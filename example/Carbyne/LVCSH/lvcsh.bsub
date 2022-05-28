@@ -1,0 +1,36 @@
+#!/bin/bash
+#BSUB -J JOB_NAME
+#BSUB -q QUEUE_NAME
+#BSUB -n ncore
+#BSUB -R "span[ptile=ncore]"
+#BSUB -o %J.out
+#BSUB -e %J.err
+
+#export OMP_NUM_THREADS=1
+#export MKL_NUM_THREADS=1
+source SH_MODULE
+export MODULEPATH=$MODULEPATH:DIR_MODULEPATH
+
+module load lvcsh/version
+
+CURDIR=$PWD
+#Generate nodelist
+rm -f ${CURDIR}/nodelist >& /dev/null
+for i in `echo $LSB_HOSTS`
+do
+echo $i >> ${CURDIR}/nodelist
+done
+
+NP=`cat ${CURDIR}/nodelist |wc -l`
+
+
+for i in $(seq 1 1 $NP)
+do
+mkdir sample$i
+cp ./LVCSH.in ./sample$i/
+cd ./sample$i
+LVCSH_complex.x &
+cd ..
+done
+wait
+
