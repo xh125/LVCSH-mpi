@@ -1,5 +1,6 @@
 module sortting
-	use kinds,only : dp	
+	use kinds,only : dp	,dpc
+  use constants,only : cone,czero
 	use io,only : stdout
 	implicit none
 	
@@ -18,9 +19,11 @@ module sortting
 		!==============================================================================================
 		
 		integer,intent(in) :: nfre
-		real(kind=dp),intent(inout) :: ee(nfre),pp(nfre,nfre)
+		real(kind=dp),intent(inout) :: ee(nfre)
+    complex(kind=dpc),intent(inout) :: pp(nfre,nfre)
 		! energy and states at time t+δt
-		real(kind=dp),intent(in) 		:: ee_0(nfre),pp_0(nfre,nfre)
+		real(kind=dp),intent(in) 		 :: ee_0(nfre)
+    complex(kind=dpc),intent(in) :: pp_0(nfre,nfre)
 		! energy and states at time t 
 		real(kind=dp),intent(in)		:: P_lim
 		! threshold to find the mixxing states
@@ -33,8 +36,10 @@ module sortting
 		! a_ji(jfre,ifre) = SUM(CONJG(pp(:,jfre))*pp_0(:,ifre)) = S_ij(jfre,ifre)
 		!========================================================================
 		
-		real(kind=dp),allocatable :: S_ij(:,:)
-		! S_ij(t,t+δt)=  <pp(jfre)|pp_0(ifre)>   
+		complex(kind=dpc),allocatable :: S_ij(:,:)
+    real(kind=dp),allocatable     :: S_ij_r(:,:),S_ij_sita(:,:)
+		! S_ij(t,t+δt)=  <pp(jfre)|pp_0(ifre)>  = Real(S_ij(t,t+δt))+Im(S_ij(t,t+δt))
+    ! S_ij(t,t+δt)=  S_ij_r(i,j)*exp(-i*S_ij_sita(i,j))
 		! equation(4) of S. Fernandez-Alberti et al., J Chem Phys 137 (2012) 014512.
 		real(kind=dp),allocatable :: P_ij(:,:)
 		! P_ij = |S_ij(t,t+δt)|^2
@@ -53,13 +58,15 @@ module sortting
 		
 		integer,allocatable :: i_mix(:),j_mix(:)
 		
-		allocate(S_ij(nfre,nfre))
+		allocate(S_ij(nfre,nfre),S_ij_r(nfre,nfre),S_ij_sita(nfre,nfre))
 		allocate(P_ij(nfre,nfre))
 		allocate(P_i(nfre),P_ii(nfre))
-		S_ij = 0.0
-		P_ij = 0.0
-		P_ii = 1.0
-		P_i  = 0.0
+		S_ij      = czero
+    S_ij_r    = 0.0
+    S_ij_sita = 0.0
+		P_ij      = 0.0
+		P_ii      = 1.0
+		P_i       = 0.0
 		
 		allocate(i_mix(nfre),j_mix(nfre))
 		i_mix = 0
@@ -69,22 +76,25 @@ module sortting
 		! calculate the overlap matrix
 		do ifre =1 ,nfre 	 ! |pp_0(ifre)>
 			do jfre = 1,nfre ! |pp(jfre)>
-				!S_ij(jfre,ifre) = SUM(CONJG(pp(:,jfre))*pp_0(:,ifre))
+				S_ij(jfre,ifre) = SUM(CONJG(pp(:,jfre))*pp_0(:,ifre))
 				! if states is a complex function
-				S_ij(jfre,ifre) = SUM(pp(:,jfre)*pp_0(:,ifre))
+				!S_ij(jfre,ifre) = SUM(pp(:,jfre)*pp_0(:,ifre))
 			enddo
 		enddo
 		
-		! P_ij = S_ij*CONJG(S_ij)
+		 P_ij = S_ij*CONJG(S_ij)
+     S_ij_r = sqrt(P_ij)
+     S_ij_sita = ATAN(IMAG(S_ij)/REAL(S_ij)) ! [-0.5pi,0.5pi]
 		! equation(5) of S. Fernandez-Alberti et al., J Chem Phys 137 (2012) 014512.
-		P_ij = S_ij**2
-		do ifre=1,nfre
+		!P_ij = S_ij**2
+		
+    do ifre=1,nfre
 			SUM_Pik = SUM(P_ij(:,ifre))
 			!SUM_Pik = 1.0
 			P_ij(:,ifre) = P_ij(:,ifre)/SUM_Pik
 			P_ii(ifre)   = P_ij(ifre,ifre)
 		enddo
-		deallocate(S_ij)
+		
 		
 		
 		! not mixxing for different states
@@ -154,8 +164,10 @@ module sortting
 		!	endif
 		!	
 		!enddo
-
 		
+		
+		
+		deallocate(S_ij)
 		deallocate(P_ij,P_ii,P_i,i_mix,j_mix)
 		
 	end subroutine resort_eigen_energy_stat
@@ -163,12 +175,13 @@ module sortting
 	subroutine exchange_states(nfre,ifre,maxfre,ee,pp,P_ij)
 		implicit none
 		integer,intent(in) :: nfre,ifre,maxfre
-		real(kind=dp),intent(inout) :: ee(nfre),pp(nfre,nfre),P_ij(nfre,nfre)
+		real(kind=dp),intent(inout) :: ee(nfre),P_ij(nfre,nfre)
+    complex(kind=dpc),intent(inout) :: pp(nfre,nfre)
 
 		! used as temp to resort the energy and states and overlap
 		real(kind=dp) :: ee_tmp
-		real(kind=dp),allocatable :: pp_tmp(:)
-		real(kind=dp),allocatable :: Pj_tmp(:)
+		real(kind=dpc),allocatable :: pp_tmp(:)
+		real(kind=dpc),allocatable :: Pj_tmp(:)
 
 		allocate(pp_tmp(nfre))
 		allocate(Pj_tmp(nfre))

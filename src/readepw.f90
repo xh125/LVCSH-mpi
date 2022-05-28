@@ -8,7 +8,7 @@ module readepw
   use klist_epw, only : xk_all,xkg_all
   use epwcom, only : nkc1,nkc2,nkc3,nqf1,nqf2,nqf3,nkf1,nkf2,nkf3,nbndsub,kqmap,scdm_proj,vme
   use pwcom, only : ef
-  use surfacecom,only : ieband_min,ieband_max,ihband_min,ihband_max
+  use surfacecom,only : ieband_min,ieband_max,ihband_min,ihband_max,eps_acustic,nqv
   use elph2, only : nkqf,nkqtotf,wf,wqf,xkf,wkf,etf,gmnvkq,nkf,epmatq,&
                     nktotf,nqf,nqtotf,ibndmin,ibndmax,efnew,vmef,dmef
   use cell_base,only : ibrav,alat,omega,at,bg,celldm
@@ -36,7 +36,7 @@ module readepw
               nu       ,           &! Mode index
               totq     ,           &! Total number of q-points within the fsthick window.
               iq,iq_                ! Current q-point index
-  INTEGER :: i,j,k,iw
+  INTEGER :: i,j,k,iw,i_,j_,k_
   !! generic counter
   INTEGER :: ipol
   !! counter on polarizations
@@ -53,7 +53,6 @@ module readepw
   real(kind=dp) ::  wq          ,&! Phonon frequency
                     ekk         ,&! Eigenenergies at k
                     ekq           ! Eigenenergies at k+q
-  real(kind=dp) ::  max_wf
   
   
   real(kind=dp),allocatable :: epc(:,:,:,:)
@@ -85,10 +84,14 @@ module readepw
   !! use random points for the fine q-mesh
   INTEGER :: rand_nk
   !! use random points for the fine k-mesh	
+  integer :: nvbmax,ncbmin
+  real(kind=dp) :: evbmax,ecbmin
+  real(kind=dp) :: enbmax
+  
   contains
 	
   subroutine readepwout(fepwout)
-    use elph2,    only : nqtotf,xqf,nbndfst
+    use elph2,    only : nqtotf,xqf,nbndfst,iminusq,iminusk
     use grid,     only : loadqmesh,kq2k_map,loadkmesh_fullBZ,get_ikq
     use modes,    only : nmodes
     use control_epw, only : eig_read,epbread,epbwrite,efermi_read,scissor
@@ -123,7 +126,7 @@ module readepw
     !logical :: eig_read,epbread,epbwrite,efermi_read
     LOGICAL :: already_skipped
     !! Skipping band during the Wannierization
-    integer :: nbndskip
+    integer :: nbndskip = 0
     logical :: wannierize
 		
     integer :: itmp,count_piv_spin
@@ -161,9 +164,6 @@ module readepw
        &     'number of atomic types    = ',i12,/,5x, &
        &     'kinetic-energy cut-off    = ',f12.4,'  Ry',/,5x, &
        &     'charge density cut-off    = ',f12.4,'  Ry')
-    if(nat /= 0) then
-			nmodes = 3*nat
-    endif
     
     !call write_dft_name ( ) 
     read(unitepwout,"(27X,A)") dft
@@ -174,7 +174,7 @@ module readepw
       read(unitepwout,"(33X,1PE12.1)") exx_fraction
     endif               
     
-    !  !  Here add a message if this is a noncollinear or a spin_orbit calculation
+    !Here add a message if this is a noncollinear or a spin_orbit calculation
     !epw_summary.f90 line 79
     !IF (noncolin) THEN
     !  IF (lspinorb) THEN
@@ -195,15 +195,14 @@ module readepw
     else
       noncolin = .false.
     endif    
-
+		read(unitepwout,*)
+		
     !
     ! Description of the unit cell
     !    
-    read(unitepwout,*)
     read(unitepwout,"(2(3X,3(12X,F11.5),/))") (celldm(i),i=1,6)
     read(unitepwout,"(/,3(23X,3F8.4,/))") ((at(ipol,apol),ipol=1,3),apol=1,3)
     read(unitepwout,"(/,3(23X,3F8.4,/))") ((bg(ipol,apol),ipol=1,3),apol=1,3)
-    read(unitepwout,"(/////)")
 
 		WRITE(stdout, '(/,2(3x,3(2x,"celldm(",i1,")=",f11.5),/))') &
 				(i, celldm(i), i = 1, 6)
@@ -218,47 +217,54 @@ module readepw
 
     !
     ! Description of the atoms inside the unit cell
-    !    
-    if(.not. allocated(iatm)) then 
-      allocate(iatm(nat),stat=ierr,errmsg=msg)
-      if(ierr /=0) then
-				call errore('readepw','Error allocating iatm',1)    
-				call io_error(msg)
+    !
+		read(unitepwout,"(/,A)") ctmp
+		read(unitepwout,"(/,A)") ctmp
+		read(unitepwout,"(/,A)") ctmp
+		if( nat /= 0) then
+			if(.not. allocated(iatm)) then 
+				allocate(iatm(nat),stat=ierr,errmsg=msg)
+				if(ierr /=0) then
+					call errore('readepw','Error allocating iatm',1)    
+					call io_error(msg)
+				endif
+				iatm = ' '
 			endif
-			iatm = ' '
-    endif
-    if(.not. allocated(iamass)) then 
-      allocate(iamass(nat),stat=ierr,errmsg=msg)
-      if(ierr /=0) then
-				call errore('readepw','Error allocating iamass',1)    
-				call io_error(msg)
+			if(.not. allocated(iamass)) then 
+				allocate(iamass(nat),stat=ierr,errmsg=msg)
+				if(ierr /=0) then
+					call errore('readepw','Error allocating iamass',1)    
+					call io_error(msg)
+				endif
+				iamass = 0.0
+			endif  
+			if(.not. allocated(tau)) then 
+				allocate(tau(3,nat),stat=ierr,errmsg=msg)
+				if(ierr /=0) then
+					call errore('readepw','Error allocating tau',1)    
+					call io_error(msg)
+				endif
+				tau = 0.0
 			endif
-			iamass = 0.0
-    endif  
-    if(.not. allocated(tau)) then 
-      allocate(tau(3,nat),stat=ierr,errmsg=msg)
-      if(ierr /=0) then
-				call errore('readepw','Error allocating tau',1)    
-				call io_error(msg)
-			endif
-			tau = 0.0
-    endif    
-    do iat =1 ,nat
-      read(unitepwout,"(7X,2x,5x,1X,A3,2X,F8.4,14X,3f11.5)") iatm(iat),iamass(iat),(tau(ipol,iat),ipol=1,3)
-    enddo
-    ! atoms mass in "Rydberg" atomic units
-    iamass = iamass * amu_ry
-
-		WRITE(stdout, '(/, 5x,"Atoms inside the unit cell: ")')
-		WRITE(stdout, '(/,3x,"Cartesian axes")')
-		WRITE(stdout, '(/,5x,"site n.  atom      mass ", &
-				&                "          positions (a_0 units)")')
+			
+			do iat =1 ,nat
+				read(unitepwout,"(7X,2x,5x,1X,A3,2X,F8.4,14X,3f11.5)") iatm(iat),iamass(iat),(tau(ipol,iat),ipol=1,3)
+			enddo
+			! atoms mass in "Rydberg" atomic units
+			iamass = iamass * amu_ry
 	
-		WRITE(stdout, '(7x,i2,5x,a6,f8.4,"   tau(",i2, &
-				&                              ") = (",3f11.5,"  )")')  &
-				& (iat,iatm(iat), amass(iat)/amu_ry, iat,  &
-				& (tau(ipol,iat), ipol = 1, 3), iat = 1, nat)
-
+			WRITE(stdout, '(/, 5x,"Atoms inside the unit cell: ")')
+			WRITE(stdout, '(/,3x,"Cartesian axes")')
+			WRITE(stdout, '(/,5x,"site n.  atom      mass ", &
+					&                "          positions (a_0 units)")')
+		
+			WRITE(stdout, '(7x,i2,5x,a6,f8.4,"   tau(",i2, &
+					&                              ") = (",3f11.5,"  )")')  &
+					& (iat,iatm(iat), amass(iat)/amu_ry, iat,  &
+					& (tau(ipol,iat), ipol = 1, 3), iat = 1, nat)
+		else
+			read(unitepwout,*)
+		endif
     
     !
     ! Description of symmetries
@@ -748,7 +754,6 @@ module readepw
 		read(unitepwout,"(38X,I8)") nrr_q
 		read(unitepwout,"(46X,I8)") nrr_g
 		
-    write(stdout,"(/5x,A,I12)") "Number of phonon modes (nmodes) =",nmodes
     
 		!! Check Memory usage
 		!CALL system_mem_usage(valueRSS)
@@ -800,8 +805,8 @@ module readepw
     !read(unitepwout,"(27X,3i4)") nqf1,nqf2,nqf3
     !!! qx,qy,qz sizes of the uniform phonon fine mesh to be used
     !nqtotf = nqf1 * nqf2 * nqf3
-    write(stdout,"(5X,A,I12)") "Total number of the uniform phonon fine mesh to be used(nqtotf) = ",&
-                               nqtotf
+    write(stdout,"(5X,A,I12)") & 
+    "Total number of the uniform phonon fine mesh to be used(nqtotf) = ",nqtotf
     
     !  total number of q points (fine grid)
     if(.not. allocated(xqf)) then 
@@ -824,13 +829,27 @@ module readepw
     endif
     wqf = 1.0d0/(dble(nqtotf))
     
+    allocate(iminusq(nqtotf))
+    
+    
     do i = 1 ,nqf1
-      do j=1,nqf2
+      i_ = nqf1 + 2 - i
+      if(i_ > nqf1) i_ = i_ - nqf1
+      
+      do j = 1 ,nqf2
+        j_ = nqf2 + 2 - j
+        if(j_ > nqf2) j_ = j_ - nqf2
+        
         do k=1,nqf3
+          k_ = nqf3 + 2 - k
+          if(k_ > nqf3) k_ = k_ - nqf3
+          
           iq = (i - 1) * nqf2 * nqf3 + (j - 1) * nqf3 + k
           xqf(1, iq) = DBLE(i - 1) / DBLE(nqf1)
           xqf(2, iq) = DBLE(j - 1) / DBLE(nqf2)
           xqf(3, iq) = DBLE(k - 1) / DBLE(nqf3)          
+          
+          iminusq(iq) = (i_ - 1) * nqf2 * nqf3 + (j_ - 1) * nqf3 + k_
         enddo
       enddo
     enddo  
@@ -871,8 +890,8 @@ module readepw
 		endif
     
     !read(unitepwout,"(27X,3i4)") nkf1,nkf2,nkf3
-    write(stdout,"(5X,A,I12)") "Total number of K-point in fine mesh to be used(nktotf)         = ",&
-                               nktotf    
+    write(stdout,"(5X,A,I12)") &
+    "Total number of K-point in fine mesh to be used(nktotf)         = ",nktotf    
     
     
     if(allocated(xkf)) deallocate(xkf) 
@@ -892,13 +911,27 @@ module readepw
 		wkf = 0.0d0
     wkf = 1.0d0/dble(nktotf) !
 		
+    allocate(iminusk(nktotf))
+    
+    
     DO i = 1, nkf1
+      i_ = nkf1 + 2 - i
+      if(i_ > nkf1) i_ = i_ - nkf1    
+
       DO j = 1, nkf2
+        j_ = nkf2 + 2 - j
+        if(j_ > nkf2) j_ = j_ - nkf2      
+
         DO k = 1, nkf3
+          k_ = nkf3 + 2 - k
+          if(k_ > nkf3) k_ = k_ - nkf3
+          
           ik = (i - 1) * nkf2 * nkf3 + (j - 1) * nkf3 + k
           xkf(1, ik) = DBLE(i - 1) / DBLE(nkf1)
           xkf(2, ik) = DBLE(j - 1) / DBLE(nkf2)
           xkf(3, ik) = DBLE(k - 1) / DBLE(nkf3)
+          iminusk(ik)= (i_ - 1) * nkf2 * nkf3 + (j_ - 1) * nkf3 + k_
+          
         ENDDO
       ENDDO
     ENDDO       
@@ -951,10 +984,6 @@ module readepw
     ef = ef /ryd2ev
 		WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'    
 		
-    if(nelec == 0.0 .and. ieband_max==0 .and. ihband_min==0) then
-      write(stdout,"(5X,A,F8.4,A)") "WARNING! The nelec =",nelec,"and ieband_max=0 ihband_min=0"
-      write(stdout,"(5X,A)") "Need to set nelec right in LVCSH.in .OR. set lreadscfout= .true."
-    endif
     
     !IF (efermi_read) THEN
     read(unitepwout,"(/5X,A)") ctmp
@@ -985,7 +1014,7 @@ module readepw
         ENDIF
       ENDIF
     !elseif(band_plot) then
-    elseif(ctmp(1:)=="Fermi energy corresponds to the coarse k-mesh") then
+    elseif(ctmp(1:45)=="Fermi energy corresponds to the coarse k-mesh") then
       read(unitepwout,"(/5X,A)") ctmp
     else
       backspace(unitepwout)
@@ -1052,17 +1081,9 @@ module readepw
     !WRITE(stdout, '(5x,"Applying a scissor shift of ",f9.5," eV to the CB ",i6)' ) scissor * ryd2ev, icbm
     if(ctmp(1:27)=="Applying a scissor shift of") then
       read(unitepwout,"(5X,28X,f9.5,14X,i6)") scissor,icbm
-      scissor = scissor/ryd2eV
-    else
-      IF (noncolin) THEN
-        icbm = FLOOR(nelec / 1.0d0) + 1
-      ELSE
-        icbm = FLOOR(nelec / 2.0d0) + 1
-      ENDIF      
+      scissor = scissor/ryd2eV   
     endif
-    
-    WRITE(stdout, '(/5x," icbm(conductor band max) = ",i6)' ) icbm
-    WRITE(stdout, '(5x," ivbm(valence   band min) = ",i6)' ) icbm-1
+
     
     
     !
@@ -1091,6 +1112,43 @@ module readepw
 		endif
 		etf = 0.0d0
     
+
+
+    if(allocated(kqmap)) deallocate(kqmap) 
+    allocate(kqmap(nktotf,nqtotf),stat=ierr,errmsg=msg)
+    if(ierr /=0) then
+			call errore('readepw','Error allocating kqmap',1)                  
+			call io_error(msg)
+		endif
+		kqmap = 1
+  
+    call findkline(unitepwout,"We only need to compute",6,28)
+    read(unitepwout,"(29X,i8)") totq
+		write(stdout,"(5X,A5,I8,A)") "Only ",totq," q-points falls within the fsthick windows."
+		write(stdout,"(5X,A,I8,A)")  'We only need to compute ', totq, ' q-points'
+    
+		allocate(calgmnvkq_q(totq))
+
+    ! Need to set nmodes, for the reason of natoms be set to zero when epw.x restart.
+    nmodes = 0
+    call findkline(unitepwout," Electron-phonon vertex |g| (meV)",6,38)
+    do i=1,6
+      read(unitepwout,*)
+    enddo
+    do
+      read(unitepwout,"(3i9)") ibnd_,jbnd_,nu_
+      if(nu_>nmodes) then
+        nmodes = nu_
+      else
+        exit
+      endif
+    enddo
+    do i=1,nmodes + 7
+      backspace(unitepwout)
+    enddo
+    !read(unitepwout,"(A)") ctmp
+    write(stdout,"(/5x,A,I12)") "Number of phonon modes (nmodes) =",nmodes    
+
     !! Fine mesh set of g-matrices.  It is large for memory storage
     !ALLOCATE(epf17(nbndfst, nbndfst, nmodes, nkf), STAT = ierr)
     allocate(gmnvkq(ibndmin:ibndmax,ibndmin:ibndmax,1:nmodes,1:nktotf,1:nqtotf),stat=ierr,errmsg=msg)
@@ -1125,22 +1183,8 @@ module readepw
 			call errore('readepw','Error allocating wf',1)                
 			call io_error(msg)
 		endif
-		wf = 0.0
-
-    if(allocated(kqmap)) deallocate(kqmap) 
-    allocate(kqmap(nktotf,nqtotf),stat=ierr,errmsg=msg)
-    if(ierr /=0) then
-			call errore('readepw','Error allocating kqmap',1)                  
-			call io_error(msg)
-		endif
-		kqmap = 1
-  
-    call findkline(unitepwout,"We only need to compute",6,28)
-    read(unitepwout,"(29X,i8)") totq
-		write(stdout,"(5X,A5,I8,A)") "Only ",totq," q-points falls within the fsthick windows."
-		write(stdout,"(5X,A,I8,A)")  'We only need to compute ', totq, ' q-points'
+		wf = 0.0    
     
-		allocate(calgmnvkq_q(totq))
 
     ! 1160 DO iqq = iq_restart, totq
     do iq=1,totq
@@ -1219,36 +1263,65 @@ module readepw
 		
 		
 
-    !gamma 3 branch A phonon must be set to 0.
+    !Acoustic phonon at gamma q-point must be set to 0 to satisfy acoustic sum rule.
+    !when wf <= 0.0, the epc need be set to 0.0, 
+    !as do in the printing.f90(line 123) in EPW code.
     do nu=1,3
 			wf(nu,1) = 0.0
       gmnvkq(:,:,nu,:,1) = 0.0
 			epmatq(:,:,nu,:,1) = czero
     enddo
 		
+    
+    
+    ! use eps_acustic as The lower boundary for the phonon frequency in el-ph and NA-MD calculations
 		do iq=1,nqtotf
 		  do nu=1,nmodes
-				if(wf(nu,iq)<lit_ephonon) then 
-					!for the phonon with energy little than lit_ephonon meV, set the g-matrices to 0.
-					gmnvkq(:,:,nu,:,iq) = 0.0
-					epmatq(:,:,nu,:,iq) = czero
-				endif
-				
+
         if(wf(nu,iq)<0.0) then
           write(stdout,"(A,I5,1X,A,3(F12.6,1X),A8,I5,A1,F12.6,A3)") &
 					"Carefully!!! the energy of phonon in iq=",iq,"(coord.:",(xqf(ipol,iq),ipol=1,3),") modes=",nu,"=",wf(nu,iq),"meV"
-					wf(nu,iq)=0.0
+          write(stdout,"(A)") "The phonon calculation could need a higher threshold for relax and scf and phonon calculaiton."
+          write(stdout,"(A)") "Surgest to set 'lifc = .true.' in EPW calculation."
 				endif
+
+        !https://docs.epw-code.org/doc/Inputs.html#eps-acustic
+				if(wf(nu,iq)<eps_acustic) then 
+          !The lower boundary for the phonon frequency in el-ph and NA-MD calculations
+					!for the phonon with energy little than lit_ephonon meV, set the g-matrices to 0.
+					wf(nu,iq) = 0.0
+          gmnvkq(:,:,nu,:,iq) = 0.0
+					epmatq(:,:,nu,:,iq) = czero
+				endif
+				
       enddo
 		enddo
 
+
+    ! use fermi energy to find vbm and cbm.
+    do ibnd= ibndmin,ibndmax
+      enbmax = Maxval(etf(ibnd,:))
+      if(enbmax>ef*ryd2eV) then
+        ncbmin = ibnd
+        EXIT
+      endif
+    enddo
+    nvbmax = ncbmin - 1
+    evbmax = Maxval(etf(nvbmax,:))
+    ecbmin = Minval(etf(ncbmin,:))
+    WRITE(stdout,'(/14x,a,i5,2x,a,f9.3,a)') 'Valence band max   = ', nvbmax, 'evbmax = ', evbmax , ' eV'
+    WRITE(stdout,'(14x,a,i5,2x,a,f9.3,a/)') 'Conductor band min = ', ncbmin, 'ecbmin = ', ecbmin , ' eV'    
+    icbm = ncbmin
+    !if(icbm /= ncbmin) write(stdout,"(5X,A)") "Warning! The nelec need to be set right."
+    
 		etf = etf/ryd2eV
-    etf = etf - ef
+    evbmax = evbmax/ryd2eV
+    ecbmin = ecbmin/ryd2eV
+    etf = etf - evbmax
     wf = wf/ryd2mev
 		gmnvkq = gmnvkq/ryd2mev
 		epmatq = epmatq/ryd2mev
-    max_wf = Maxval(wf(nmodes,:))
-		lit_gmnvkq = lit_gmnvkq*sqrt(2.0*max_wf/nqtotf)
+    eps_acustic = eps_acustic/ryd2mev
     
 		do iq=1,nqtotf
 			do nu = 1,nmodes
@@ -1258,8 +1331,9 @@ module readepw
 		enddo
 		
 		gmnvkq = ABS(epmatq)
-		deallocate(epmatq)
-       
+    
+
+    !ref : https://journals.aps.org/prb/pdf/10.1103/PhysRevB.72.045314
     call findkline(unitepwout,"matrix elements",15,29)
     read(unitepwout,"(A)") ctmp
     if(ctmp(32:35)=="vmef") then
@@ -1269,7 +1343,7 @@ module readepw
     endif
     allocate(vmef(1:3,ibndmin:ibndmax,ibndmin:ibndmax,1:nktotf),stat=ierr,errmsg=msg)
 		if(ierr /= 0) call io_error(msg)
-		ram = real_size*3*(ibndmax-ibndmin+1)**2*nktotf
+		ram = complex_size*3*(ibndmax-ibndmin+1)**2*nktotf
 		call print_memory("vmef",ram)
 		
     do ik=1,nkf
@@ -1280,7 +1354,7 @@ module readepw
         enddo
       enddo
     enddo
-    ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k) 
+    ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k)
     ! vmef = 2 *dmef
     ! ! ... RY for "Rydberg" atomic units (e^2=2, m=1/2, hbar=1)   
     if (.not. vme) vmef = 2.0*vmef  !in unit of Ryd*bohr   

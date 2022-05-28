@@ -1,5 +1,7 @@
 module fssh
   use kinds,only : dp,dpc
+  !use constants,only : cone,czero
+
   implicit none
 
   contains
@@ -10,16 +12,17 @@ module fssh
     integer , intent(in)     :: nfre,nfre_sh,nq,nmodes
     integer , intent(inout)  :: isurface
     real(kind=dp),intent(in) :: EE(nfre)
-    real(kind=dp),intent(in) :: P(nfre,nfre)
-    real(kind=dp),intent(in) :: DD(nfre_sh,nfre_sh,nmodes,nq)
+    complex(kind=dpc),intent(in) :: P(nfre,nfre)
+    complex(kind=dpc),intent(in) :: DD(2,nfre_sh,nmodes,nq)
     real(kind=dp),intent(in) :: GG(nfre_sh)
-    real(kind=dp),intent(inout) :: VV(nmodes,nq)
+    complex(kind=dp),intent(inout) :: VV(nmodes,nq)
     
-    real(kind=dp) :: sumvd,sumdd,sumgg,flagr,flagd,detaE
+    real(kind=dp) :: sumvd
+    real(kind=dp) :: sumdd,sumgg,flagr,flagd,detaE
     integer :: ifre,jfre,imode,iq
     real(kind=dp) :: SUM_E0,SUM_E1,dSUM_E
     
-    SUM_E0 = 0.5*SUM(VV**2)+EE(isurface)
+    SUM_E0 = 0.5*SUM(VV*CONJG(VV))+EE(isurface)
     
     call more_random()
     call random_number(flagr)
@@ -34,18 +37,21 @@ module fssh
           sumdd = 0.0
           do iq=1,nq
             do imode=1,nmodes
-              sumvd = sumvd + VV(imode,iq)*DD(isurface,ifre,imode,iq) ! A
-              sumdd = sumdd + DD(isurface,ifre,imode,iq)**2           ! B
+              sumvd = sumvd + REAL(CONJG(VV(imode,iq))*DD(1,ifre,imode,iq)) ! A
+              sumdd = sumdd + ABS(DD(1,ifre,imode,iq))**2  ! B                   
             enddo
           enddo
-          detaE = EE(isurface)-EE(ifre)
+          detaE = EE(isurface)-EE(ifre) !C
+          ! 2.0*detaE = 2.0*sumvd*dt+sumdd*(dt2)
+          
           flagd = 1.0+2.0*detaE*sumdd/(sumvd**2)  
           
+          
           if(flagd > 0.0) then
-            flagd = (sumvd/sumdd)*(-1.0+dsqrt(flagd))
+            flagd = (sumvd/sumdd)*(-1.0+dsqrt(flagd))  ! effective scratting time
             do iq=1,nq
               do imode=1,nmodes
-                if(lfeedback) VV(imode,iq) = VV(imode,iq) + flagd*dd(isurface,ifre,imode,iq)
+                if(lfeedback) VV(imode,iq) = VV(imode,iq) + flagd*dd(1,ifre,imode,iq)
               enddo
             enddo
             isurface = ifre          

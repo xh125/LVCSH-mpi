@@ -5,15 +5,14 @@ module readinput
                         lreadscfout,scfoutname,lreadphout,phoutname,lreadfildyn,fildyn,epwoutname,&
                         methodsh,lfeedback,naver,nstep,nsnap,pre_nstep,pre_dt,mix_thr,&
                         gamma,ld_fric,dt,temp,l_ph_quantum,&
-                        l_gamma_energy,gamma_min,gamma_max,ld_fric_min,ld_fric_max,n_gamma,&
                         init_kx,init_ky,init_kz,init_hband,init_eband,&
-                        llaser,efield,efield_cart,w_laser,fwhm,nelec,&
+                        llaser,efield_cart,w_laser,fwhm,eps_acustic,&
                         lsetthreads,mkl_threads,lelecsh,lholesh,lehpairsh,&
                         ieband_min,ieband_max,ihband_min,ihband_max,nefre_sh,nhfre_sh,&
-												nnode,ncore,savedsnap,lsortpes
+												nnode,ncore,savedsnap,lsortpes,l_dEa_dQ,l_dEa2_dQ2
   use io,        only : io_file_unit,io_error,msg
   use utility,   only : utility_lowercase
-	use modes, only : nmodes
+
   implicit none
     integer               :: in_unit,tot_num_lines,ierr,loop,in1,in2
     integer               :: num_lines,line_counter
@@ -171,6 +170,7 @@ module readinput
 		cdecoherence  = 0.1
 		lit_gmnvkq    = 1.0d-8 !meV
 		lit_ephonon   = 1.0    !meV
+    eps_acustic   = 5.d0 ! cm-1
     l_ph_quantum  = .true.
     lelecsh       = .false.
     lholesh       = .false.
@@ -183,7 +183,6 @@ module readinput
     lreadfildyn   = .false.
     fildyn        = "prefix.dyn"
     epwoutname    = "epw.out"
-    nelec         = 0.0    !!! number of electrons
     ieband_min    = 0
     ieband_max    = 0
     ihband_min    = 0
@@ -196,14 +195,8 @@ module readinput
     pre_nstep     = 0
     pre_dt        = 1.0
 		mix_thr       = 0.8
-    gamma         = 1.0    ! 0.1   ! the friction coefficient 1/ps
-    ld_fric       = 0.1
-    l_gamma_energy= .false.
-    gamma_min     = 0.00
-    gamma_max     = 0.00
-    ld_fric_min   = 0.00
-    ld_fric_max   = 1.00
-    n_gamma       = 100
+    gamma         = 0.0    ! 0.1   ! the friction coefficient 1/ps
+    ld_fric       = 0.01
     dt            = 0.5    ! fs
     temp          = 300.0  ! K
     init_kx       = 0.0    ! in unit of b_x
@@ -212,14 +205,15 @@ module readinput
     init_eband    = 1      ! the initial electron band
     init_hband    = 1      ! the initial hole band
     llaser        = .true.
-    efield        = 1.0    ! V/m
-    efield_cart   = (/ 0.0,0.0,1.0 /)  ! V/m
+    efield_cart   = (/ 0.0,0.0,0.0 /)  ! V/m
     w_laser       = 1.0    ! eV
     fwhm          = 10     ! fs
 		nnode         = 1
 		ncore         = 1
 		savedsnap     = 100
-		nmodes        = 0
+
+    l_dEa_dQ      = .false.
+    l_dEa2_dQ2    = .true.
     
     lsetthreads   = .FALSE.
     mkl_threads   = 4    
@@ -258,17 +252,21 @@ module readinput
   
   subroutine param_in_atomicunits()
     ! change the input parameters into Rydberg atomic units
-    use constants,only : Ryd2V_m,ryd2eV,Ry_TO_THZ,Ry_TO_fs,ryd2mev
+    use constants,only : Ryd2V_m,mev2cmm1,ryd2eV,Ry_TO_THZ,Ry_TO_fs,ryd2mev
     use lasercom,only  : fwhm_2T2
     implicit none
     
 		cdecoherence = cdecoherence/2.0 ! Hartree to Rydberg
     lit_gmnvkq   = lit_gmnvkq/ryd2meV
-		gamma = gamma / Ry_TO_THZ ! change gamma in unit of (THZ) to (Ryd)
+    !
+    ! from cm-1 to meV
+    eps_acustic = eps_acustic / mev2cmm1
+		
+    gamma = gamma / Ry_TO_THZ ! change gamma in unit of (THZ) to (Ryd)
     dt    = dt / Ry_TO_fs     ! in Rydberg atomic units(1 a.u.=4.8378 * 10^-17 s)
     pre_dt= pre_dt/ Ry_TO_fs
-    efield= efield / Ryd2V_m  ! (in Ry a.u.;1 a.u. = 36.3609*10^10 V/m)
-    efield_cart = efield_cart / Ryd2V_m
+    
+    efield_cart = efield_cart / Ryd2V_m ! (in Ry a.u.;1 a.u. = 36.3609*10^10 V/m)
     w_laser = w_laser /ryd2eV
     fwhm = fwhm/ ry_to_fs  
     fwhm_2T2 = fwhm**2.0/4.0*log(2.0)

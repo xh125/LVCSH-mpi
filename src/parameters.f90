@@ -4,14 +4,12 @@ module parameters
   use kinds,only : dp
   use constants,only    : maxlen
   use environments,only : mkl_threads,lsetthreads
-  use lasercom,only     : llaser,efield,efield_cart,w_laser,fwhm
-  use klist,only        : nelec
+  use lasercom,only     : llaser,efield_cart,w_laser,fwhm
   use surfacecom,only   : methodsh,lfeedback,naver,nstep,nsnap,dt,pre_nstep,pre_dt,&
                           temp,gamma,ld_fric,l_ph_quantum,lit_gmnvkq,lit_ephonon,&
-                          l_gamma_energy,gamma_min,gamma_max,ld_fric_min,ld_fric_max,n_gamma,&
-                          lelecsh,lholesh,lehpairsh,ldecoherence,Cdecoherence,&
-                          ieband_min,ieband_max,ihband_min,ihband_max,nefre_sh,nhfre_sh
-	use modes,only : nmodes
+                          lelecsh,lholesh,lehpairsh,ldecoherence,Cdecoherence,eps_acustic,&
+                          ieband_min,ieband_max,ihband_min,ihband_max,nefre_sh,nhfre_sh,&
+                          l_dEa_dQ,l_dEa2_dQ2
   implicit none
   
   !integer,parameter :: npk = 40000 ! max number of k-points in pw.x calculation
@@ -20,6 +18,7 @@ module parameters
 
   real(kind=dp)   :: init_kx,init_ky,init_kz  !激发后初始的电子(空穴)的k坐标
   integer         :: init_hband,init_eband    !激发后初始的电子(空穴)所处的能带
+  real(kind=dp)   :: init_e_en,init_h_en      !激发后初始电子(空穴)的能量
   integer         :: init_ikx,init_iky,init_ikz,init_ik 
   real(kind=dp)   :: mix_thr
 	! threshold to find the mixxing states
@@ -35,12 +34,11 @@ module parameters
 					 lreadscfout,lreadphout,scfoutname,phoutname,lreadfildyn,fildyn,&
 					 epwoutname,methodsh,lfeedback,naver,nstep,nsnap,mix_thr,&
            pre_nstep,pre_dt,gamma,ld_fric,l_ph_quantum,dt,temp,&
-           l_gamma_energy,gamma_min,gamma_max,ld_fric_min,ld_fric_max,n_gamma,&
            init_kx,init_ky,init_kz,init_hband,init_eband,&
-           llaser,efield,efield_cart,w_laser,fwhm,&
+           llaser,efield_cart,w_laser,fwhm,eps_acustic,&
            lsetthreads,mkl_threads,lelecsh,lholesh,lehpairsh,&
-           nelec,ieband_min,ieband_max,ihband_min,ihband_max,nefre_sh,nhfre_sh,&
-					 nnode,ncore,savedsnap,nmodes,lsortpes
+           ieband_min,ieband_max,ihband_min,ihband_max,nefre_sh,nhfre_sh,&
+					 nnode,ncore,savedsnap,lsortpes,l_dEa_dQ,l_dEa2_dQ2
 
   contains
   

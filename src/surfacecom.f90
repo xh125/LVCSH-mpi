@@ -12,21 +12,22 @@ module surfacecom
   real(kind=dp)   :: pre_dt
   real(kind=dp)   :: dt
   real(kind=dp)   :: temp
+
+  REAL(KIND = DP) :: eps_acustic
+  !! min. phonon frequency for e-p and NA-MD calculations (units of cm-1)
+  
   real(kind=dp)   :: gamma    ! gamma is the friction coefficient,dimention is 1/t(ps-1)  THZ  
   real(kind=dp)   :: ld_fric  ! 2pi*gamma_qv/w_qv
   !calculate averager energy from simulation at different ld_gamma and reference temperature.
   !ref: 1 D. M. F. M. Germana Paterlini, Chemical Physics 236 (1998) 243. Table 1
-  logical         :: l_gamma_energy
-  real(kind=dp)   :: gamma_min,gamma_max
-  real(kind=dp)   :: ld_fric_min,ld_fric_max
-  integer         :: n_gamma
+  
   real(kind=dp) 	:: lit_gmnvkq  
 	!for the gmnvkq with energy larger than lit_gmnvkq (in unit of mev) take into account
 	real(kind=dp)   :: lit_ephonon 
 	!for the phonon with energy wf(iq,nu) larger than lit_ephonon (in unit of mev) take into account
 	
   logical         :: l_ph_quantum
-  logical :: lfeedback
+  logical         :: lfeedback
   
 	!ref:1	Bedard-Hearn, M. J., Larsen, R. E. & Schwartz, B. J. Mean-field dynamics with stochastic decoherence (MF-SD):
 	!				a new algorithm for nonadiabatic mixed quantum/classical molecular-dynamics simulations with nuclear-induced decoherence.
@@ -59,10 +60,14 @@ module surfacecom
   
   ! phonons normal mode Langevin dynamica friction coefficient
   real(kind=dp),allocatable :: ld_gamma(:,:)
+  ! <nqv>=1/(exp{hbar*wqv/kbT}-1)
+  real(kind=dp),allocatable :: nqv(:,:)
+  
   
   ! phonons normal mode coordinate,and phonons P
-  real(kind=dp),allocatable :: phQ(:,:),phP(:,:),phQ0(:,:),phP0(:,:)
-  real(kind=dp),allocatable :: dEa_dQ(:,:),dEa_dQ_e(:,:),dEa_dQ_h(:,:)
+  complex(kind=dpc),allocatable :: phQ(:,:),phP(:,:),phQ0(:,:),phP0(:,:)
+  logical :: l_dEa_dQ,l_dEa2_dQ2
+  complex(kind=dpc),allocatable :: dEa_dQ(:,:),dEa_dQ_e(:,:),dEa_dQ_h(:,:)
   real(kind=dp),allocatable :: dEa2_dQ2(:,:),dEa2_dQ2_e(:,:),dEa2_dQ2_h(:,:)
   
 
@@ -74,8 +79,9 @@ module surfacecom
   real(kind=dp) :: E_ph_CA_sum,E_ph_QA_sum
   ! averager crystal energy and temperature T,in classical and quantum . 
   
-  real(kind=dp),allocatable :: d_e(:,:,:,:) ,d_h(:,:,:,:) ,g_e(:) ,g_h(:)
-  real(kind=dp),allocatable :: d0_e(:,:,:,:),d0_h(:,:,:,:),g1_e(:),g1_h(:)  
+  complex(kind=dpc),allocatable :: d_e(:,:,:,:),d_h(:,:,:,:),d0_e(:,:,:,:),d0_h(:,:,:,:)
+  real(kind=dp),allocatable :: g_e(:) ,g_h(:)
+  real(kind=dp),allocatable :: g1_e(:),g1_h(:)  
                                
   
   complex(kind=dpc),allocatable :: c_e(:),c_e_nk(:,:),w_e(:),w0_e(:)
@@ -84,7 +90,8 @@ module surfacecom
   real(kind=dp) :: sumg0_e,sumg0_h,sumg1_e,sumg1_h
   
 	!Store information
-	real(kind=dp),allocatable :: phQsit(:,:,:),phPsit(:,:,:),phKsit(:,:,:),phUsit(:,:,:)
+	complex(kind=dpc),allocatable :: phQsit(:,:,:),phPsit(:,:,:)
+  real(kind=dp),allocatable     :: phKsit(:,:,:),phUsit(:,:,:)
 	real(kind=dp),allocatable :: pes_one_e(:,:),pes_e(:,:),csit_e(:,:),wsit_e(:,:),psit_e(:,:),& 
                                pes_one_h(:,:),pes_h(:,:),csit_h(:,:),wsit_h(:,:),psit_h(:,:)
 															   

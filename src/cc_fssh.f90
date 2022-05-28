@@ -1,6 +1,6 @@
 module cc_fssh
   use kinds,only : dp,dpc
-
+  use constants,only : cone,czero
   implicit none
   
   integer :: iesurface_j,ihsurface_j
@@ -25,12 +25,12 @@ module cc_fssh
     implicit none
     integer,intent(in) :: nfre,nfre_sh,isurface
     integer,intent(out):: isurface_j
-    real(kind=dp),intent(in) :: p0(nfre,nfre)
-    real(kind=dp),intent(in) :: p(nfre,nfre)
-    complex(kind=dpc),intent(in):: w0(nfre),w(nfre)
-    real(kind=dp),intent(inout) :: S_ai(nfre_sh)
-    real(kind=dp),intent(in)  	:: g1(nfre_sh)
-    real(kind=dp),intent(inout) :: g(nfre_sh)
+    complex(kind=dpc),intent(in) :: p0(nfre,nfre)
+    complex(kind=dpc),intent(in) :: p(nfre,nfre)
+    complex(kind=dpc),intent(in) :: w0(nfre),w(nfre)
+    real(kind=dp),intent(inout)  :: S_ai(nfre_sh)
+    real(kind=dp),intent(in)  	 :: g1(nfre_sh)
+    real(kind=dp),intent(inout)  :: g(nfre_sh)
     
     integer :: ifre
     integer :: isurface_a,isurface_b,isurface_k
@@ -52,12 +52,11 @@ module cc_fssh
     else
       !type(2) or type(4)
       do ifre = 1,nfre_sh
-        S_ai(ifre) = SUM(p0(:,isurface_a)*p(:,ifre))
+        S_ai(ifre) = ABS(SUM(p0(:,isurface_a)*p(:,ifre)))**2
         !S_ai(ibasis) = SUM(CONJG(pp0(:,isurface_a))*pp(:,ibasis))
       enddo
-      S_ai = S_ai**2
+      !S_ai = S_ai**2
       SUM_S = SUM(S_ai)   ! = 1.00
-      !S_ai = CONJG(S_ai)*S_ai
       max_Sai =  MAXLOC(S_ai)
       isurface_j = max_Sai(1)
     endif
@@ -87,18 +86,19 @@ module cc_fssh
     integer , intent(in)     :: isurface_j
     integer , intent(out)    :: surface_type
     real(kind=dp),intent(in) :: EE(nfre)
-    real(kind=dp),intent(in) :: P(nfre,nfre),P0(nfre,nfre)
-    real(kind=dp),intent(in) :: DD(nfre_sh,nfre_sh,nmodes,nq)
+    complex(kind=dpc),intent(in) :: P(nfre,nfre),P0(nfre,nfre)
+    complex(kind=dpc),intent(in) :: DD(2,nfre_sh,nmodes,nq)
     real(kind=dp),intent(out):: S_bi(nfre_sh)
     real(kind=dp),intent(in) :: GG(nfre_sh)
-    real(kind=dp),intent(inout) :: VV(nmodes,nq)
+    complex(kind=dpc),intent(inout) :: VV(nmodes,nq)
     
-    real(kind=dp) :: sumvd,sumdd,sumgg,flagr,flagd,detaE
+    real(kind=dp) :: sumvd
+    real(kind=dp) :: sumdd,sumgg,flagr,flagd,detaE
     integer :: ifre,jfre,imode,iq,isurface_a,isurface_b,isurface_k
     real(kind=dp) :: max_Sbi(1)
     real(kind=dp) :: SUM_E0,SUM_E1,dSUM_E
     
-    SUM_E0 = 0.5*SUM(VV**2)+EE(isurface)
+    SUM_E0 = 0.5*SUM(VV*CONJG(VV))+EE(isurface)
     
     isurface_a = isurface
     call more_random()
@@ -112,9 +112,8 @@ module cc_fssh
           
           S_bi = 0.0
           do jfre = 1,nfre_sh
-            S_bi(jfre) = SUM(p0(:,isurface_b)*p(:,jfre))
+            S_bi(jfre) = ABS(SUM(p0(:,isurface_b)*CONJG(p(:,jfre))))**2
           enddo
-          S_bi = S_bi**2
           max_Sbi =  MAXLOC(S_bi)
           isurface_k = max_Sbi(1)
           
@@ -139,11 +138,13 @@ module cc_fssh
           sumdd = 0.0
           do iq=1,nq
             do imode=1,nmodes
-              sumvd = sumvd + VV(imode,iq)*DD(isurface_a,ifre,imode,iq) ! A
-              sumdd = sumdd + DD(isurface_a,ifre,imode,iq)**2           ! B
+              sumvd = sumvd + REAL(CONJG(VV(imode,iq))*DD(1,ifre,imode,iq)) ! A
+              sumdd = sumdd + ABS(DD(1,ifre,imode,iq))**2  ! B      
             enddo
           enddo
-          detaE = EE(isurface_a)-EE(ifre) 
+          detaE = EE(isurface_a)-EE(ifre) ! C
+          ! 2.0*detaE = 2.0*sumvd*dt+sumdd*(dt2)
+
           flagd = 1.0+2.0*detaE*sumdd/sumvd**2  
           
           if(isurface_j == isurface_a) then ! type (1) (3)
@@ -151,13 +152,13 @@ module cc_fssh
               flagd = sumvd/sumdd*(-1.0+dsqrt(flagd))
               do iq=1,nq
                 do imode=1,nmodes
-                  if(lfeedback) VV(imode,iq) = VV(imode,iq) + flagd*dd(isurface,ifre,imode,iq)
+                  if(lfeedback) VV(imode,iq) = VV(imode,iq) + flagd*dd(1,ifre,imode,iq)
                 enddo
               enddo
               isurface = isurface_k
               
               !
-              SUM_E1 = 0.5*SUM(VV**2)+EE(isurface_b)
+              SUM_E1 = 0.5*SUM(VV*CONJG(VV))+EE(isurface_b)
               dSUM_E = SUM_E1 - SUM_E0
               if(lfeedback) then
                 if(ABS(dSUM_E)>eps10) then
@@ -175,13 +176,13 @@ module cc_fssh
                 flagd = sumvd/sumdd*(-1.0+dsqrt(flagd))
                 do iq=1,nq
                   do imode=1,nmodes
-                    if(lfeedback) VV(imode,iq) = VV(imode,iq) + flagd*dd(isurface,ifre,imode,iq)
+                    if(lfeedback) VV(imode,iq) = VV(imode,iq) + flagd*dd(1,ifre,imode,iq)
                   enddo
                 enddo
                 isurface = isurface_k
                 
                 !
-                SUM_E1 = 0.5*SUM(VV**2)+EE(isurface_b)
+                SUM_E1 = 0.5*SUM(VV*CONJG(VV))+EE(isurface_b)
                 dSUM_E = SUM_E1 - SUM_E0
                 if(lfeedback) then
                   if(ABS(dSUM_E)>eps10) then
