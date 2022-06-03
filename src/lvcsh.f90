@@ -30,6 +30,7 @@ program lvcsh
   use constants,only      : ryd2eV,ry_to_fs,ryd2meV,czero,cone
   use environments,only   : environment_start,mkl_threads,set_mkl_threads,&
                             lsetthreads
+  use global_mpi
   use readinput,only      : get_inputfile
   use readscf,only        : readpwscf_out
   use readphout,only      : readph_out
@@ -100,11 +101,13 @@ program lvcsh
   !===============!
   != preparation =!
   !===============!
-  integer :: iq,imode,ifre,igamma,ik,iband,inode,icore,ierr
+  integer :: iq,imode,ifre,igamma,ik,iband,inode,icore
   real(kind=8) :: t0,t1
   !real(kind=dp) :: flagd
   character(len=9) :: cdate,ctime
   !character(len=2) :: ctimeunit
+  
+  call initmpi
   call cpu_time(t0)  
 
   call environment_start( 'LVCSH' )
@@ -602,6 +605,8 @@ program lvcsh
   close(stdout)
   
   stop
+  
+  call system("pause")
   
 end program lvcsh
 
