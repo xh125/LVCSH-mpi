@@ -53,7 +53,7 @@ program lvcsh
   use write_sh_information,only : write_initial_information
   use surfacecom,only     : methodsh,lfeedback,lit_gmnvkq,naver,nsnap,nstep,dt,&
                             pre_nstep,pre_dt,l_ph_quantum,gamma,temp,iaver,    &
-                            isnap,istep,ldecoherence,Cdecoherence,             &
+                            isnap,istep,ldecoherence,Cdecoherence,itraj,       &
                             lelecsh,lholesh,ieband_min,ieband_max,             &
                             ihband_min,ihband_max,nefre_sh,nhfre_sh,iesurface, &
                             ihsurface,iesurface_j,ihsurface_j,c_e,c_e_nk,d_e,  &
@@ -109,12 +109,12 @@ program lvcsh
   
   call initmpi
   call cpu_time(t0)  
-
   call environment_start( 'LVCSH' )
   call get_inputfile(inputfilename)
   call readepwout(epwoutname)
   if(lreadscfout) call readpwscf_out(scfoutname)
   if(lreadphout)  call readph_out(phoutname)
+  stop
   call set_subband(lelecsh,lholesh,ieband_min,ieband_max,ihband_min,ihband_max)
   !get ieband_min,ieband_max,ihband_min,ihband_max
   call allocate_hamiltonian(lelecsh,lholesh,ieband_min,ieband_max,ihband_min,ihband_max)
@@ -152,9 +152,11 @@ program lvcsh
     
     !==========================!
     != loop over realizations =!
-    !==========================!  
-    do iaver=1,naver
-      write(stdout,'(/,1X,a,I4,a)') '###### iaver=',iaver,' ######'    
+    !==========================!
+    itraj = 0
+    do iaver=1+iproc,naver,nproc
+      itraj = itraj + 1
+      write(stdout,'(/,1X,a,I4,a)') '###### itraj=',itraj,' ######'    
       call get_date_and_time(cdate,ctime)
       write(stdout,'(1X,"This trajectory start on ",A9," at ",A9)') cdate,ctime      
       !==================!
@@ -605,8 +607,6 @@ program lvcsh
   close(stdout)
   
   stop
-  
-  call system("pause")
   
 end program lvcsh
 

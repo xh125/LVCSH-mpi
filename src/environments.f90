@@ -1,6 +1,7 @@
 module environments
   use kinds, only: dp
   use global_version, only : version_number
+  use global_mpi
   use io,only : stdout,stdout_name,io_file_unit
   use date_and_times,only : get_date_and_time
   use constants, only : maxlen,constants_version_str1,constants_version_str2
@@ -23,12 +24,14 @@ module environments
     code_version = trim(adjustl(code)) // " v." // trim(adjustl(version_number))
     stdout = io_file_unit()
     stdout_name = "LVCSH.out"
-    open(unit=stdout,file=stdout_name,status='REPLACE')
+    if(ionode) open(unit=stdout,file=stdout_name,status='REPLACE')
     !call io_date(cdate,ctime)
     call mkl_get_version_string(mkl_version )
     max_threads = mkl_get_max_threads()
     
     call openning_message( code_version)
+    
+    !write(*,*) "It's ok in environment_start:",iproc,"iproc"
     
   end subroutine environment_start
 
@@ -42,40 +45,43 @@ module environments
     
     call get_date_and_time(cdate,ctime)
     
-    ! Display the logo. Use https://www.asciiarts.net/ 
-    write(stdout,'(10X,a)') "  _____  ____   ____   ______   ______   ____  ____  "
-    write(stdout,'(10X,a)') " |_   _||_  _| |_  _|.' ___  |.' ____ \ |_   ||   _| "
-    write(stdout,'(10X,a)') "   | |    \ \   / / / .'   \_|| (___ \_|  | |__| |   "
-    write(stdout,'(10X,a)') "   | |   _ \ \ / /  | |        _.____`.   |  __  |   "
-    write(stdout,'(10X,a)') "  _| |__/ | \ ' /   \ `.___.'\| \____) | _| |  | |_  "
-    write(stdout,'(10X,a)') " |________|  \_/     `.____ .' \______.'|____||____| "    
-    write(stdout,'(10X,a)') "                                                     "
-    write(stdout,'(10X,a)') "                                                     "
-    write(stdout,'(20X,a)') " Developed by XieHua at department of physic, USTC   "    
-    write(stdout,'(20X,a)') "                        Email:xh125@mail.ustc.edu.cn "    
-    write(stdout,'(a)') "                                                     "     
+    if(ionode) then
+      ! Display the logo. Use https://www.asciiarts.net/ 
+      write(stdout,'(10X,a)') "  _____  ____   ____   ______   ______   ____  ____  "
+      write(stdout,'(10X,a)') " |_   _||_  _| |_  _|.' ___  |.' ____ \ |_   ||   _| "
+      write(stdout,'(10X,a)') "   | |    \ \   / / / .'   \_|| (___ \_|  | |__| |   "
+      write(stdout,'(10X,a)') "   | |   _ \ \ / /  | |        _.____`.   |  __  |   "
+      write(stdout,'(10X,a)') "  _| |__/ | \ ' /   \ `.___.'\| \____) | _| |  | |_  "
+      write(stdout,'(10X,a)') " |________|  \_/     `.____ .' \______.'|____||____| "    
+      write(stdout,'(10X,a)') "                                                     "
+      write(stdout,'(10X,a)') "                                                     "
+      write(stdout,'(20X,a)') " Developed by XieHua at department of physic, USTC   "    
+      write(stdout,'(20X,a)') "                        Email:xh125@mail.ustc.edu.cn "    
+      write(stdout,'(a)') "                                                     "     
+      
+      !write(stdout,"(1X,A77)") repeat("=",77)
+      write(stdout,"(1X,A)") "LVCSH complied with using Intel Fortran Complier and MKL:"
+      !write(stdout,"(1X,A)") trim(adjustl(mkl_version))
+      write(stdout,"(1X,A73)") mkl_version(1:73)
+      write(stdout,"(1X,A)")   mkl_version(74:)
+      !write(stdout,"(1X,A77)") repeat("=",77)
+      write(ctmp  ,*) max_threads
+      write(stdout,*) "By default, Intel MKL uses "//trim(adjustl(ctmp))//" threads"
+      write(stdout,*) "where "//trim(adjustl(ctmp))//" is the number of physical cores on the system"
     
-    !write(stdout,"(1X,A77)") repeat("=",77)
-    write(stdout,"(1X,A)") "LVCSH complied with using Intel Fortran Complier and MKL:"
-    !write(stdout,"(1X,A)") trim(adjustl(mkl_version))
-    write(stdout,"(1X,A73)") mkl_version(1:73)
-    write(stdout,"(1X,A)")   mkl_version(74:)
-    !write(stdout,"(1X,A77)") repeat("=",77)
-    write(ctmp  ,*) max_threads
-    write(stdout,*) "By default, Intel MKL uses "//trim(adjustl(ctmp))//" threads"
-    write(stdout,*) "where "//trim(adjustl(ctmp))//" is the number of physical cores on the system"
 
-
-    call print_kind_info (stdout)
-    write(stdout,"(/,1X,A77)") repeat("=",77)
-    write(stdout,*) constants_version_str1
-    write(stdout,*) constants_version_str2
-    write(stdout,"(1X,A77)") repeat("=",77)
+      call print_kind_info (stdout)
+      write(stdout,"(/,1X,A77)") repeat("=",77)
+      write(stdout,*) constants_version_str1
+      write(stdout,*) constants_version_str2
+      write(stdout,"(1X,A77)") repeat("=",77)
+      
+      !write(stdout,"(/,1X,A77)") repeat("=",77)
+      write(stdout,'(/,1X,"Program ",A," startes on ",A9," at ",A9)') &
+                    &trim(code_version),cdate,ctime
     
-    !write(stdout,"(/,1X,A77)") repeat("=",77)
-    write(stdout,'(/,1X,"Program ",A," startes on ",A9," at ",A9)') &
-                  &trim(code_version),cdate,ctime
-    return
+    endif  
+      return
   end subroutine openning_message
   
   subroutine closing_message()

@@ -1,6 +1,8 @@
 module readinput
-  use kinds,     only : dp
+  use kinds,     only : dp,dpc
   use constants, only : maxlen
+  use global_mpi
+  use mp
   use parameters,only : calculation,verbosity,outdir,ldecoherence,Cdecoherence,lit_gmnvkq,lit_ephonon,&
                         lreadscfout,scfoutname,lreadphout,phoutname,lreadfildyn,fildyn,epwoutname,&
                         methodsh,lfeedback,naver,nstep,nsnap,pre_nstep,pre_dt,mix_thr,&
@@ -14,7 +16,7 @@ module readinput
   use utility,   only : utility_lowercase
 
   implicit none
-    integer               :: in_unit,tot_num_lines,ierr,loop,in1,in2
+    integer               :: in_unit,tot_num_lines,loop,in1,in2
     integer               :: num_lines,line_counter
     character(len=maxlen),allocatable:: in_data(:) 
     character(len=maxlen) :: dummy,ctmp
@@ -26,9 +28,15 @@ module readinput
   subroutine get_inputfile(filename)
     implicit none
     character(*),intent(in) :: filename
-    call treat_inputfile(filename)
-    call read_namelist()
+    if(ionode) then
+      call treat_inputfile(filename)
+      call read_namelist()
+    endif
+    
+    call MPI_Barrier(MPI_COMM_WORLD,ierr)
+    call bcast_namelist()
     call param_in_atomicunits()
+    
   end subroutine
 
   !=======================================!
@@ -273,6 +281,125 @@ module readinput
     
   end subroutine param_in_atomicunits
   
+  subroutine bcast_namelist()
+    use mpi
+    implicit none
+    
+    !write(*,*) "In bcast_namelist"
+    call mp_bcast(calculation   ,ionode_id)    
+    call mp_bcast(lfeedback     ,ionode_id)
+    call mp_bcast(verbosity     ,ionode_id)
+    call mp_bcast(outdir        ,ionode_id)
+    call mp_bcast(methodsh      ,ionode_id)
+    call mp_bcast(ldecoherence  ,ionode_id)
+    call mp_bcast(cdecoherence  ,ionode_id)
+    call mp_bcast(lit_gmnvkq    ,ionode_id)
+    call mp_bcast(lit_ephonon   ,ionode_id)
+    call mp_bcast(eps_acustic   ,ionode_id)
+    call mp_bcast(l_ph_quantum  ,ionode_id)
+    call mp_bcast(lelecsh       ,ionode_id)
+    call mp_bcast(lholesh       ,ionode_id)
+    call mp_bcast(lehpairsh     ,ionode_id)
+    call mp_bcast(lreadscfout   ,ionode_id)
+    call mp_bcast(lsortpes      ,ionode_id)
+    call mp_bcast(scfoutname    ,ionode_id)
+    call mp_bcast(lreadphout    ,ionode_id)
+    call mp_bcast(phoutname     ,ionode_id)
+    call mp_bcast(lreadfildyn   ,ionode_id)
+    call mp_bcast(fildyn        ,ionode_id)
+    call mp_bcast(epwoutname    ,ionode_id)
+    call mp_bcast(ieband_min    ,ionode_id)
+    call mp_bcast(ieband_max    ,ionode_id)
+    call mp_bcast(ihband_min    ,ionode_id)
+    call mp_bcast(ihband_max    ,ionode_id)
+    call mp_bcast(nefre_sh      ,ionode_id)
+    call mp_bcast(nhfre_sh      ,ionode_id)
+    call mp_bcast(naver         ,ionode_id)
+    call mp_bcast(nstep         ,ionode_id)
+    call mp_bcast(nsnap         ,ionode_id)
+    call mp_bcast(pre_nstep     ,ionode_id)
+    call mp_bcast(pre_dt        ,ionode_id) 
+    call mp_bcast(mix_thr       ,ionode_id)
+    call mp_bcast(gamma         ,ionode_id) 
+    call mp_bcast(ld_fric       ,ionode_id)
+    call mp_bcast(dt            ,ionode_id) 
+    call mp_bcast(temp          ,ionode_id)
+    call mp_bcast(init_kx       ,ionode_id) 
+    call mp_bcast(init_ky       ,ionode_id)
+    call mp_bcast(init_kz       ,ionode_id) 
+    call mp_bcast(init_eband    ,ionode_id)
+    call mp_bcast(init_hband    ,ionode_id)    
+    call mp_bcast(llaser        ,ionode_id)
+    call mp_bcast(efield_cart   ,ionode_id) 
+    call mp_bcast(w_laser       ,ionode_id)
+    call mp_bcast(fwhm          ,ionode_id) 
+    call mp_bcast(nnode         ,ionode_id)
+    call mp_bcast(ncore         ,ionode_id) 
+    call mp_bcast(savedsnap     ,ionode_id)
+    call mp_bcast(l_dEa_dQ      ,ionode_id) 
+    call mp_bcast(l_dEa2_dQ2    ,ionode_id)
+    call mp_bcast(lsetthreads   ,ionode_id) 
+    call mp_bcast(mkl_threads   ,ionode_id)
+
+       
+    !write(*,*) "iproc",iproc,"calculation  ",trim(calculation) 
+    !write(*,*) "iproc",iproc,"lfeedback    ",lfeedback     
+    !write(*,*) "iproc",iproc,"verbosity    ",trim(verbosity)  
+    !write(*,*) "iproc",iproc,"outdir       ",trim(outdir)       
+    !write(*,*) "iproc",iproc,"methodsh     ",methodsh   
+    !write(*,*) "iproc",iproc,"ldecoherence ",ldecoherence    
+    !write(*,*) "iproc",iproc,"cdecoherence ",cdecoherence 
+    !write(*,*) "iproc",iproc,"lit_gmnvkq   ",lit_gmnvkq  
+    !write(*,*) "iproc",iproc,"lit_ephonon  ",lit_ephonon 
+    !write(*,*) "iproc",iproc,"eps_acustic  ",eps_acustic    
+    !write(*,*) "iproc",iproc,"l_ph_quantum ",l_ph_quantum
+    !write(*,*) "iproc",iproc,"lelecsh      ",lelecsh     
+    !write(*,*) "iproc",iproc,"lholesh      ",lholesh    
+    !write(*,*) "iproc",iproc,"lehpairsh    ",lehpairsh     
+    !write(*,*) "iproc",iproc,"lreadscfout  ",lreadscfout
+    !write(*,*) "iproc",iproc,"lsortpes     ",lsortpes    
+    !write(*,*) "iproc",iproc,"scfoutname   ",trim(scfoutname) 
+    !write(*,*) "iproc",iproc,"lreadphout   ",lreadphout    
+    !write(*,*) "iproc",iproc,"phoutname    ",trim(phoutname)  
+    !write(*,*) "iproc",iproc,"lreadfildyn  ",lreadfildyn 
+    !write(*,*) "iproc",iproc,"fildyn       ",trim(fildyn)     
+    !write(*,*) "iproc",iproc,"epwoutname   ",trim(epwoutname)    
+    !write(*,*) "iproc",iproc,"ieband_min   ",ieband_min 
+    !write(*,*) "iproc",iproc,"ieband_max   ",ieband_max  
+    !write(*,*) "iproc",iproc,"ihband_min   ",ihband_min 
+    !write(*,*) "iproc",iproc,"ihband_max   ",ihband_max    
+    !write(*,*) "iproc",iproc,"nefre_sh     ",nefre_sh   
+    !write(*,*) "iproc",iproc,"nhfre_sh     ",nhfre_sh    
+    !write(*,*) "iproc",iproc,"naver        ",naver      
+    !write(*,*) "iproc",iproc,"nstep        ",nstep         
+    !write(*,*) "iproc",iproc,"nsnap        ",nsnap      
+    !write(*,*) "iproc",iproc,"pre_nstep    ",pre_nstep  
+    !write(*,*) "iproc",iproc,"pre_dt       ",pre_dt     
+    !write(*,*) "iproc",iproc,"mix_thr      ",mix_thr       
+    !write(*,*) "iproc",iproc,"gamma        ",gamma      
+    !write(*,*) "iproc",iproc,"ld_fric      ",ld_fric     
+    !write(*,*) "iproc",iproc,"dt           ",dt         
+    !write(*,*) "iproc",iproc,"temp         ",temp         
+    !write(*,*) "iproc",iproc,"init_kx      ",init_kx      
+    !write(*,*) "iproc",iproc,"init_ky      ",init_ky      
+    !write(*,*) "iproc",iproc,"init_kz      ",init_kz      
+    !write(*,*) "iproc",iproc,"init_eband   ",init_eband   
+    !write(*,*) "iproc",iproc,"init_hband   ",init_hband   
+    !write(*,*) "iproc",iproc,"llaser       ",llaser       
+    !write(*,"(1X,A5,7X,I5,1X,A10,3(1X,F12.5))") "iproc",iproc,"efield_cart  ",efield_cart  
+    !write(*,*) "iproc",iproc,"w_laser      ",w_laser      
+    !write(*,*) "iproc",iproc,"fwhm         ",fwhm         
+    !write(*,*) "iproc",iproc,"nnode        ",nnode        
+    !write(*,*) "iproc",iproc,"ncore        ",ncore            
+    !write(*,*) "iproc",iproc,"savedsnap    ",savedsnap    
+    !write(*,*) "iproc",iproc,"l_dEa_dQ     ",l_dEa_dQ     
+    !write(*,*) "iproc",iproc,"l_dEa2_dQ2   ",l_dEa2_dQ2   
+    !write(*,*) "iproc",iproc,"lsetthreads  ",lsetthreads  
+    !write(*,*) "iproc",iproc,"mkl_threads  ",mkl_threads  
+    
+    !call MPI_Barrier(MPI_COMM_WORLD,ierr)
+    
+  end subroutine bcast_namelist
   
   function get_ik(kx,nkx)
     use kinds,only : dp

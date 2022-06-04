@@ -8,8 +8,10 @@ module global_mpi
   ! job_path   The absolute path of the folder you submit the job. This wll be got from pwd()
   ! work_path  The current working path for each processor. If DINT_TMP_DIR is defined, 
   logical :: ionode
+  integer :: ionode_id
   logical :: llinux
-  integer :: filelive
+  logical :: filelive,dirlive
+  integer :: ver_mpi,subver_mpi
   
   contains
   
@@ -23,15 +25,18 @@ module global_mpi
     call MPI_COMM_RANK(MPI_COMM_WORLD,iproc,ierr)
     call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,ierr)
     write(iproc_str,"(i0.3)") iproc
+    ionode_id = 0
     if(iproc == 0) ionode = .true.
+    call MPI_get_version(ver_mpi,subver_mpi,ierr)
+    !if(ionode) write(*,*) "MPI Version:",ver_mpi,".",subver_mpi
     
     !get the job_path
     call getcwd(job_path)
     !call MPI_Barrier(MPI_COMM_WORLD,ierr)
-    call findsystem(job_path,llinux)
-    !call MPI_Bcast(llinux,1,MPI_logical,ionode,MPI_COMM_WORLD,ierr)
+    if(ionode) call findsystem(job_path,llinux)
+    call MPI_Bcast(llinux,1,MPI_logical,ionode_id,MPI_COMM_WORLD,ierr)
     
-    write(*,*) "Job direct is:",job_path
+    !if(ionode) write(*,*) "Job direct is:",job_path
     
     !creat work_path
     if(llinux) then
@@ -40,11 +45,20 @@ module global_mpi
       work_path = trim(job_path)//"\"//iproc_str
     endif
     
-    inquire(file=trim(adjustl(work_path)),exist=filelive)
-    if(filelive == 0) call system("mkdir "//trim(work_path))
-    write(*,*) "Work direct for ",iproc," processor is :",work_path
+    !inquire(file=trim(adjustl(work_path)),exist=filelive)
+    inquire(directory=trim(adjustl(work_path)),exist=dirlive)
+    !write(*,*) "dirlive:",dirlive
+    if(.not. dirlive) call system("mkdir "//trim(work_path))
+    !write(*,*) "Work direct for ",iproc," processor is :",work_path
     
   end subroutine initmpi
+  
+  subroutine endmpi
+    implicit none
+    
+    call mpi_finalize(ierr)
+    
+  end subroutine endmpi
   
   subroutine findsystem(job_path,llinux)
     implicit none

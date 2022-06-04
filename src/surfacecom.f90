@@ -1,11 +1,11 @@
 module surfacecom
   use kinds,only : dp,dpc
   implicit none
-  integer :: iaver
+  integer :: iaver,itraj
   integer :: isnap,istep
   integer :: iesurface,ihsurface,iesurface_j,ihsurface_j,&
              esurface_type,hsurface_type
-  integer         :: naver
+  integer         :: naver,ntraj
   integer         :: nstep
   integer         :: nsnap
   integer         :: pre_nstep ! only phonons dynamica nstep before non-diabatic dynamica.

@@ -1,3 +1,5 @@
+#define __MPI
+
 module io
   !! Module to handle operations related to file input and output.
   use kinds     ,only : dp
@@ -119,15 +121,22 @@ contains
   !========================================
   !! Abort the code giving an error message 
   !========================================
-
+#if defined __MPI 		
+    use global_mpi
+#endif
     implicit none
     character(len=*), intent(in) :: error_msg
-
+#if defined __MPI 		
+  if(ionode) then
+#endif
     write(stdout,*)  'Exiting.......' 
     write(stdout, '(1x,a)') trim(error_msg)    
     close(stdout)    
     write(*, '(1x,a)') trim(error_msg)
     write(*,'(A)') "Error: examine the output/error file for details" 
+#if defined __MPI 		
+  endif
+#endif    
     STOP
          
   end subroutine io_error

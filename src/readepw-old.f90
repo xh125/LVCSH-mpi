@@ -1,10 +1,6 @@
-#define __MPI
+#define __MPI 
 
 module readepw
-#if defined __MPI 		
-  use global_mpi
-#endif
-
   use kinds ,only :dp
   use constants,only : maxlen,amu_ry,rytoev,ryd2mev,ryd2eV,cone,czero,ci
   use io, only : io_file_unit,open_file,close_file,findkword,findkline,stdout,io_error,msg
@@ -97,6 +93,7 @@ module readepw
   contains
 	
   subroutine readepwout(fepwout)
+    use global_mpi
     use elph2,    only : nqtotf,xqf,nbndfst,iminusq,iminusk
     use grid,     only : loadqmesh,kq2k_map,loadkmesh_fullBZ,get_ikq
     use modes,    only : nmodes
@@ -104,6 +101,7 @@ module readepw
     use lr_symm_base,only : l_nsymq_le_1,minus_q,nsymq
     use gvect,only : gcutm,ngm
     use gvecs,only : gcutms,ngms,doublegrid
+    use mp
     implicit none
     character(len=*) ,intent(in) :: fepwout
     integer :: unitepwout
@@ -112,8 +110,6 @@ module readepw
     real(kind=dp) :: xiq(3),xik(3)
 		
 		integer :: iverbosity
-    integer :: ierr
-    !! error status
     logical :: alive
     character(len=4) :: spin_component
     INTEGER :: ispinw
@@ -144,22 +140,17 @@ module readepw
 
 #if defined __MPI 		
     if(ionode) then
-#endif		
+#endif
+    write(*,*) trim(fepwout)
     inquire(file=trim(adjustl(fepwout)),exist=alive)
+    write(*,*) "File:",trim(fepwout)," is live:",alive
     if(.NOT. alive) then
       call io_error("Error:EPW output file "//trim(adjustl(fepwout))//" doesn't exist.")
     else   
       unitepwout = io_file_unit()
       call open_file(fepwout,unitepwout)
     endif
-#if defined __MPI 		
-    endif
-#endif
-
-
-#if defined __MPI 		
-    if(ionode) then
-#endif    
+    
     call findkword(unitepwout,"Program")
     read(unitepwout,"(A)") epw_info
     write(stdout,"(/,A)") trim(epw_info)
@@ -232,13 +223,40 @@ module readepw
 				& "reciprocal axes: (cart. coord. in units 2 pi/a_0)",/, &
 				&         3(15x,"b(",i1,") = (",3f8.4," )  ",/ ) )') &
 				& (apol, (bg(ipol, apol), ipol = 1, 3), apol = 1, 3)
+#if defined __MPI 
+    end if !(ionode)
+#endif
 
+#if defined __MPI     
+    call mp_bcast(ibrav   ,ionode_id)
+    call mp_bcast(alat    ,ionode_id)
+    call mp_bcast(omega   ,ionode_id)
+    call mp_bcast(nat     ,ionode_id)
+    call mp_bcast(ntyp    ,ionode_id)
+    call mp_bcast(ecutwfc ,ionode_id)
+    call mp_bcast(ecutrho ,ionode_id)
+    call mp_bcast(dft     ,ionode_id)
+    call mp_bcast(iexch   ,ionode_id)
+    call mp_bcast(icorr   ,ionode_id)
+    call mp_bcast(igcx    ,ionode_id)
+    call mp_bcast(igcc    ,ionode_id)
+    call mp_bcast(inlc    ,ionode_id)
+    call mp_bcast(imeta   ,ionode_id)
+    call mp_bcast(imetac  ,ionode_id)
+#endif    
     !
     ! Description of the atoms inside the unit cell
     !
-		read(unitepwout,"(/,A)") ctmp
-		read(unitepwout,"(/,A)") ctmp
-		read(unitepwout,"(/,A)") ctmp
+#if defined __MPI 
+    if(ionode) then
+#endif
+    read(unitepwout,"(/,A)") ctmp
+    read(unitepwout,"(/,A)") ctmp
+    read(unitepwout,"(/,A)") ctmp
+#if defined __MPI 
+    endif !(ionode)
+#endif
+    
 		if( nat /= 0) then
 			if(.not. allocated(iatm)) then 
 				allocate(iatm(nat),stat=ierr,errmsg=msg)
@@ -265,12 +283,18 @@ module readepw
 				tau = 0.0
 			endif
 			
+      if(ionode) then
 			do iat =1 ,nat
 				read(unitepwout,"(7X,2x,5x,1X,A3,2X,F8.4,14X,3f11.5)") iatm(iat),iamass(iat),(tau(ipol,iat),ipol=1,3)
 			enddo
+      endif !(ionode)
 			! atoms mass in "Rydberg" atomic units
 			iamass = iamass * amu_ry
-	
+      call mp_bcast(iatm,ionode_id)
+      call mp_bcast(iamass,ionode_id)
+      call mp_bcast(tau,ionode_id)
+      
+      if(ionode) then
 			WRITE(stdout, '(/, 5x,"Atoms inside the unit cell: ")')
 			WRITE(stdout, '(/,3x,"Cartesian axes")')
 			WRITE(stdout, '(/,5x,"site n.  atom      mass ", &
@@ -280,13 +304,18 @@ module readepw
 					&                              ") = (",3f11.5,"  )")')  &
 					& (iat,iatm(iat), amass(iat)/amu_ry, iat,  &
 					& (tau(ipol,iat), ipol = 1, 3), iat = 1, nat)
+      endif !(ionode)
 		else
-			read(unitepwout,*)
+			if(ionode) read(unitepwout,*)
 		endif
+    
     
     !
     ! Description of symmetries
     !
+#if defined __MPI     
+    if(ionode) then
+#endif
     read(unitepwout,*)
     read(unitepwout,"(A)") ctmp
     if(ctmp(6:17)=="No symmetry!") then
@@ -314,10 +343,17 @@ module readepw
 		else
 			backspace(unitepwout)
 	  endif
-		
+#if defined __MPI 		
+    endif !(ionode)
+    call mp_bcast(iverbosity,ionode_id)
+#endif
+    
     !
     !     Description of the reciprocal lattice vectors
-    !    
+    ! 
+#if defined __MPI 
+    if(ionode) then
+#endif
     call findkline(unitepwout,"G cutoff =",6,15)
     read(unitepwout,"(15X,f10.4,3X,i7)") gcutm,ngm
     read(unitepwout,"(A)") ctmp
@@ -328,6 +364,9 @@ module readepw
     else
       doublegrid = .false.
     endif
+#if defined __MPI     
+    endif !(ionode)
+#endif
 
     !IF (.NOT.lgauss) THEN
     !  WRITE(stdout, '(5x,"number of k points=",i5)') nkstot
@@ -338,6 +377,9 @@ module readepw
     !ENDIF
 
     !call findkline(unitepwout,"number of k points=",6,24)
+#if defined __MPI 
+    if(ionode) then
+#endif
     read(unitepwout,"(A)") ctmp
     backspace(unit=unitepwout)
     if(len(trim(adjustl(ctmp)))==24) then
@@ -348,6 +390,13 @@ module readepw
       lgauss = .true.
       read(unitepwout,"(24X,I5,23X,f8.4,14X,i3)") nkstot,degauss,ngauss
     endif
+#if defined __MPI 
+    endif!(ionode)
+    call mp_bcast(nkstot,ionode_id)
+    call mp_bcast(degauss,ionode_id)
+    call mp_bcast(ngauss,ionode_id)
+#endif
+
     
     if(.not. allocated(xk_all)) then 
       allocate(xk_all(3,nkstot),stat=ierr,errmsg=msg)
@@ -373,19 +422,34 @@ module readepw
     !read(unitepwout,"(A)") ctmp
     !backspace(unitepwout)
 		if(iverbosity == 1 .or. nkstot < 10000) then
+#if defined __MPI 
+    if(ionode) then
+#endif
       read(unitepwout,*)
       do ik=1,nkstot
         read(unitepwout,"(20X,3f12.7,7X,f12.7)") &
              (xk_all(ipol, ik) , ipol = 1, 3), wk(ik)
       enddo
+#if defined __MPI 
     endif
+    call mp_bcast(xk_all,ionode_id)
+    call mp_bcast(wk,ionode_id)
+#endif
+    endif
+    
     
     !read(unitepwout,"(/23X,A)") ctmp
     !backspace(unitepwout)
     !backspace(unitepwout)
 		if(iverbosity ==1) then
     !if(ctmp == "cryst. coord.") then
+#if defined __MPI 
+    if(ionode) then
+#endif    
       read(unitepwout,"(/23X,A)") ctmp
+#if defined __MPI 
+    endif
+#endif 
       if(.not. allocated(xkg_all)) then 
         allocate(xkg_all(3,nkstot),stat=ierr,errmsg=msg)
 				if(ierr /= 0) call io_error(msg)
@@ -394,10 +458,19 @@ module readepw
         xkg_all = 0.0
       endif
       
+#if defined __MPI 
+    if(ionode) then
+#endif       
       do ik=1,nkstot
         read(unitepwout,"(20X,3f12.7,7X,f12.7)") (xkg_all(ipol,ik),ipol=1,3),wk(ik)
       enddo
+#if defined __MPI 
     endif
+    call mp_bcast(xkg_all,ionode_id)
+    call mp_bcast(wk,ionode_id)
+#endif 
+    endif
+    
     
     !CALL print_ps_info()
     !End call epw_summary()
@@ -409,6 +482,9 @@ module readepw
     !WRITE(stdout, '(a, i2, a, i2, a, i2, a)') "     Wannierization on ", nkc1, " x ", nkc2, " x ", nkc3 , " electronic grid"
     !WRITE(stdout, '(5x, a)') REPEAT("-",67)
     !
+#if defined __MPI 
+    if(ionode) then
+#endif 
     call findkline(unitepwout,"-------------------------------------------------------------------",6,72)
     read(unitepwout,"(/,A)") ctmp
 		if(ctmp(6:19)=="Wannierization") then
@@ -456,13 +532,27 @@ module readepw
 				ikstart = 1
 				ikstop  = nkstot
 				iknum   = nkstot      
-			end if 
+			end if
+    endif
+#if defined __MPI 
+    endif
+    call mp_bcast(spin_component,ionode_id)
+    call mp_bcast(noncolin,ionode_id)
+    call mp_bcast(ispinw,ionode_id)
+    call mp_bcast(ikstart,ionode_id)
+    call mp_bcast(ikstop,ionode_id)
+    call mp_bcast(iknum,ionode_id)
+#endif 
+    write(*,*) "iproc:",iproc,"line 546 successfull"
 	
-			!!
-			!WRITE(stdout, *)
-			!WRITE(stdout, *) '    Initializing Wannier90'
-			!WRITE(stdout, *)
-			!!
+    !!
+    !WRITE(stdout, *)
+    !WRITE(stdout, *) '    Initializing Wannier90'
+    !WRITE(stdout, *)
+    !!
+#if defined __MPI 
+    if(ionode) then
+#endif 
 			read(unitepwout,"(//,A)")
 			
 			! CALL setup_nnkp()
@@ -507,47 +597,71 @@ module readepw
 												(center_w(ipol,iw),ipol=1,3),l_w(iw),mr_w(iw)
 				enddo
 			endif
-				
+#if defined __MPI 
+    endif
+    call mp_bcast(scdm_proj,ionode_id)
+    call mp_bcast(n_proj,ionode_id)
+    call mp_bcast(n_wannier,ionode_id)
+#endif
+    write(*,*) "number of wannier=",n_wannier
+    write(*,*) "iproc:",iproc,"line 606 successfull"
 	
-			!WRITE(stdout, '(/, "      - Number of bands is (", i3, ")")') num_bands
-			!call findkline(unitepwout,"      - Number of bands is (",1,28)
-			read(unitepwout,"(/,28X,i3)") num_bands      ! the num_bands from DFT pass to Wanner90,defined in wannierEPW
-			read(unitepwout,"(34X,i3)")   nbnd           ! the total bands of DFT,is define in pwcom.f90 wvfct
-			read(unitepwout,"(37X,i3)")   nexband        ! number of excluded bands,defined in wannierEPW
-																									! ref: exclude_bands in wannier90:User Guide
-			read(unitepwout,"(40X,i3)")   n_wannier      ! number of wannier functions,as Wanner90 num_wann,defined in wannierEPW
-			nbndsub = n_wannier
-			nbndskip = nexband
-			
-			if((nbnd-nexband)/=num_bands) &
-			call errore('setup_nnkp', ' something wrong with num_bands', 1)
-			
-			!!
-			!IF (.NOT. scdm_proj) WRITE(stdout, *) '     - All guiding functions are given '
-			!!
-			read(unitepwout,*)
-			!!
-			!! Read data about neighbours
-			!WRITE(stdout, *)
-			!WRITE(stdout, *) ' Reading data about k-point neighbours '
-			!WRITE(stdout, *)    
-			read(unitepwout,*)
-			read(unitepwout,*)
-			read(unitepwout,*)
-			!!
-			!WRITE(stdout, *) '     - All neighbours are found '
-			!WRITE(stdout, *)
-			!!
-			read(unitepwout,*)
-			read(unitepwout,*)
-			
-			!END subroutine setup_nnkp
-			
-			!IF (scdm_proj) THEN
-			!  CALL compute_amn_with_scdm()
-			!ELSE
-			!  CALL compute_amn_para()
-			!ENDIF
+	  !WRITE(stdout, '(/, "      - Number of bands is (", i3, ")")') num_bands
+		!call findkline(unitepwout,"      - Number of bands is (",1,28)
+#if defined __MPI 
+    if(ionode) then
+#endif 
+		read(unitepwout,"(/,28X,i3)") num_bands      ! the num_bands from DFT pass to Wanner90,defined in wannierEPW
+		read(unitepwout,"(34X,i3)")   nbnd           ! the total bands of DFT,is define in pwcom.f90 wvfct
+		read(unitepwout,"(37X,i3)")   nexband        ! number of excluded bands,defined in wannierEPW
+																								! ref: exclude_bands in wannier90:User Guide
+		read(unitepwout,"(40X,i3)")   n_wannier      ! number of wannier functions,as Wanner90 num_wann,defined in wannierEPW
+		nbndsub = n_wannier
+		nbndskip = nexband
+		
+		if((nbnd-nexband)/=num_bands) &
+		call errore('setup_nnkp', ' something wrong with num_bands', 1)
+		
+		!!
+		!IF (.NOT. scdm_proj) WRITE(stdout, *) '     - All guiding functions are given '
+		!!
+		read(unitepwout,*)
+		!!
+		!! Read data about neighbours
+		!WRITE(stdout, *)
+		!WRITE(stdout, *) ' Reading data about k-point neighbours '
+		!WRITE(stdout, *)    
+		read(unitepwout,*)
+		read(unitepwout,*)
+		read(unitepwout,*)
+		!!
+		!WRITE(stdout, *) '     - All neighbours are found '
+		!WRITE(stdout, *)
+		!!
+		read(unitepwout,*)
+		read(unitepwout,*)
+    write(*,*) "iproc:",iproc,"line 642 successfull"	
+		!END subroutine setup_nnkp
+#if defined __MPI 
+    endif
+    call mp_bcast(num_bands,ionode_id)
+    write(*,*) "iproc:",iproc,"line 647 successfull"
+    call mp_bcast(nbnd,ionode_id)
+    call mp_bcast(nexband,ionode_id)
+    call mp_bcast(n_wannier,ionode_id)
+    call mp_bcast(nbndsub,ionode_id)
+    call mp_bcast(nbndskip,ionode_id)
+#endif
+    write(*,*) "iproc:",iproc,"line 653 successfull"
+    
+		!IF (scdm_proj) THEN
+		!  CALL compute_amn_with_scdm()
+		!ELSE
+		!  CALL compute_amn_para()
+		!ENDIF
+#if defined __MPI 
+    if(ionode) then
+#endif 
 			if(scdm_proj) then
 				!CALL compute_amn_with_scdm()
 				read(unitepwout,"(9x,a/)") scdm_entanglement
@@ -610,44 +724,65 @@ module readepw
 					
 				!end subroutine compute_amn_para
 			endif
+#if defined __MPI 
+    endif
+    call mp_bcast(scdm_entanglement,ionode_id)
+    call mp_bcast(scdm_mu,ionode_id)
+    call mp_bcast(scdm_sigma,ionode_id)
+    call mp_bcast(count_piv_spin,ionode_id)
+    call mp_bcast(itmp,ionode_id)
+    call mp_bcast(iknum,ionode_id)
+    call mp_bcast(npool,ionode_id)
+    call mp_bcast(nks,ionode_id)
+#endif 
 			
 			!CALL compute_mmn_para()
 			!!
 			!WRITE(stdout, *)
 			!WRITE(stdout, '(5x, a)') 'MMN'
 			!!
-			read(unitepwout,*)
-			read(unitepwout,"(A)") ctmp
+#if defined __MPI 
+    if(ionode) then
+#endif 
+		read(unitepwout,*)
+		read(unitepwout,"(A)") ctmp
 !#if defined(__MPI)
 !    WRITE(stdout, '(6x, a, i5, a, i4, a)') 'k points = ', iknum, ' in ', npool, ' pools'
 !#endif
-			read(unitepwout, '(17x,  i5, 4x, i4)')  iknum,  npool
-			do ik=1,nks
-				!read(unitepwout, '(5x, i8, " of ", i4, a)') ik , nks, ' on ionode'
-				read(unitepwout,*)
-			enddo
-			!
-			!WRITE(stdout, '(5x, a)') 'MMN calculated'
-			!    
-			read(unitepwout,"(A)") ctmp
-			!end subroutine compute_mmn_para
-			
-			!CALL write_band()
-			!!
-			!WRITE(stdout, *)
-			!WRITE(stdout, *) '    Running Wannier90'
+		read(unitepwout, '(17x,  i5, 4x, i4)')  iknum,  npool
+		do ik=1,nks
+			!read(unitepwout, '(5x, i8, " of ", i4, a)') ik , nks, ' on ionode'
 			read(unitepwout,*)
-			read(unitepwout,"(A)") ctmp
-			
-			!!
-			!CALL run_wannier()    
-			read(unitepwout,"(A)") ctmp
-			backspace(unitepwout)
-			if(ctmp(6:46)=="Reading external electronic eigenvalues (") then
-				eig_read = .true.
-				read(unitepwout,'(46x, i5, 1x, i5)')  nbnd,  nkstot
-			endif
-			
+		enddo
+		!
+		!WRITE(stdout, '(5x, a)') 'MMN calculated'
+		!    
+		read(unitepwout,"(A)") ctmp
+		!end subroutine compute_mmn_para
+		
+		!CALL write_band()
+		!!
+		!WRITE(stdout, *)
+		!WRITE(stdout, *) '    Running Wannier90'
+		read(unitepwout,*)
+		read(unitepwout,"(A)") ctmp
+		
+		!!
+		!CALL run_wannier()    
+		read(unitepwout,"(A)") ctmp
+		backspace(unitepwout)
+		if(ctmp(6:46)=="Reading external electronic eigenvalues (") then
+			eig_read = .true.
+			read(unitepwout,'(46x, i5, 1x, i5)')  nbnd,  nkstot
+		endif
+#if defined __MPI 
+    endif
+    call mp_bcast(nbnd,ionode_id)
+    call mp_bcast(nkstot,ionode_id)
+#endif 
+    write(*,*) "compute_mmn_para successfull"
+    
+    
 			!
 			! output the results of the wannierization
 			!
@@ -661,7 +796,11 @@ module readepw
 			!WRITE(stdout, *)  
 	
 			!if( allocated(wann_centers) == .flase. ) then
-				allocate(wann_centers(3,n_wannier),stat=ierr,errmsg=msg)
+
+#if defined __MPI 
+    if(ionode) then
+#endif       
+        allocate(wann_centers(3,n_wannier),stat=ierr,errmsg=msg)
 				if(ierr /=0) then
 					call errore('readepw','Error allocating wann_centers',1) 
 					call io_error(msg)
@@ -729,7 +868,7 @@ module readepw
 			!!------------------------------------------------------------
 			!END SUBROUTINE wann_run
 			!------------------------------------------------------------    
-    endif
+    
 
     !! Setup Bravais lattice symmetry
     !WRITE(stdout,'(5x,a,i3)') "Symmetries of Bravais lattice: ", nrot
@@ -1386,10 +1525,9 @@ module readepw
     if (.not. vme) vmef = 2.0*vmef  !in unit of Ryd*bohr   
     
     write(stdout,"(5X,A)") "Reading epw.out successfull!"
-
-#if defined __MPI 		
+#if defined __MPI 
     endif
-#endif
+#endif 
     
   end subroutine readepwout
   
