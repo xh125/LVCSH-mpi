@@ -2,6 +2,7 @@
 module getwcvk
 #if defined __MPI 		
   use global_mpi
+  use mp
 #endif
   use kinds,only    : dp,dpc
   use lasercom,only : W_cvk,efield_cart
@@ -12,7 +13,7 @@ module getwcvk
   !ref : 2 <固体物理> (9-29)(9-31)
   subroutine get_Wcvk(ihband_min,ieband_max,fwhm,w_center)
     !得到光激发下垂直跃迁的跃迁几率
-    use elph2,only  : vmef,nkf  !vmef(3,nbndsub,nbndsub,nkf)
+    use elph2,only  : vmef,nktotf  !vmef(3,nbndsub,nbndsub,nktotf)
     use readepw,only : etf,icbm
     use io,only : stdout
     use constants,only : ryd2eV,ry_to_fs
@@ -32,16 +33,27 @@ module getwcvk
     integer :: ierr
     integer :: ivbm
     
+    !write(procout,*) "ihband_min =",ihband_min
+    !write(procout,*) "ieband_max =",ieband_max
+    !write(procout,*) "fwhm       =",fwhm
+    !write(procout,*) "w_center   =",w_center
+    !write(procout,*) "icbm       =",icbm
+    !write(procout,*) "nktotf     =",nktotf
+    !write(procout,*) "efiled     =",efield_cart
+    !write(procout,*) "vmef       =",vmef
+    
+    !call mp_bcast(etf,ionode_id)
+    call mp_bcast(vmef,ionode_id)
     ivbm = icbm-1
     
-    allocate(W_cvk(icbm:ieband_max,ihband_min:ivbm,nkf),stat=ierr)
+    allocate(W_cvk(icbm:ieband_max,ihband_min:ivbm,nktotf),stat=ierr)
     if(ierr /=0) call errore('getmcvk','Error allocating W_cvk',1)
     
     !ref : 1 S. Butscher et al., Physical Review B 72 (2005) 
     !ref : 1 S. Fernandez-Alberti et al., The Journal of Chemical Physics 137 (2012) 
     fwhm_2T2 = fwhm**2.0/4.0*log(2.0)
     W_cvk = 0.0
-    do ik=1,nkf
+    do ik=1,nktotf
       do ibnd=ihband_min,ivbm
         do jbnd=icbm,ieband_max
           Evmef = 0.0
@@ -50,11 +62,14 @@ module getwcvk
             Evmef =Evmef+ (efield_cart(ipol)*(vmef(ipol,jbnd,ibnd,ik)))
           enddo
           fcw = f_w(E_mnk,w_center,fwhm_2T2)
-          W_cvk(jbnd,ibnd,ik) = REAL(Evmef*CONJG(Evmef))*fcw
+          W_cvk(jbnd,ibnd,ik) = fcw*(ABS(Evmef))**2
         enddo
       enddo
     enddo  
     
+    write(procout,*) "vmef:", vmef
+    write(procout,*) "W_cvk =",W_cvk
+    write(procout,*) "SUM(W_cvk) = ",SUM(W_cvk)
     !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
     !% Write laser information            %!
     !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
@@ -66,6 +81,7 @@ module getwcvk
     write(stdout,"(5X,A38,F12.7,A4)")  "The full width at half-maximum:fwhm = ",fwhm*ry_to_fs," fs."    
 #if defined __MPI 		
     endif
+    !call mp_bcast(W_cvk,ionode_id)
     write(procout,"(/,5X,A)") "In the laser obsorbtion,the Pump laser as follow:"
     write(procout,"(5X,A22,F12.7,A4)")  "Laser centred energy :",w_center*ryd2eV," eV."
     write(procout,"(5X,A38,F12.7,A4)")  "The full width at half-maximum:fwhm = ",fwhm*ry_to_fs," fs."     

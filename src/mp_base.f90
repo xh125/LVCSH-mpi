@@ -123,20 +123,20 @@ END SUBROUTINE mp_synchronize
 #endif
    ! 
     IF( n <= msgsiz_max ) THEN
-       CALL MPI_BCAST( array, n, MPI_COMPLEX, root, gid, ierr )
+       CALL MPI_BCAST( array, n, MPI_DOUBLE_COMPLEX, root, gid, ierr )
        IF( ierr /= 0 ) CALL errore( ' bcast_real ', ' error in mpi_bcast 1 ', ierr )
     ELSE
        nblk   = n / msgsiz_max
        blksiz = msgsiz_max
        DO iblk = 1, nblk
           istart = (iblk-1)*msgsiz_max + 1
-          CALL MPI_BCAST( array( istart ), blksiz, MPI_COMPLEX, root, gid, ierr )
+          CALL MPI_BCAST( array( istart ), blksiz, MPI_DOUBLE_COMPLEX, root, gid, ierr )
           IF( ierr /= 0 ) CALL errore( ' bcast_real ', ' error in mpi_bcast 2 ', ierr )
        END DO
        blksiz = MOD( n, msgsiz_max )
        IF( blksiz > 0 ) THEN
           istart = nblk * msgsiz_max + 1
-          CALL MPI_BCAST( array( istart ), blksiz, MPI_COMPLEX, root, gid, ierr )
+          CALL MPI_BCAST( array( istart ), blksiz, MPI_DOUBLE_COMPLEX, root, gid, ierr )
           IF( ierr /= 0 ) CALL errore( ' bcast_real ', ' error in mpi_bcast 3 ', ierr )
        END IF
     END IF

@@ -1394,7 +1394,6 @@ module readepw
     allocate(etf(ibndmin:ibndmax,1:nktotf),stat=ierr,errmsg=msg)
     if(ierr /=0) then
 			call errore('readepw','Error allocating etf',1)
-			call io_error(msg)
 		endif
 		etf = 0.0d0
     
@@ -1432,16 +1431,24 @@ module readepw
     enddo
     !read(unitepwout,"(A)") ctmp
     write(stdout,"(/5x,A,I12)") "Number of phonon modes (nmodes) =",nmodes    
+#if defined __MPI 		
+    endif
+    call mp_bcast(ibndmin,ionode_id)
+    call mp_bcast(ibndmax,ionode_id)
+    call mp_bcast(nmodes,ionode_id)
+    call mp_bcast(nktotf,ionode_id)
+    call mp_bcast(nqtotf,ionode_id)
+#endif  
 
     !! Fine mesh set of g-matrices.  It is large for memory storage
     !ALLOCATE(epf17(nbndfst, nbndfst, nmodes, nkf), STAT = ierr)
     allocate(gmnvkq(ibndmin:ibndmax,ibndmin:ibndmax,1:nmodes,1:nktotf,1:nqtotf),stat=ierr,errmsg=msg)
     if(ierr /=0) then
 			call errore('readepw','Error allocating gmnvkq',1)
-			call io_error(msg)
 		endif
 		ram = real_size*(ibndmax-ibndmin+1)**2*nmodes*nktotf*nqtotf
 		call print_memory("gmnvkq",ram)		
+
 		
     !!
     !! wf are the interpolated eigenfrequencies
@@ -1456,11 +1463,12 @@ module readepw
     allocate(wf(nmodes,nqtotf),stat=ierr,errmsg=msg)
     if(ierr /=0) then
 			call errore('readepw','Error allocating wf',1)                
-			call io_error(msg)
 		endif
 		wf = 0.0    
     
-
+#if defined __MPI 		
+    if(ionode) then
+#endif  
     ! 1160 DO iqq = iq_restart, totq
     do iq=1,totq
       !call print_gkk(iq)
@@ -1635,11 +1643,11 @@ module readepw
       vme= .false.
     endif
     allocate(vmef(1:3,ibndmin:ibndmax,ibndmin:ibndmax,1:nktotf),stat=ierr,errmsg=msg)
-		if(ierr /= 0) call io_error(msg)
+		if(ierr /= 0) call errore("readepw",trim(msg),1)
 		ram = complex_size*3*(ibndmax-ibndmin+1)**2*nktotf
-		call print_memory("vmef",ram)
+		!call print_memory("vmef",ram)
 		
-    do ik=1,nkf
+    do ik=1,nktotf
       read(unitepwout,"(//)")
       do ibnd=ibndmin,ibndmax
         do jbnd=ibndmin,ibndmax
@@ -1661,6 +1669,7 @@ module readepw
     call mp_bcast(ebndmin,ionode_id)
     call mp_bcast(ebndmax,ionode_id)
     call mp_bcast(nktotf,ionode_id)
+    call mp_bcast(nkf,ionode_id)
     call mp_bcast(nqtotf,ionode_id)
     call mp_bcast(nmodes,ionode_id)
     call mp_bcast(ecbmin,ionode_id)

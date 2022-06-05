@@ -103,8 +103,8 @@ module initialsh
     use epwcom,only : nkf1,nkf2,nkf3
     use readepw,only : etf,icbm,xkf
     use surfacecom,only : ieband_min,ieband_max,ihband_min,ihband_max,c_e_nk,c_h_nk
-    use elph2,only  : vmef,ibndmin,ibndmax,nbndfst,nkf  !vmef(3,nbndsub,nbndsub,nkf)
-    use getwcvk,only: W_cvk !(W_cvk(icbm:ieband_max,ihband_min:ivbm,nkf)
+    use elph2,only  : vmef,ibndmin,ibndmax,nbndfst,nktotf  !vmef(3,nbndsub,nbndsub,nktotf)
+    use getwcvk,only: W_cvk !(W_cvk(icbm:ieband_max,ihband_min:ivbm,nktotf)
     use constants,only :ryd2eV
     use io,only : stdout
     implicit none
@@ -119,15 +119,17 @@ module initialsh
     real(kind=dp) :: flagr,flagd,W_cvk_all
     real(kind=dp) :: obsorbEn
     integer :: ivbm,ipol
-    
+
+   
     ivbm = icbm - 1
     !allocate(W_cvk(icbm:ieband_max,ihband_min:ivbm,nkf) !光激发下的跃迁几率大小
     if (llaser) then
       W_cvk_all = SUM(W_cvk)
+      write(procout,*) "W_cvk_all =", W_cvk_all
       call random_number(flagr)
       flagr = flagr*W_cvk_all
       flagd = 0.0
-      outter:do ik=1,nkf
+      outter:do ik=1,nktotf
                do ihband=ihband_min,ivbm
                  do ieband=icbm,ieband_max
                    flagd = flagd+W_cvk(ieband,ihband,ik)
@@ -147,18 +149,37 @@ module initialsh
       init_ikz = get_ik(init_kz,nkf3)
       init_ik  =  (init_ikx - 1) * nkf2 * nkf3 + (init_iky - 1) * nkf3 + init_ikz     
       if(init_eband < icbm .or. init_eband > ieband_max) then
+#if defined __MPI 		
+    if(ionode) then
+#endif  
         write(stdout,"(/5X,A29,I5)") "Wrong! The init_eband set as:",init_eband
         write(stdout,"(5X,A29,I5,A16,I5)") "The init_eband need to set : ",icbm,"<= init_eband <=",ieband_max
+#if defined __MPI 		
+    endif
+        write(procout,"(/5X,A29,I5)") "Wrong! The init_eband set as:",init_eband
+        write(procout,"(5X,A29,I5,A16,I5)") "The init_eband need to set : ",icbm,"<= init_eband <=",ieband_max    
+#endif  
       endif
       if(init_hband < ihband_min .or. init_hband > ivbm) then
+#if defined __MPI 		
+    if(ionode) then
+#endif 
         write(stdout,"(/5X,A29,I5)") "Wrong! The init_hband set as:",init_hband
         write(stdout,"(5X,A29,I5,A16,I5)") "The init_hband need to set : ",ihband_min,"<= init_hband <=",ivbm
+#if defined __MPI 		
+    endif
+        write(procout,"(/5X,A29,I5)") "Wrong! The init_hband set as:",init_hband
+        write(procout,"(5X,A29,I5,A16,I5)") "The init_hband need to set : ",ihband_min,"<= init_hband <=",ivbm    
+#endif 
       endif      
     endif
 
     obsorbEn = (etf(init_eband,init_ik)-etf(init_hband,init_ik))*ryd2eV
     e_en = etf(init_eband,init_ik)
     h_en = -1.0*etf(init_hband,init_ik)
+#if defined __MPI 		
+    if(ionode) then
+#endif 
     write(stdout,"(/5X,A)") "Initial eh_KSstate:  "
     write(stdout,"(5X,A3,I5,1X,A10,3(F12.6,1X),A2)") "ik=",init_ik, "coord.: ( ",(xkf(ipol,init_ik),ipol=1,3)," )"
     write(stdout,"(5X,A11,I5,A21,F12.5,A3)") "init_hband=",init_hband," Initial hole Energy:",&
@@ -166,7 +187,16 @@ module initialsh
     write(stdout,"(5X,A11,I5,A21,F12.5,A3)") "init_eband=",init_eband," Initial elec Energy:",&
                                               etf(init_eband,init_ik)*ryd2eV," eV"      
     write(stdout,"(5X,A18,F12.5,A3)")"elec-hole energy= ",obsorbEn," eV"
-    
+#if defined __MPI 		
+    endif
+    write(procout,"(/5X,A)") "Initial eh_KSstate:  "
+    write(procout,"(5X,A3,I5,1X,A10,3(F12.6,1X),A2)") "ik=",init_ik, "coord.: ( ",(xkf(ipol,init_ik),ipol=1,3)," )"
+    write(procout,"(5X,A11,I5,A21,F12.5,A3)") "init_hband=",init_hband," Initial hole Energy:",&
+                                          etf(init_hband,init_ik)*ryd2eV," eV"
+    write(procout,"(5X,A11,I5,A21,F12.5,A3)") "init_eband=",init_eband," Initial elec Energy:",&
+                                        etf(init_eband,init_ik)*ryd2eV," eV"      
+    write(procout,"(5X,A18,F12.5,A3)")"elec-hole energy= ",obsorbEn," eV"    
+#endif     
   end subroutine init_eh_KSstat
   
   subroutine init_stat_diabatic(init_ik,init_band,iband_min,nband,nk,c_nk)
