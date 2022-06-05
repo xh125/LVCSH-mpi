@@ -43,11 +43,10 @@ module hamiltonian
       neband = ieband_max - ieband_min + 1
       nefre   = neband * nk
       allocate(Enk_e(neband,nk),stat=ierr,errmsg=msg)
-      if(ierr /= 0) call io_error(msg)
+      if(ierr /= 0) call errore('Enk_e allocate',trim(msg),1)
       allocate(gmnvkq_e(neband,neband,nmodes,nk,nq),stat=ierr,errmsg=msg)
       if(ierr /=0) then
         call errore('hamiltonian','Error allocating gmnvkq_e',1)
-        call io_error(msg)
       endif
       gmnvkq_e = 0.0
       ram = real_size*neband*neband*nmodes*nk*nq
@@ -55,7 +54,6 @@ module hamiltonian
       allocate(H0_e(nefre,nefre),stat=ierr,errmsg=msg)
       if(ierr /=0) then
         call errore('hamiltonian','Error allocating H0_e',1)    
-        call io_error(msg)
       endif
       H0_e = 0.0
       ram = complex_size*nefre*nefre
@@ -63,21 +61,18 @@ module hamiltonian
       allocate(H0_e_nk(neband,nk,neband,nk),stat=ierr,errmsg=msg)
       if(ierr /=0) then
         call errore('hamiltonian','Error allocating H0_e_nk',1)
-        call io_error(msg)
       endif
       H0_e_nk = 0.0
       call print_memory("H0_e_nk",ram)
       allocate(H_e(nefre,nefre),stat=ierr,errmsg=msg)
       if(ierr /=0) then
         call errore('hamiltonian','Error allocating H_e',1)
-        call io_error(msg)
       endif
       H_e = 0.0
       call print_memory("H_e",ram)
       allocate(H_e_nk(neband,nk,neband,nk),stat=ierr,errmsg=msg)
       if(ierr /=0) then
         call errore('hamiltonian','Error allocating H_e_nk',1)
-        call io_error(msg)
       endif
       H_e_nk = 0.0
       call print_memory("H_e_nk",ram)
@@ -88,11 +83,10 @@ module hamiltonian
       nhband = ihband_max - ihband_min + 1
       nhfre   = nhband * nk
       allocate(Enk_h(nhband,nk),stat=ierr,errmsg=msg)
-      if(ierr /= 0) call io_error(msg)
+      if(ierr /= 0) call errore('Enk_h allocate',trim(msg),1)
       allocate(gmnvkq_h(nhband,nhband,nmodes,nk,nq),stat=ierr,errmsg=msg)
       if(ierr /=0) then
         call errore('hamiltonian','Error allocating gmnvkq_h',1)
-        call io_error(msg)
       endif
       gmnvkq_h = 0.0
       ram = real_size*nhband*nhband*nmodes*nk*nq
@@ -100,7 +94,6 @@ module hamiltonian
       allocate(H0_h(nhfre,nhfre),stat=ierr,errmsg=msg)
       if(ierr /=0) then
         call errore('hamiltonian','Error allocating H0_h',1)    
-        call io_error(msg)
       endif
       H0_h = 0.0
       ram = complex_size*nhfre*nhfre
@@ -108,14 +101,12 @@ module hamiltonian
       allocate(H0_h_nk(nhband,nk,nhband,nk),stat=ierr,errmsg=msg)
       if(ierr /=0) then
         call errore('hamiltonian','Error allocating H0_h_nk',1)
-        call io_error(msg)
       endif
       H0_h_nk = 0.0
       call print_memory("H0_h_nk",ram)  
       allocate(H_h(nhfre,nhfre),stat=ierr,errmsg=msg)
       if(ierr /=0) then
         call errore('hamiltonian','Error allocating H_h',1)
-        call io_error(msg)
       endif
       H_h = 0.0
       ram = complex_size*nhfre*nhfre
@@ -123,7 +114,6 @@ module hamiltonian
       allocate(H_h_nk(nhband,nk,nhband,nk),stat=ierr,errmsg=msg)
       if(ierr /=0) then
         call errore('hamiltonian','Error allocating H_h_nk',1)
-        call io_error(msg)
       endif
       H_h_nk = 0.0
       call print_memory("H_h_nk",ram)        

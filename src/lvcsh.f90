@@ -7,6 +7,7 @@
 !                                                                              !
 !------------------------------------------------------------------------------!
 
+#define __MPI
 program lvcsh
   !============================================================================!
   != This program is used to simulation carrier relaxtion in materials with   =!
@@ -27,10 +28,12 @@ program lvcsh
   use omp_lib
   use f95_precision
   use blas95  
+#if defined __MPI 		
+  use global_mpi
+#endif
   use constants,only      : ryd2eV,ry_to_fs,ryd2meV,czero,cone
   use environments,only   : environment_start,mkl_threads,set_mkl_threads,&
                             lsetthreads
-  use global_mpi
   use readinput,only      : get_inputfile
   use readscf,only        : readpwscf_out
   use readphout,only      : readph_out
@@ -115,7 +118,6 @@ program lvcsh
   if(lreadscfout) call readpwscf_out(scfoutname)
   if(lreadphout)  call readph_out(phoutname)
   call set_subband(lelecsh,lholesh,ieband_min,ieband_max,ihband_min,ihband_max)
-  stop
   !get ieband_min,ieband_max,ihband_min,ihband_max
   call allocate_hamiltonian(lelecsh,lholesh,ieband_min,ieband_max,ihband_min,ihband_max)
   
@@ -145,7 +147,6 @@ program lvcsh
     if(llaser) call get_Wcvk(ihband_min,ieband_max,fwhm,w_laser)
     ! ref : https://journals.aps.org/prb/pdf/10.1103/PhysRevB.72.045314
     !get W_cvk(icband,ivband,ik)
-    
     call init_random_seed()
     if(lsetthreads) call set_mkl_threads(mkl_threads)
     
@@ -153,19 +154,28 @@ program lvcsh
     !==========================!
     != loop over realizations =!
     !==========================!
-    itraj = 0
+    itraj = 0  ! itraj in different processor
     do iaver=1+iproc,naver,nproc
       itraj = itraj + 1
+#if defined __MPI 		
+    if(ionode) then
+#endif      
       write(stdout,'(/,1X,a,I4,a)') '###### itraj=',itraj,' ######'    
       call get_date_and_time(cdate,ctime)
-      write(stdout,'(1X,"This trajectory start on ",A9," at ",A9)') cdate,ctime      
+      write(stdout,'(1X,"This trajectory start on ",A9," at ",A9)') cdate,ctime 
+#if defined __MPI 		
+    endif
+      write(procout,'(/,1X,a,I4,a)') '###### itraj=',itraj,' ######'    
+      call get_date_and_time(cdate,ctime)
+      write(procout,'(1X,"This trajectory start on ",A9," at ",A9)') cdate,ctime     
+#endif      
       !==================!
       != initialization =!
       !==================!
-      
+
       !!Get the initial normal mode coordinate phQ and versity phP
       call init_normalmode_coordinate_velocity(nmodes,nqtotf,wf,temp,l_ph_quantum,phQ,phP)
-      
+      stop
       
       !应该先跑平衡后，再做电子空穴动力学计算   
       call pre_md(nmodes,nqtotf,wf,ld_gamma,temp,phQ,phP,l_ph_quantum,pre_dt)     

@@ -318,6 +318,9 @@ module initialsh
     !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
     !% Write phonon energy information         %!
     !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
+#if defined __MPI 		
+    if(ionode) then
+#endif    
     write(stdout,"(/5X,A51,F11.5,A2)") &
           "The temperature of the non-adiabatic dynamica is : ",T," K"
     write(stdout,"(5X,A49,F11.5,A4)") &
@@ -335,6 +338,26 @@ module initialsh
     " SUM_phU=",0.5*SUM(w**2*ABS(ph_Q)**2)*ryd2eV," eV"
     write(stdout,"(5X,A38,F11.5,A4)") &
     "The initial energy of phonon: SUM_phE=",0.5*SUM(ABS(ph_P)**2+w**2*ABS(ph_Q)**2)*ryd2eV," eV."    
+#if defined __MPI 		
+    endif
+    write(procout,"(/5X,A51,F11.5,A2)") &
+          "The temperature of the non-adiabatic dynamica is : ",T," K"
+    write(procout,"(5X,A49,F11.5,A4)") &
+          "The average energy of phonon(quantum): <SUM_phE>=",E_ph_QA_sum*ryd2eV," eV."
+    write(procout,"(5X,A49,F11.5,A4)") &
+          "The average energy of phonon(class)  : <SUM_phE>=",E_ph_CA_sum*ryd2eV," eV."
+    
+    if(l_ph_quantum) then
+      write(procout,"(/5X,A)") "The phonon dynamica set as quantum"
+    else
+      write(procout,"(/5X,A)") "The phonon dynamica set as classical."
+    endif
+    write(procout,"(5X,A38,F11.5,A4,A9,F11.5,A4)") &
+    "The initial energy of phonon: SUM_phT=",0.5*SUM(ABS(ph_P)**2)*ryd2eV," eV",&
+    " SUM_phU=",0.5*SUM(w**2*ABS(ph_Q)**2)*ryd2eV," eV"
+    write(procout,"(5X,A38,F11.5,A4)") &
+    "The initial energy of phonon: SUM_phE=",0.5*SUM(ABS(ph_P)**2+w**2*ABS(ph_Q)**2)*ryd2eV," eV."     
+#endif
     
     
   end subroutine init_normalmode_coordinate_velocity

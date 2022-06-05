@@ -1,4 +1,8 @@
+#define __MPI
 module getwcvk
+#if defined __MPI 		
+  use global_mpi
+#endif
   use kinds,only    : dp,dpc
   use lasercom,only : W_cvk,efield_cart
   implicit none
@@ -54,10 +58,18 @@ module getwcvk
     !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
     !% Write laser information            %!
     !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
+#if defined __MPI 		
+    if(ionode) then
+#endif    
     write(stdout,"(/,5X,A)") "In the laser obsorbtion,the Pump laser as follow:"
     write(stdout,"(5X,A22,F12.7,A4)")  "Laser centred energy :",w_center*ryd2eV," eV."
     write(stdout,"(5X,A38,F12.7,A4)")  "The full width at half-maximum:fwhm = ",fwhm*ry_to_fs," fs."    
-    
+#if defined __MPI 		
+    endif
+    write(procout,"(/,5X,A)") "In the laser obsorbtion,the Pump laser as follow:"
+    write(procout,"(5X,A22,F12.7,A4)")  "Laser centred energy :",w_center*ryd2eV," eV."
+    write(procout,"(5X,A38,F12.7,A4)")  "The full width at half-maximum:fwhm = ",fwhm*ry_to_fs," fs."     
+#endif    
     
   end subroutine get_Wcvk
   

@@ -27,7 +27,7 @@ module surfacehopping
   contains
   
   subroutine allocatesh(methodsh,lelecsh,lholesh,nmodes,nq)
-		use io,only : msg,io_error
+		use io,only : msg
     implicit none
     character(len=*),intent(in) :: methodsh
     logical,intent(in):: lelecsh,lholesh
@@ -42,7 +42,6 @@ module surfacehopping
     allocate(phQ(nmodes,nq),stat=ierr,errmsg=msg)  ! x(1:nphfre)
     if(ierr /=0) then
 			call errore('surfacehopping','Error allocating phQ',1)
-			if(ierr /= 0 ) call io_error(msg)
 		endif
 		phQ = 0.0
     ! phonons normal mode coordinates
@@ -51,9 +50,9 @@ module surfacehopping
     !allocate(phPsit(nmodes,nq,0:nsnap),stat=ierr,errmsg=msg)
 		!if(ierr /= 0 ) call io_error(msg)
     allocate(phKsit(nmodes,nq,0:nsnap),stat=ierr,errmsg=msg)
-		if(ierr /= 0 ) call io_error(msg)
+		if(ierr /= 0 ) call errore("surfacehopping",trim(msg),1)
     allocate(phUsit(nmodes,nq,0:nsnap),stat=ierr,errmsg=msg)
-		if(ierr /= 0 ) call io_error(msg)
+		if(ierr /= 0 ) call errore("surfacehopping",trim(msg),1)
     !phQsit = 0.0d0
     !phPsit = 0.0d0
     phKsit = 0.0d0
@@ -78,9 +77,9 @@ module surfacehopping
     allocate(phK(nmodes,nq),stat=ierr,errmsg=msg)
     if(ierr /=0) call errore('surfacehopping','Error allocating phK',1)            
     allocate(dEa_dQ(nmodes,nq),stat=ierr,errmsg=msg)
-		if(ierr /=0) call io_error(msg)
+		if(ierr /=0) call errore("surfacehopping",trim(msg),1)
     allocate(dEa2_dQ2(nmodes,nq),stat=ierr,errmsg=msg)
-    if(ierr /=0) call io_error(msg)
+    if(ierr /=0) call errore("surfacehopping",trim(msg),1)
 		
     if(lelecsh) then
       allocate(E_e(1:nefre),stat=ierr,errmsg=msg)
