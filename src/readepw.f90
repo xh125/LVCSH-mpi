@@ -8,7 +8,7 @@ module readepw
   use kinds ,only :dp
   use constants,only : maxlen,amu_ry,rytoev,ryd2mev,ryd2eV,cone,czero,ci
   use io, only : io_file_unit,open_file,close_file,findkword,findkline,stdout,io_error,msg
-	use parameters,only : verbosity,lit_ephonon,lit_gmnvkq
+	use parameters,only : verbosity,lit_ephonon,lit_gmnvkq,prtgmnvkq
 	use memory_report,only : MB,GB,complex_size, real_size,int_size,ram,print_memory
   use klist, only : nelec,lgauss, degauss, ngauss, nkstot, wk
   use klist_epw, only : xk_all,xkg_all
@@ -1514,7 +1514,7 @@ module readepw
 		
 		
 		!for testing
-		if(verbosity == "high" .and. .FALSE.) then
+		if(verbosity == "high" .and. prtgmnvkq) then
 			write(stdout,"(5X,A,I8,1X,A)") "We only need to compute",totq,"q-points"
 			do iq=1,totq
 				write(stdout,"(/,5X,A)") " Electron-phonon vertex |g| (meV)"
@@ -1672,6 +1672,8 @@ module readepw
     call mp_bcast(ecbmin,ionode_id)
     call mp_bcast(icbm,ionode_id)
     call mp_bcast(ef,ionode_id)
+    call mp_bcast(totq,ionode_id)
+    
     
     if(.not. allocated(xkf)) then
       allocate(xkf(3,nktotf),stat=ierr,errmsg=msg)
@@ -1764,13 +1766,47 @@ module readepw
     endif
     call mp_bcast(iminusk,ionode_id)
     
+    if(.not. allocated(calgmnvkq_q)) then
+      allocate(calgmnvkq_q(totq))    
+    endif
+    call mp_bcast(calgmnvkq_q,ionode_id)
+    
     WRITE(procout, '(/5x,a,f10.6,a)') &
         'Fermi energy is calculated from the fine k-mesh: Ef = ', ef * ryd2ev, ' eV'
     
     WRITE(procout,'(/14x,a,i5,2x,a,f9.3,a)') 'ibndmin = ', ibndmin, 'ebndmin = ', ebndmin * ryd2ev, ' eV'
     WRITE(procout,'(14x,a,i5,2x,a,f9.3,a/)') 'ibndmax = ', ibndmax, 'ebndmax = ', ebndmax * ryd2ev, ' eV' 
 
+		write(procout,"(5X,A5,I8,A)") "Only ",totq," q-points falls within the fsthick windows."
+		write(procout,"(5X,A,I8,A)")  'We only need to compute ', totq, ' q-points'
     
+    write(procout,"(/5x,A,I12)") "Number of phonon modes (nmodes) =",nmodes
+
+    WRITE(procout,'(/14x,a,i5,2x,a,f9.3,a)') 'Valence band max   = ', nvbmax, 'evbmax = ', evbmax*ryd2eV , ' eV'
+    WRITE(procout,'(14x,a,i5,2x,a,f9.3,a/)') 'Conductor band min = ', ncbmin, 'ecbmin = ', ecbmin*ryd2eV , ' eV'    
+
+		if(verbosity == "high" .and. prtgmnvkq) then
+			write(procout,"(5X,A,I8,1X,A)") "We only need to compute",totq,"q-points"
+			do iq=1,totq
+				write(procout,"(/,5X,A)") " Electron-phonon vertex |g| (meV) with g(m,n,v,k,q)= g(n,m,v,k+q,-q)*"
+				WRITE(procout, '(/5x, "iq = ", i7, " coord.: ", 3f12.7)') calgmnvkq_q(iq), xqf(:, calgmnvkq_q(iq))
+				do ik=1,nktotf
+					WRITE(procout, '(5x, "ik = ", i7, " coord.: ", 3f12.7)') ik, xkf(:, ik)
+					WRITE(procout, '(5x, a)') ' ibnd     jbnd     imode   enk[eV]    enk+q[eV]  omega(q)[meV]   |g|[meV]'
+					WRITE(procout, '(5x, a)') REPEAT('-', 78)
+					do ibnd = ibndmin,ibndmax ! ibnd = 1,nbndfst
+						do jbnd = ibndmin,ibndmax !jbnd= 1,nbndfst
+							do nu = 1, nmodes		
+								WRITE(procout, '(3i9, 2f12.4, 1f20.10, 1e20.10)') ibnd, jbnd,nu, (etf(ibnd,ik)+evbmax)*ryd2eV, &
+                   &  (etf(ibnd,kqmap(ik,calgmnvkq_q(iq)))+evbmax)*ryd2eV, wf(nu, calgmnvkq_q(iq))*ryd2mev,&
+                   &  gmnvkq(ibnd, jbnd, nu, ik,calgmnvkq_q(iq))*ryd2mev/sqrt(2.0*wf(nu,iq)/nqtotf)
+							enddo
+					  enddo
+					enddo
+					WRITE(procout, '(5x, a/)') REPEAT('-', 78)
+				enddo
+			enddo
+		endif
     
 #endif 
     

@@ -1,5 +1,3 @@
-#define __MPI
-
 module io
   !! Module to handle operations related to file input and output.
   use kinds     ,only : dp
@@ -16,9 +14,6 @@ module io
   character(len=maxlen)           :: home_dir
   ! For parallel execution: I/O within an image
   ! These are set at startup by calling mp_world_start
-  integer :: ionode_id= 0       ! index of the i/o node for this image
-  Logical :: Lionode  = .True.  ! true if this processor is a i/o node
-                                   ! for this image
                                    
   type timing_data
     !! Data about each stopwatch - for timing routines
@@ -121,22 +116,13 @@ contains
   !========================================
   !! Abort the code giving an error message 
   !========================================
-#if defined __MPI 		
-    use global_mpi
-#endif
     implicit none
     character(len=*), intent(in) :: error_msg
-#if defined __MPI 		
-  if(ionode) then
-#endif
     write(stdout,*)  'Exiting.......' 
     write(stdout, '(1x,a)') trim(error_msg)    
     close(stdout)    
     write(*, '(1x,a)') trim(error_msg)
-    write(*,'(A)') "Error: examine the output/error file for details" 
-#if defined __MPI 		
-  endif
-#endif    
+    write(*,'(A)') "Error: examine the output/error file for details"    
     STOP
          
   end subroutine io_error
@@ -174,7 +160,6 @@ contains
   !! Returns elapsed CPU time in seconds since its first call.
   !! Uses standard f90 call                                                                                           
   !===========================================================
-    use kinds, only : dp
     implicit none
 
     real(kind=dp) :: io_time

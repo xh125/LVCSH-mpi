@@ -6,7 +6,7 @@ module readinput
   use parameters,only : calculation,verbosity,outdir,ldecoherence,Cdecoherence,lit_gmnvkq,lit_ephonon,&
                         lreadscfout,scfoutname,lreadphout,phoutname,lreadfildyn,fildyn,epwoutname,&
                         methodsh,lfeedback,naver,nstep,nsnap,pre_nstep,pre_dt,mix_thr,&
-                        gamma,ld_fric,dt,temp,l_ph_quantum,&
+                        gamma,ld_fric,dt,temp,l_ph_quantum,prtgmnvkq,&
                         init_kx,init_ky,init_kz,init_hband,init_eband,&
                         llaser,efield_cart,w_laser,fwhm,eps_acustic,&
                         lsetthreads,mkl_threads,lelecsh,lholesh,lehpairsh,&
@@ -191,6 +191,7 @@ module readinput
     lreadfildyn   = .false.
     fildyn        = "prefix.dyn"
     epwoutname    = "epw.out"
+    prtgmnvkq     = .false.
     ieband_min    = 0
     ieband_max    = 0
     ihband_min    = 0
@@ -308,6 +309,7 @@ module readinput
     call mp_bcast(lreadfildyn   ,ionode_id)
     call mp_bcast(fildyn        ,ionode_id)
     call mp_bcast(epwoutname    ,ionode_id)
+    call mp_bcast(prtgmnvkq     ,ionode_id)
     call mp_bcast(ieband_min    ,ionode_id)
     call mp_bcast(ieband_max    ,ionode_id)
     call mp_bcast(ihband_min    ,ionode_id)
@@ -363,7 +365,8 @@ module readinput
     write(procout,*) "phoutname    =",trim(phoutname)  
     write(procout,*) "lreadfildyn  =",lreadfildyn 
     write(procout,*) "fildyn       =",trim(fildyn)     
-    write(procout,*) "epwoutname   =",trim(epwoutname)    
+    write(procout,*) "epwoutname   =",trim(epwoutname)  
+    write(procout,*) "prtgmnvkq    =",prtgmnvkq
     write(procout,*) "ieband_min   =",ieband_min 
     write(procout,*) "ieband_max   =",ieband_max  
     write(procout,*) "ihband_min   =",ihband_min 

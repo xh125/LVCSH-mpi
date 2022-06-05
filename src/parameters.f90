@@ -28,6 +28,7 @@ module parameters
 	character(len=maxlen) :: outdir
 	integer :: nnode,ncore,naver_sum,savedsnap
   logical :: lreadscfout,lreadphout,lreadfildyn,lsortpes
+  logical :: prtgmnvkq
   
   namelist / shinput / &
            calculation,verbosity,outdir,ldecoherence,Cdecoherence,lit_gmnvkq,lit_ephonon,&
@@ -35,7 +36,7 @@ module parameters
 					 epwoutname,methodsh,lfeedback,naver,nstep,nsnap,mix_thr,&
            pre_nstep,pre_dt,gamma,ld_fric,l_ph_quantum,dt,temp,&
            init_kx,init_ky,init_kz,init_hband,init_eband,&
-           llaser,efield_cart,w_laser,fwhm,eps_acustic,&
+           llaser,efield_cart,w_laser,fwhm,eps_acustic,prtgmnvkq,&
            lsetthreads,mkl_threads,lelecsh,lholesh,lehpairsh,&
            ieband_min,ieband_max,ihband_min,ihband_max,nefre_sh,nhfre_sh,&
 					 nnode,ncore,savedsnap,lsortpes,l_dEa_dQ,l_dEa2_dQ2

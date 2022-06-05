@@ -1,6 +1,6 @@
 module global_mpi
   use mpi
-  use io,only : io_file_unit,msg
+  use io,only : io_file_unit
   implicit none
   integer :: ierr
   integer :: iproc,nproc,procout
@@ -66,7 +66,10 @@ module global_mpi
   end subroutine initmpi
   
   subroutine endmpi
+    use constants ,only : maxlen
     implicit none
+    
+    character(len=maxlen) :: msg
     
     close(unit=procout,iostat=ierr,iomsg=msg)
     call mpi_finalize(ierr)
