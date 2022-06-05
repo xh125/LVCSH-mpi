@@ -1,4 +1,8 @@
+#define __MPI
 module dynamics
+#if defined __MPI 		
+  use global_mpi
+#endif
   use kinds,only     : dp,dpc
   use constants,only : cone,czero
   use parameters,only: temp
@@ -233,7 +237,7 @@ module dynamics
     real(kind=dp) :: gamma_,womiga_,aver_E_T_
     
     
-    call test_xv(nmodes,nq,xx,vv)
+    !call test_xv(nmodes,nq,xx,vv)
     !  ph_Q(v,q)=ph_Q(v,-q)*
     !  ph_P(v,q)=ph_P(v,-q)*
     DO iq=1,nq
@@ -264,11 +268,11 @@ module dynamics
             
             cplx_tmp = VV(imode,iq)/ABS(VV(imode,iq))            
             cplx_tmp_= VV(imode,iq_)/ABS(VV(imode,iq_))
-            if(cplx_tmp_ /= CONJG(cplx_tmp)) then
-              write(*,*) "phP(",imode,",",iq,") /= CONJG:phP(",imode,",",iq_,")"
-              write(*,*) "phP(",imode,",",iq,") =",VV(imode,iq)
-              write(*,*) "phP(",imode,",",iq_,") =",VV(imode,iq_)
-            endif
+            !if(cplx_tmp_ /= CONJG(cplx_tmp)) then
+            !  write(*,*) "phP(",imode,",",iq,") /= CONJG:phP(",imode,",",iq_,")"
+            !  write(*,*) "phP(",imode,",",iq,") =",VV(imode,iq)
+            !  write(*,*) "phP(",imode,",",iq_,") =",VV(imode,iq_)
+            !endif
           
             R1=GAUSSIAN_RANDOM_NUMBER_FAST(0.0D0,SIGMAR)*cplx_tmp
             R2=GAUSSIAN_RANDOM_NUMBER_FAST(0.0D0,SIGMAR)*cplx_tmp
@@ -302,7 +306,7 @@ module dynamics
       endif
     enddo
     
-    call test_xv(nmodes,nq,xx,vv)
+    !call test_xv(nmodes,nq,xx,vv)
     
   end subroutine add_bath_effect
 
@@ -325,16 +329,18 @@ module dynamics
     
     !call test_wqv(nmodes,nqtotf,wf)
     
-    call test_xv(nmodes,nqtotf,phQ,phP)
+    !call test_xv(nmodes,nqtotf,phQ,phP)
+    write(procout,*) "It's OK1"
     
     dEa_dQ = 0.0
     dEa2_dQ2 = 0.0
+    write(procout,*) "It's OK2"
     do istep=1,pre_nstep
       call rk4_nuclei(nmodes,nqtotf,dEa_dQ,ld_gamma,wf,phQ,phP,pre_dt)
       call add_bath_effect(nmodes,nqtotf,wf,ld_gamma,temp,dEa2_dQ2,pre_dt,l_ph_quantum,phQ,phP)
     enddo
-  
-    call test_xv(nmodes,nqtotf,phQ,phP)
+    write(procout,*) "It's OK3"  
+    !call test_xv(nmodes,nqtotf,phQ,phP)
   
     time = pre_nstep*pre_dt*ry_to_fs
     if(time<1.0E3) then
@@ -346,13 +352,25 @@ module dynamics
       time = time/1.0E6
       ctimeunit = 'ns'
     endif
-    
+
+#if defined __MPI 		
+    if(ionode) then
+#endif     
     write(stdout,"(5X,A23,F6.2,A2,A19,F11.5,A4,A9,F11.5,A4)") &
     "Energy of phonon after ", time,ctimeunit," dynamica: SUM_phT=",0.5*SUM(ABS(phP)**2)*ryd2eV," eV",&
     " SUM_phU=",0.5*SUM(wf**2*ABS(phQ)**2)*ryd2eV," eV"
     write(stdout,"(5X,A23,F6.2,A2,A19,F11.5,A4)") &
     "Energy of phonon after ", time,ctimeunit," dynamica: SUM_phE="&
     ,0.5*SUM(ABS(phP)**2+wf**2*ABS(phQ)**2)*ryd2eV," eV."    
+#if defined __MPI 		
+    endif
+    write(procout,"(5X,A23,F6.2,A2,A19,F11.5,A4,A9,F11.5,A4)") &
+    "Energy of phonon after ", time,ctimeunit," dynamica: SUM_phT=",0.5*SUM(ABS(phP)**2)*ryd2eV," eV",&
+    " SUM_phU=",0.5*SUM(wf**2*ABS(phQ)**2)*ryd2eV," eV"
+    write(procout,"(5X,A23,F6.2,A2,A19,F11.5,A4)") &
+    "Energy of phonon after ", time,ctimeunit," dynamica: SUM_phE="&
+    ,0.5*SUM(ABS(phP)**2+wf**2*ABS(phQ)**2)*ryd2eV," eV."      
+#endif 
   
   end subroutine pre_md
 
@@ -406,12 +424,16 @@ module dynamics
     do iq=1,nq
       iq_ = iminusq(iq)
       do imode=1,nmodes
-        if(phQ(imode,iq_) /= CONJG(phQ(imode,iq))) then
+        if(ABS(REAL(phQ(imode,iq_))/REAL(phQ(imode,iq)) - 1.0) > 1.0E-7 .or. &
+           ABS(IMAG(phQ(imode,iq_))/IMAG(phQ(imode,iq)) + 1.0) > 1.0E-7) then
+        !if(phQ(imode,iq_) /= CONJG(phQ(imode,iq))) then
           write(*,*) "phQ(",imode,",",iq,") /= CONJG(phQ(",imode,",",iq_,"))"
           write(*,*) "phQ(",imode,",",iq,") =",phQ(imode,iq)
           write(*,*) "phQ(",imode,",",iq_,") =",phQ(imode,iq_)
         endif
-        if(phP(imode,iq_) /= CONJG(phP(imode,iq))) then
+        if(ABS(REAL(phP(imode,iq_))/REAL(phP(imode,iq)) - 1.0) > 1.0E-7 .or. &
+           ABS(IMAG(phP(imode,iq_))/IMAG(phP(imode,iq)) + 1.0) > 1.0E-7) then      
+        !if(phP(imode,iq_) /= CONJG(phP(imode,iq))) then
           write(*,*) "phP(",imode,",",iq,") /= CONJG(phP(",imode,",",iq_,"))"
           write(*,*) "phP(",imode,",",iq,") =",phP(imode,iq)
           write(*,*) "phP(",imode,",",iq_,") =",phP(imode,iq_)
@@ -434,7 +456,9 @@ module dynamics
     do iq=1,nq
       iq_ = iminusq(iq)
       do imode=1,nmodes
-        if(phP(imode,iq_) /= CONJG(phP(imode,iq))) then
+        if(ABS(REAL(phP(imode,iq_))/REAL(phP(imode,iq)) - 1.0) > 1.0E-7 .or. &
+           ABS(IMAG(phP(imode,iq_))/IMAG(phP(imode,iq)) + 1.0) > 1.0E-7) then      
+        !if(phP(imode,iq_) /= CONJG(phP(imode,iq))) then
           write(*,*) "phP(",imode,",",iq,") /= CONJG(phP(",imode,",",iq_,"))"
           write(*,*) "phP(",imode,",",iq,") =",phP(imode,iq)
           write(*,*) "phP(",imode,",",iq_,") =",phP(imode,iq_)

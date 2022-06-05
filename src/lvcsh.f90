@@ -175,10 +175,11 @@ program lvcsh
 
       !!Get the initial normal mode coordinate phQ and versity phP
       call init_normalmode_coordinate_velocity(nmodes,nqtotf,wf,temp,l_ph_quantum,phQ,phP)
-      stop
       
       !应该先跑平衡后，再做电子空穴动力学计算   
       call pre_md(nmodes,nqtotf,wf,ld_gamma,temp,phQ,phP,l_ph_quantum,pre_dt)     
+      call MPI_Barrier(MPI_COMM_WORLD,ierr)
+      stop
       
       !!得到初始电子和空穴的初始的KS状态 init_ik,init_eband,init_hband(in the diabatic states)
       call init_eh_KSstat(lelecsh,lholesh,llaser,init_ik,init_eband,init_hband,init_e_en,init_h_en)
