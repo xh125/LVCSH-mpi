@@ -114,8 +114,8 @@ program lvcsh
   call readepwout(epwoutname)
   if(lreadscfout) call readpwscf_out(scfoutname)
   if(lreadphout)  call readph_out(phoutname)
-  stop
   call set_subband(lelecsh,lholesh,ieband_min,ieband_max,ihband_min,ihband_max)
+  stop
   !get ieband_min,ieband_max,ihband_min,ihband_max
   call allocate_hamiltonian(lelecsh,lholesh,ieband_min,ieband_max,ihband_min,ihband_max)
   

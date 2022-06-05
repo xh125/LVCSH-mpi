@@ -1,4 +1,10 @@
+#define __MPI
+
 module initialsh
+#if defined __MPI 		
+  use global_mpi
+  use mp
+#endif
   use kinds     ,only   : dp,dpc
   use constants ,only   : maxlen,tpi,K_B_Ryd,ryd2eV,ryd2mev,cone,czero,ci
   implicit none
@@ -16,7 +22,8 @@ module initialsh
                                ieband_max,&
                                ihband_min,&
                                ihband_max
-                               
+    
+    
     if(ieband_min==0 .and. ieband_max==0) then
       ieband_min = ncbmin
       ieband_max = ibndmax
@@ -25,7 +32,9 @@ module initialsh
       ihband_min = ibndmin
       ihband_max = nvbmax
     endif
-    
+#if defined __MPI 		
+    if(ionode) then
+#endif	    
     if(lelecsh) then
       if(ieband_min < ibndmin) then
         write(stdout,"(A,I9,1X,A3,1X,I9)") "Error! The parameter: ieband_min need to set between ", ibndmin,"and",ibndmax
@@ -74,7 +83,15 @@ module initialsh
         write(stdout,"(A)") "Calculation the electron-hole Carrier recombination. "
       endif    
     endif
-    
+#if defined __MPI 		
+    endif
+    write(procout,*) "lelecsh = ",lelecsh
+    write(procout,*) "lholesh = ",lholesh
+    write(procout,*) "ieband_min =",ieband_min
+    write(procout,*) "ieband_max =",ieband_max
+    write(procout,*) "ihband_min =",ihband_min
+    write(procout,*) "ihband_max =",ihband_max
+#endif	    
     
     
   end subroutine set_subband

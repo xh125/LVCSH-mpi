@@ -1596,34 +1596,34 @@ module readepw
 		gmnvkq = gmnvkq/ryd2mev
     eps_acustic = eps_acustic/ryd2mev
     
-		do iq=1,nqtotf
-			do nu = 1,nmodes
-				gmnvkq(:,:,nu,:,iq)=sqrt(2.0*wf(nu,iq)/nqtotf)*gmnvkq(:,:,nu,:,iq)
-			enddo
-		enddo
-    
-    !! g(m,n,v,k,q)= g(n,m,v,k+q,-q)*
-    do ik=1,nktotf
-      do iq=1,nqtotf
-        iq_ = iminusq(iq)
-        ikq = kqmap(ik,iq)
-        do imode=1,nmodes
-          do ibnd=ibndmin,ibndmax
-            do jbnd=ibndmin,ibndmax
-              A = gmnvkq(ibnd,jbnd,imode,ik,iq)
-              B = gmnvkq(jbnd,ibnd,imode,ikq,iq_)
-              if(gmnvkq(ibnd,jbnd,imode,ik,iq) /= gmnvkq(jbnd,ibnd,imode,ikq,iq_)) then
-                !write(*,*) "gmnvkq /= gnmv(k+q)(-q)"
-                !write(*,*) "gmnvkq(",ibnd,",",jbnd,",",imode,",",ik,",",iq,")=",A
-                !write(*,*) "gmnvkq(",jbnd,",",ibnd,",",imode,",",ikq,",",iq_,")=",B
-                gmnvkq(ibnd,jbnd,imode,ik,iq) = (A + B)/2.0
-                gmnvkq(jbnd,ibnd,imode,ikq,iq_)= (A + B)/2.0
-              endif
-            enddo
-          enddo
-        enddo
-      enddo
-    enddo    
+		!do iq=1,nqtotf
+		!	do nu = 1,nmodes
+		!		gmnvkq(:,:,nu,:,iq)=sqrt(2.0*wf(nu,iq)/nqtotf)*gmnvkq(:,:,nu,:,iq)
+		!	enddo
+		!enddo
+    !
+    !!! g(m,n,v,k,q)= g(n,m,v,k+q,-q)*
+    !do ik=1,nktotf
+    !  do iq=1,nqtotf
+    !    iq_ = iminusq(iq)
+    !    ikq = kqmap(ik,iq)
+    !    do imode=1,nmodes
+    !      do ibnd=ibndmin,ibndmax
+    !        do jbnd=ibndmin,ibndmax
+    !          A = gmnvkq(ibnd,jbnd,imode,ik,iq)
+    !          B = gmnvkq(jbnd,ibnd,imode,ikq,iq_)
+    !          if(gmnvkq(ibnd,jbnd,imode,ik,iq) /= gmnvkq(jbnd,ibnd,imode,ikq,iq_)) then
+    !            !write(*,*) "gmnvkq /= gnmv(k+q)(-q)"
+    !            !write(*,*) "gmnvkq(",ibnd,",",jbnd,",",imode,",",ik,",",iq,")=",A
+    !            !write(*,*) "gmnvkq(",jbnd,",",ibnd,",",imode,",",ikq,",",iq_,")=",B
+    !            gmnvkq(ibnd,jbnd,imode,ik,iq) = (A + B)/2.0
+    !            gmnvkq(jbnd,ibnd,imode,ikq,iq_)= (A + B)/2.0
+    !          endif
+    !        enddo
+    !      enddo
+    !    enddo
+    !  enddo
+    !enddo    
     
 
     !ref : https://journals.aps.org/prb/pdf/10.1103/PhysRevB.72.045314
@@ -1788,7 +1788,7 @@ module readepw
 		if(verbosity == "high" .and. prtgmnvkq) then
 			write(procout,"(5X,A,I8,1X,A)") "We only need to compute",totq,"q-points"
 			do iq=1,totq
-				write(procout,"(/,5X,A)") " Electron-phonon vertex |g| (meV) with g(m,n,v,k,q)= g(n,m,v,k+q,-q)*"
+				write(procout,"(/,5X,A)") " Electron-phonon vertex |g| (meV)"
 				WRITE(procout, '(/5x, "iq = ", i7, " coord.: ", 3f12.7)') calgmnvkq_q(iq), xqf(:, calgmnvkq_q(iq))
 				do ik=1,nktotf
 					WRITE(procout, '(5x, "ik = ", i7, " coord.: ", 3f12.7)') ik, xkf(:, ik)
@@ -1799,7 +1799,7 @@ module readepw
 							do nu = 1, nmodes		
 								WRITE(procout, '(3i9, 2f12.4, 1f20.10, 1e20.10)') ibnd, jbnd,nu, (etf(ibnd,ik)+evbmax)*ryd2eV, &
                    &  (etf(ibnd,kqmap(ik,calgmnvkq_q(iq)))+evbmax)*ryd2eV, wf(nu, calgmnvkq_q(iq))*ryd2mev,&
-                   &  gmnvkq(ibnd, jbnd, nu, ik,calgmnvkq_q(iq))*ryd2mev/sqrt(2.0*wf(nu,iq)/nqtotf)
+                   &  gmnvkq(ibnd, jbnd, nu, ik,calgmnvkq_q(iq))*ryd2mev
 							enddo
 					  enddo
 					enddo
@@ -1808,7 +1808,37 @@ module readepw
 			enddo
 		endif
     
-#endif 
+#endif
+
+		do iq=1,nqtotf
+			do nu = 1,nmodes
+				gmnvkq(:,:,nu,:,iq)=sqrt(2.0*wf(nu,iq)/nqtotf)*gmnvkq(:,:,nu,:,iq)
+			enddo
+		enddo
+    
+    !! g(m,n,v,k,q)= g(n,m,v,k+q,-q)*
+    do ik=1,nktotf
+      do iq=1,nqtotf
+        iq_ = iminusq(iq)
+        ikq = kqmap(ik,iq)
+        do imode=1,nmodes
+          do ibnd=ibndmin,ibndmax
+            do jbnd=ibndmin,ibndmax
+              A = gmnvkq(ibnd,jbnd,imode,ik,iq)
+              B = gmnvkq(jbnd,ibnd,imode,ikq,iq_)
+              if(gmnvkq(ibnd,jbnd,imode,ik,iq) /= gmnvkq(jbnd,ibnd,imode,ikq,iq_)) then
+                !write(*,*) "gmnvkq /= gnmv(k+q)(-q)"
+                !write(*,*) "gmnvkq(",ibnd,",",jbnd,",",imode,",",ik,",",iq,")=",A
+                !write(*,*) "gmnvkq(",jbnd,",",ibnd,",",imode,",",ikq,",",iq_,")=",B
+                gmnvkq(ibnd,jbnd,imode,ik,iq) = (A + B)/2.0
+                gmnvkq(jbnd,ibnd,imode,ikq,iq_)= (A + B)/2.0
+              endif
+            enddo
+          enddo
+        enddo
+      enddo
+    enddo    
+ 
     
   end subroutine readepwout
   
