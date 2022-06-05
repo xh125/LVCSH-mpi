@@ -1,10 +1,11 @@
 module global_mpi
   use mpi
+  use io,only : io_file_unit,msg
   implicit none
   integer :: ierr
-  integer :: iproc,nproc
+  integer :: iproc,nproc,procout
   character(len=10) :: iproc_str
-  character(len=256) :: job_path,work_path
+  character(len=256) :: job_path,work_path,procout_name
   ! job_path   The absolute path of the folder you submit the job. This wll be got from pwd()
   ! work_path  The current working path for each processor. If DINT_TMP_DIR is defined, 
   logical :: ionode
@@ -50,12 +51,24 @@ module global_mpi
     !write(*,*) "dirlive:",dirlive
     if(.not. dirlive) call system("mkdir "//trim(work_path))
     !write(*,*) "Work direct for ",iproc," processor is :",work_path
+    procout = io_file_unit()
+    if(llinux) then
+      procout_name = trim(work_path)//"/LVCSH_"//trim(adjustl(iproc_str))//".out"
+    else
+      procout_name = trim(work_path)//"\LVCSH_"//trim(adjustl(iproc_str))//".out"
+    endif
+    !write(*,*) trim(procout_name)
+    open(unit=procout,file=procout_name,status='REPLACE')
+    write(procout,*) "Output of the ",iproc,"processor."
+    write(procout,*) "Job_path is :",trim(job_path)
+    write(procout,*) "Work_path is :",trim(work_path)
     
   end subroutine initmpi
   
   subroutine endmpi
     implicit none
     
+    close(unit=procout,iostat=ierr,iomsg=msg)
     call mpi_finalize(ierr)
     
   end subroutine endmpi

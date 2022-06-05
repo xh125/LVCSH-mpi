@@ -341,63 +341,64 @@ module readinput
     call mp_bcast(lsetthreads   ,ionode_id) 
     call mp_bcast(mkl_threads   ,ionode_id)
 
-       
-    !write(*,*) "iproc",iproc,"calculation  ",trim(calculation) 
-    !write(*,*) "iproc",iproc,"lfeedback    ",lfeedback     
-    !write(*,*) "iproc",iproc,"verbosity    ",trim(verbosity)  
-    !write(*,*) "iproc",iproc,"outdir       ",trim(outdir)       
-    !write(*,*) "iproc",iproc,"methodsh     ",methodsh   
-    !write(*,*) "iproc",iproc,"ldecoherence ",ldecoherence    
-    !write(*,*) "iproc",iproc,"cdecoherence ",cdecoherence 
-    !write(*,*) "iproc",iproc,"lit_gmnvkq   ",lit_gmnvkq  
-    !write(*,*) "iproc",iproc,"lit_ephonon  ",lit_ephonon 
-    !write(*,*) "iproc",iproc,"eps_acustic  ",eps_acustic    
-    !write(*,*) "iproc",iproc,"l_ph_quantum ",l_ph_quantum
-    !write(*,*) "iproc",iproc,"lelecsh      ",lelecsh     
-    !write(*,*) "iproc",iproc,"lholesh      ",lholesh    
-    !write(*,*) "iproc",iproc,"lehpairsh    ",lehpairsh     
-    !write(*,*) "iproc",iproc,"lreadscfout  ",lreadscfout
-    !write(*,*) "iproc",iproc,"lsortpes     ",lsortpes    
-    !write(*,*) "iproc",iproc,"scfoutname   ",trim(scfoutname) 
-    !write(*,*) "iproc",iproc,"lreadphout   ",lreadphout    
-    !write(*,*) "iproc",iproc,"phoutname    ",trim(phoutname)  
-    !write(*,*) "iproc",iproc,"lreadfildyn  ",lreadfildyn 
-    !write(*,*) "iproc",iproc,"fildyn       ",trim(fildyn)     
-    !write(*,*) "iproc",iproc,"epwoutname   ",trim(epwoutname)    
-    !write(*,*) "iproc",iproc,"ieband_min   ",ieband_min 
-    !write(*,*) "iproc",iproc,"ieband_max   ",ieband_max  
-    !write(*,*) "iproc",iproc,"ihband_min   ",ihband_min 
-    !write(*,*) "iproc",iproc,"ihband_max   ",ihband_max    
-    !write(*,*) "iproc",iproc,"nefre_sh     ",nefre_sh   
-    !write(*,*) "iproc",iproc,"nhfre_sh     ",nhfre_sh    
-    !write(*,*) "iproc",iproc,"naver        ",naver      
-    !write(*,*) "iproc",iproc,"nstep        ",nstep         
-    !write(*,*) "iproc",iproc,"nsnap        ",nsnap      
-    !write(*,*) "iproc",iproc,"pre_nstep    ",pre_nstep  
-    !write(*,*) "iproc",iproc,"pre_dt       ",pre_dt     
-    !write(*,*) "iproc",iproc,"mix_thr      ",mix_thr       
-    !write(*,*) "iproc",iproc,"gamma        ",gamma      
-    !write(*,*) "iproc",iproc,"ld_fric      ",ld_fric     
-    !write(*,*) "iproc",iproc,"dt           ",dt         
-    !write(*,*) "iproc",iproc,"temp         ",temp         
-    !write(*,*) "iproc",iproc,"init_kx      ",init_kx      
-    !write(*,*) "iproc",iproc,"init_ky      ",init_ky      
-    !write(*,*) "iproc",iproc,"init_kz      ",init_kz      
-    !write(*,*) "iproc",iproc,"init_eband   ",init_eband   
-    !write(*,*) "iproc",iproc,"init_hband   ",init_hband   
-    !write(*,*) "iproc",iproc,"llaser       ",llaser       
-    !write(*,"(1X,A5,7X,I5,1X,A10,3(1X,F12.5))") "iproc",iproc,"efield_cart  ",efield_cart  
-    !write(*,*) "iproc",iproc,"w_laser      ",w_laser      
-    !write(*,*) "iproc",iproc,"fwhm         ",fwhm         
-    !write(*,*) "iproc",iproc,"nnode        ",nnode        
-    !write(*,*) "iproc",iproc,"ncore        ",ncore            
-    !write(*,*) "iproc",iproc,"savedsnap    ",savedsnap    
-    !write(*,*) "iproc",iproc,"l_dEa_dQ     ",l_dEa_dQ     
-    !write(*,*) "iproc",iproc,"l_dEa2_dQ2   ",l_dEa2_dQ2   
-    !write(*,*) "iproc",iproc,"lsetthreads  ",lsetthreads  
-    !write(*,*) "iproc",iproc,"mkl_threads  ",mkl_threads  
+    write(procout,"(/,1X,A15,I5,1X,A10)") "Input file for ",iproc,"processor."   
+    write(procout,*) "calculation  =",trim(calculation) 
+    write(procout,*) "lfeedback    =",lfeedback     
+    write(procout,*) "verbosity    =",trim(verbosity)  
+    write(procout,*) "outdir       =",trim(outdir)       
+    write(procout,*) "methodsh     =",methodsh   
+    write(procout,*) "ldecoherence =",ldecoherence    
+    write(procout,*) "cdecoherence =",cdecoherence 
+    write(procout,*) "lit_gmnvkq   =",lit_gmnvkq  
+    write(procout,*) "lit_ephonon  =",lit_ephonon 
+    write(procout,*) "eps_acustic  =",eps_acustic    
+    write(procout,*) "l_ph_quantum =",l_ph_quantum
+    write(procout,*) "lelecsh      =",lelecsh     
+    write(procout,*) "lholesh      =",lholesh    
+    write(procout,*) "lehpairsh    =",lehpairsh     
+    write(procout,*) "lreadscfout  =",lreadscfout
+    write(procout,*) "lsortpes     =",lsortpes    
+    write(procout,*) "scfoutname   =",trim(scfoutname) 
+    write(procout,*) "lreadphout   =",lreadphout    
+    write(procout,*) "phoutname    =",trim(phoutname)  
+    write(procout,*) "lreadfildyn  =",lreadfildyn 
+    write(procout,*) "fildyn       =",trim(fildyn)     
+    write(procout,*) "epwoutname   =",trim(epwoutname)    
+    write(procout,*) "ieband_min   =",ieband_min 
+    write(procout,*) "ieband_max   =",ieband_max  
+    write(procout,*) "ihband_min   =",ihband_min 
+    write(procout,*) "ihband_max   =",ihband_max    
+    write(procout,*) "nefre_sh     =",nefre_sh   
+    write(procout,*) "nhfre_sh     =",nhfre_sh    
+    write(procout,*) "naver        =",naver      
+    write(procout,*) "nstep        =",nstep         
+    write(procout,*) "nsnap        =",nsnap      
+    write(procout,*) "pre_nstep    =",pre_nstep  
+    write(procout,*) "pre_dt       =",pre_dt     
+    write(procout,*) "mix_thr      =",mix_thr       
+    write(procout,*) "gamma        =",gamma      
+    write(procout,*) "ld_fric      =",ld_fric     
+    write(procout,*) "dt           =",dt         
+    write(procout,*) "temp         =",temp         
+    write(procout,*) "init_kx      =",init_kx      
+    write(procout,*) "init_ky      =",init_ky      
+    write(procout,*) "init_kz      =",init_kz      
+    write(procout,*) "init_eband   =",init_eband   
+    write(procout,*) "init_hband   =",init_hband   
+    write(procout,*) "llaser       =",llaser       
+    !write(procout,*) "efield_cart  =",efield_cart 
+    write(procout,"(1X,A14,3(1X,F12.5))") "efield_cart  =",efield_cart  
+    write(procout,*) "w_laser      =",w_laser      
+    write(procout,*) "fwhm         =",fwhm         
+    write(procout,*) "nnode        =",nnode        
+    write(procout,*) "ncore        =",ncore            
+    write(procout,*) "savedsnap    =",savedsnap    
+    write(procout,*) "l_dEa_dQ     =",l_dEa_dQ     
+    write(procout,*) "l_dEa2_dQ2   =",l_dEa2_dQ2   
+    write(procout,*) "lsetthreads  =",lsetthreads  
+    write(procout,*) "mkl_threads  =",mkl_threads  
     
-    !call MPI_Barrier(MPI_COMM_WORLD,ierr)
+    call MPI_Barrier(MPI_COMM_WORLD,ierr)
     
   end subroutine bcast_namelist
   

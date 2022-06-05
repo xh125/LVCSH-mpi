@@ -3,8 +3,8 @@
 module readepw
 #if defined __MPI 		
   use global_mpi
+  use mp
 #endif
-
   use kinds ,only :dp
   use constants,only : maxlen,amu_ry,rytoev,ryd2mev,ryd2eV,cone,czero,ci
   use io, only : io_file_unit,open_file,close_file,findkword,findkline,stdout,io_error,msg
@@ -182,8 +182,32 @@ module readepw
        &     'number of atomic types    = ',i12,/,5x, &
        &     'kinetic-energy cut-off    = ',f12.4,'  Ry',/,5x, &
        &     'charge density cut-off    = ',f12.4,'  Ry')
+#if defined __MPI 
+    endif !(ionode)   
+    call mp_bcast(ibrav   ,ionode_id)
+    call mp_bcast(alat    ,ionode_id)
+    call mp_bcast(omega   ,ionode_id)
+    call mp_bcast(nat     ,ionode_id)
+    call mp_bcast(ntyp    ,ionode_id)
+    call mp_bcast(ecutwfc ,ionode_id)
+    call mp_bcast(ecutrho ,ionode_id)
+    WRITE(procout, 1001) ibrav, alat, omega, nat, ntyp, ecutwfc, ecutrho
+1001 FORMAT(/,5x,75x,/,/,5x, &
+       &     'bravais-lattice index     = ',i12,/,5x, &
+       &     'lattice parameter (a_0)   = ',f12.4,'  a.u.',/,5x, &
+       &     'unit-cell volume          = ',f12.4,' (a.u.)^3',/,5x, &
+       &     'number of atoms/cell      = ',i12,/,5x, &
+       &     'number of atomic types    = ',i12,/,5x, &
+       &     'kinetic-energy cut-off    = ',f12.4,'  Ry',/,5x, &
+       &     'charge density cut-off    = ',f12.4,'  Ry')
+#endif 
+
+
     
-    !call write_dft_name ( ) 
+    !call write_dft_name ( )
+#if defined __MPI 		
+    if(ionode) then
+#endif     
     read(unitepwout,"(27X,A)") dft
     read(unitepwout,"(28X,7I4)") iexch, icorr, igcx, igcc, inlc, imeta, imetac
     read(unitepwout,"(A)") ctmp
@@ -191,6 +215,18 @@ module readepw
     if(ctmp(6:32)=="EXX-fraction              =") then
       read(unitepwout,"(33X,1PE12.1)") exx_fraction
     endif               
+#if defined __MPI 
+    endif !(ionode)   
+    call mp_bcast(dft     ,ionode_id)
+    call mp_bcast(iexch   ,ionode_id)
+    call mp_bcast(icorr   ,ionode_id)
+    call mp_bcast(igcx    ,ionode_id)
+    call mp_bcast(igcc    ,ionode_id)
+    call mp_bcast(inlc    ,ionode_id)
+    call mp_bcast(imeta   ,ionode_id)
+    call mp_bcast(imetac  ,ionode_id)
+#endif 
+
     
     !Here add a message if this is a noncollinear or a spin_orbit calculation
     !epw_summary.f90 line 79
@@ -198,6 +234,9 @@ module readepw
     !  IF (lspinorb) THEN
     !    IF (domag) THEN
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if defined __MPI 		
+    if(ionode) then
+#endif
     read(unitepwout,"(A)") ctmp    
     if(ctmp(6:45)=="Noncollinear calculation with spin-orbit") then
       domag = .true.
@@ -214,10 +253,20 @@ module readepw
       noncolin = .false.
     endif    
 		read(unitepwout,*)
+#if defined __MPI 		
+    endif
+    call mp_bcast(domag,ionode_id)
+    call mp_bcast(lspinorb,ionode_id)
+    call mp_bcast(noncolin,ionode_id)
+#endif
+
 		
     !
     ! Description of the unit cell
     !    
+#if defined __MPI 		
+    if(ionode) then
+#endif
     read(unitepwout,"(2(3X,3(12X,F11.5),/))") (celldm(i),i=1,6)
     read(unitepwout,"(/,3(23X,3F8.4,/))") ((at(ipol,apol),ipol=1,3),apol=1,3)
     read(unitepwout,"(/,3(23X,3F8.4,/))") ((bg(ipol,apol),ipol=1,3),apol=1,3)
@@ -233,12 +282,38 @@ module readepw
 				&         3(15x,"b(",i1,") = (",3f8.4," )  ",/ ) )') &
 				& (apol, (bg(ipol, apol), ipol = 1, 3), apol = 1, 3)
 
+#if defined __MPI 		
+    endif
+    call mp_bcast(celldm,ionode_id)
+    call mp_bcast(at,ionode_id)
+    call mp_bcast(bg,ionode_id)
+		WRITE(procout, '(/,2(3x,3(2x,"celldm(",i1,")=",f11.5),/))') &
+				(i, celldm(i), i = 1, 6)
+		WRITE(procout, '(5x, &
+				& "crystal axes: (cart. coord. in units of a_0)",/, &
+				&         3(15x,"a(",i1,") = (",3f8.4," )  ",/ ) )') &
+				& (apol, (at(ipol, apol), ipol = 1, 3), apol = 1, 3)
+		WRITE(procout, '(5x, &
+				& "reciprocal axes: (cart. coord. in units 2 pi/a_0)",/, &
+				&         3(15x,"b(",i1,") = (",3f8.4," )  ",/ ) )') &
+				& (apol, (bg(ipol, apol), ipol = 1, 3), apol = 1, 3)    
+#endif
+
+
     !
     ! Description of the atoms inside the unit cell
     !
+#if defined __MPI 		
+    if(ionode) then
+#endif    
 		read(unitepwout,"(/,A)") ctmp
 		read(unitepwout,"(/,A)") ctmp
 		read(unitepwout,"(/,A)") ctmp
+#if defined __MPI 		
+    endif
+#endif
+
+    
 		if( nat /= 0) then
 			if(.not. allocated(iatm)) then 
 				allocate(iatm(nat),stat=ierr,errmsg=msg)
@@ -264,7 +339,10 @@ module readepw
 				endif
 				tau = 0.0
 			endif
-			
+
+#if defined __MPI 		
+    if(ionode) then
+#endif  			
 			do iat =1 ,nat
 				read(unitepwout,"(7X,2x,5x,1X,A3,2X,F8.4,14X,3f11.5)") iatm(iat),iamass(iat),(tau(ipol,iat),ipol=1,3)
 			enddo
@@ -280,13 +358,37 @@ module readepw
 					&                              ") = (",3f11.5,"  )")')  &
 					& (iat,iatm(iat), amass(iat)/amu_ry, iat,  &
 					& (tau(ipol,iat), ipol = 1, 3), iat = 1, nat)
+#if defined __MPI 		
+    endif
+    call mp_bcast(iatm,ionode_id)
+    call mp_bcast(iamass,ionode_id)
+    call mp_bcast(tau,ionode_id)
+		WRITE(procout, '(/, 5x,"Atoms inside the unit cell: ")')
+		WRITE(procout, '(/,3x,"Cartesian axes")')
+		WRITE(procout, '(/,5x,"site n.  atom      mass ", &
+				&                "          positions (a_0 units)")')
+		
+		WRITE(procout, '(7x,i2,5x,a6,f8.4,"   tau(",i2, &
+				&                              ") = (",3f11.5,"  )")')  &
+				& (iat,iatm(iat), amass(iat)/amu_ry, iat,  &
+				& (tau(ipol,iat), ipol = 1, 3), iat = 1, nat)
+#endif  
 		else
+#if defined __MPI 		
+    if(ionode) then
+#endif  
 			read(unitepwout,*)
+#if defined __MPI 		
+    endif
+#endif  
 		endif
     
     !
     ! Description of symmetries
     !
+#if defined __MPI 		
+    if(ionode) then
+#endif        
     read(unitepwout,*)
     read(unitepwout,"(A)") ctmp
     if(ctmp(6:17)=="No symmetry!") then
@@ -314,10 +416,24 @@ module readepw
 		else
 			backspace(unitepwout)
 	  endif
+#if defined __MPI 		
+    endif
+    call mp_bcast(l_nsymq_le_1,ionode_id)
+    call mp_bcast(minus_q,ionode_id)
+    call mp_bcast(nsymq,ionode_id)
+    call mp_bcast(iverbosity,ionode_id)
+    write(procout,*) "l_nsymq_le_1 = ",l_nsymq_le_1
+    write(procout,*) "minus_q = ",minus_q
+    write(procout,*) "nsymq = ",nsymq
+    write(procout,*) "iverbosity = ",iverbosity
+#endif 
 		
     !
     !     Description of the reciprocal lattice vectors
-    !    
+    !
+#if defined __MPI 		
+    if(ionode) then
+#endif     
     call findkline(unitepwout,"G cutoff =",6,15)
     read(unitepwout,"(15X,f10.4,3X,i7)") gcutm,ngm
     read(unitepwout,"(A)") ctmp
@@ -401,6 +517,21 @@ module readepw
     
     !CALL print_ps_info()
     !End call epw_summary()
+#if defined __MPI 		
+    endif
+    call mp_bcast(gcutm,ionode_id)
+    call mp_bcast(ngm,ionode_id)
+    call mp_bcast(gcutms,ionode_id)
+    call mp_bcast(ngms,ionode_id)
+    call mp_bcast(doublegrid,ionode_id)
+    call mp_bcast(lgauss,ionode_id)
+    call mp_bcast(nkstot,ionode_id)
+    call mp_bcast(degauss,ionode_id)
+    call mp_bcast(ngauss,ionode_id)
+    call mp_bcast(xk_all,ionode_id)
+    call mp_bcast(xkg_all,ionode_id)
+    call mp_bcast(wk,ionode_id)
+#endif 
     
 		!CALL print_clock('EPW' )
     
@@ -409,10 +540,20 @@ module readepw
     !WRITE(stdout, '(a, i2, a, i2, a, i2, a)') "     Wannierization on ", nkc1, " x ", nkc2, " x ", nkc3 , " electronic grid"
     !WRITE(stdout, '(5x, a)') REPEAT("-",67)
     !
+#if defined __MPI 		
+    if(ionode) then
+#endif 
     call findkline(unitepwout,"-------------------------------------------------------------------",6,72)
     read(unitepwout,"(/,A)") ctmp
+#if defined __MPI 		
+    endif
+#endif     
+
 		if(ctmp(6:19)=="Wannierization") then
 			wannierize = .true.
+#if defined __MPI 		
+    if(ionode) then
+#endif  
 			backspace(unitepwout)
 			!call findkline(unitepwout,"Wannierization on ",6,23) 
 			!read(unitepwout,"(23X,3(i2,3X),/)") nkc1,nkc2,nkc3
@@ -429,6 +570,10 @@ module readepw
 			!CALL pw2wan90epw()
 			read(unitepwout,*)
 			read(unitepwout,"(A)") ctmp
+#if defined __MPI 		
+    endif
+    call mp_bcast(ctmp,ionode_id)
+#endif 
 			!select case(trim(adjustl(ctmp)))
 			if(trim(adjustl(ctmp))=='Spin CASE ( up )') then
 				spin_component = 'up'
@@ -463,17 +608,27 @@ module readepw
 			!WRITE(stdout, *) '    Initializing Wannier90'
 			!WRITE(stdout, *)
 			!!
-			read(unitepwout,"(//,A)")
+#if defined __MPI 		
+    if(ionode) then
+#endif 
+      read(unitepwout,"(//,A)")
 			
 			! CALL setup_nnkp()
 			! line 452 of pw2wan2epw.f90
-			read(unitepwout,"(/,A,/)") ctmp    
+			read(unitepwout,"(/,A,/)") ctmp
+#if defined __MPI 		
+    endif
+    call mp_bcast(ctmp,ionode_id)
+#endif       
 			if(trim(adjustl(ctmp))=="Initial Wannier auto_projections") then
 				scdm_proj = .true.
 			else
 				scdm_proj = .false.
 				n_proj = 0
-				do
+#if defined __MPI 		
+    if(ionode) then
+#endif 
+        do
 					read(unitepwout,"(5x,A1)") ctmp
 					if(ctmp/="(") exit
 					n_proj = n_proj+1
@@ -481,7 +636,10 @@ module readepw
 				do i=1,n_proj+1
 					backspace(unitepwout)
 				enddo
-				
+#if defined __MPI 		
+    endif
+    call mp_bcast(n_proj,ionode_id)
+#endif 				
 				n_wannier = n_proj
 				
 				allocate(center_w(3,n_wannier),stat=ierr,errmsg=msg)
@@ -502,16 +660,28 @@ module readepw
 					call io_error(msg)
 				endif
 				mr_w = 0
+#if defined __MPI 		
+    if(ionode) then
+#endif 
 				do iw=1,n_proj
 					read(unitepwout,"(6x,3f10.5,9x,i3,6x,i3)") &
 												(center_w(ipol,iw),ipol=1,3),l_w(iw),mr_w(iw)
 				enddo
+#if defined __MPI 		
+    endif
+    call mp_bcast(center_w,ionode_id)
+    call mp_bcast(l_w,ionode_id)
+    call mp_bcast(mr_w,ionode_id)
+#endif 
 			endif
 				
 	
 			!WRITE(stdout, '(/, "      - Number of bands is (", i3, ")")') num_bands
 			!call findkline(unitepwout,"      - Number of bands is (",1,28)
-			read(unitepwout,"(/,28X,i3)") num_bands      ! the num_bands from DFT pass to Wanner90,defined in wannierEPW
+#if defined __MPI 		
+    if(ionode) then
+#endif 			
+      read(unitepwout,"(/,28X,i3)") num_bands      ! the num_bands from DFT pass to Wanner90,defined in wannierEPW
 			read(unitepwout,"(34X,i3)")   nbnd           ! the total bands of DFT,is define in pwcom.f90 wvfct
 			read(unitepwout,"(37X,i3)")   nexband        ! number of excluded bands,defined in wannierEPW
 																									! ref: exclude_bands in wannier90:User Guide
@@ -542,12 +712,24 @@ module readepw
 			read(unitepwout,*)
 			
 			!END subroutine setup_nnkp
+#if defined __MPI 		
+    endif
+    call mp_bcast(num_bands,ionode_id)
+    call mp_bcast(nbnd,ionode_id)
+    call mp_bcast(nexband,ionode_id)
+    call mp_bcast(n_wannier,ionode_id)
+    call mp_bcast(nbndsub,ionode_id)
+    call mp_bcast(nbndskip,ionode_id)
+#endif 
 			
 			!IF (scdm_proj) THEN
 			!  CALL compute_amn_with_scdm()
 			!ELSE
 			!  CALL compute_amn_para()
 			!ENDIF
+#if defined __MPI 		
+    if(ionode) then
+#endif 	
 			if(scdm_proj) then
 				!CALL compute_amn_with_scdm()
 				read(unitepwout,"(9x,a/)") scdm_entanglement
@@ -610,12 +792,22 @@ module readepw
 					
 				!end subroutine compute_amn_para
 			endif
+#if defined __MPI 		
+    endif
+    call mp_bcast(iknum,ionode_id)
+    call mp_bcast(npool,ionode_id)
+    call mp_bcast(nks,ionode_id)
+#endif 	
+
 			
 			!CALL compute_mmn_para()
 			!!
 			!WRITE(stdout, *)
 			!WRITE(stdout, '(5x, a)') 'MMN'
 			!!
+#if defined __MPI 		
+    if(ionode) then
+#endif 	
 			read(unitepwout,*)
 			read(unitepwout,"(A)") ctmp
 !#if defined(__MPI)
@@ -647,6 +839,12 @@ module readepw
 				eig_read = .true.
 				read(unitepwout,'(46x, i5, 1x, i5)')  nbnd,  nkstot
 			endif
+#if defined __MPI 		
+    endif
+    call mp_bcast(iknum,ionode_id)
+    call mp_bcast(nbnd,ionode_id)
+    call mp_bcast(nkstot,ionode_id)
+#endif 	
 			
 			!
 			! output the results of the wannierization
@@ -675,7 +873,10 @@ module readepw
 					call io_error(msg)
 				endif
 				wann_spreads = 0.0
-			!endif    
+			!endif 
+#if defined __MPI 		
+    if(ionode) then
+#endif 	      
 			read(unitepwout,"(/,A,/)") ctmp
 			do iw=1,n_wannier
 				read(unitepwout,'(6x,3f10.5,5x,f8.5)') (wann_centers(ipol,iw),ipol=1,3),wann_spreads(iw)
@@ -686,6 +887,11 @@ module readepw
 			!IF (wannier_plot) CALL write_plot()
 			read(unitepwout,"(A)") ctmp
 			backspace(unitepwout)
+#if defined __MPI 		
+    endif
+    call mp_bcast(wann_centers,ionode_id)
+    call mp_bcast(wann_spreads,ionode_id)
+#endif 	      
 			if(trim(adjustl(ctmp))=='Writing out Wannier function cube files')then
 				wannier_plot = .true.
 				!WRITE(stdout,'(a,/)') '    Writing out Wannier function cube files'
@@ -696,7 +902,10 @@ module readepw
 					!WRITE(stdout,'(a,f6.3)') 'write_plot: wannier_plot_scale =', &
 																	!wannier_plot_scale
 				!ENDIF
-				!!			
+				!!
+#if defined __MPI 		
+    if(ionode) then
+#endif         
 				read(unitepwout,"(A,/)") ctmp
 				if(iverbosity == 1) then
 					read(unitepwout,"(33X,f6.3)") wannier_plot_radius
@@ -709,9 +918,21 @@ module readepw
 					backspace(unitepwout)
 				endif
 				read(unitepwout,"(6X,I5,8X,I5,8X,I5)") ngx,ngy,ngz
+#if defined __MPI 		
+    endif
+    call mp_bcast(wannier_plot_radius,ionode_id)
+    call mp_bcast(wannier_plot_scale,ionode_id)
+    call mp_bcast(ngx,ionode_id)
+    call mp_bcast(ngy,ionode_id)
+    call mp_bcast(ngz,ionode_id)
+    call mp_bcast(reduce_unk,ionode_id)
+#endif 
 				allocate(ratmax(n_wannier),stat=ierr,errmsg=msg)
 				if(ierr /= 0) call io_error(msg)
-				read(unitepwout,"(36X,3I5)") (wannier_plot_supercell(i), i = 1, 3)
+#if defined __MPI 		
+    if(ionode) then
+#endif 				
+        read(unitepwout,"(36X,3I5)") (wannier_plot_supercell(i), i = 1, 3)
 				do iw=1,n_wannier
 					read(unitepwout,"(60X,f12.6)") ratmax(iw)
 				enddo
@@ -719,8 +940,12 @@ module readepw
 				!WRITE(stdout, *) ' cube files written'			
 				read(unitepwout,"(/)") 
 				read(unitepwout,"(A)") ctmp
-			endif
-			
+#if defined __MPI 		
+    endif
+    call mp_bcast(wannier_plot_supercell,ionode_id)
+    call mp_bcast(ratmax,ionode_id)
+#endif 
+			endif			
 			!
 			!WRITE(stdout, '(5x, a)') REPEAT("-", 67)
 			!CALL print_clock('WANNIER')
@@ -739,7 +964,9 @@ module readepw
     !IF (fixsym) CALL fix_sym(.FALSE.)
     !WRITE(stdout, '(5x, a, i3)') "Symmetries of crystal:         ", nsym
     !! 
-    
+#if defined __MPI 		
+    if(ionode) then
+#endif     
     call findkline(unitepwout,"Symmetries of Bravais lattice: ",6,36)
     read(unitepwout,"(36X,i3)") nrot
     call findkline(unitepwout,"Symmetries of crystal:         ",6,36)
@@ -788,12 +1015,19 @@ module readepw
 		valueRSS = valueRSS * 1024
 		read(unitepwout,*)
 		read(unitepwout,*)
+#if defined __MPI 		
+    endif
+#endif 
+
 		
     !! Load the fine-grid q and k grids.
     !! nkqtotf is computed inside
     !CALL loadqmesh_serial
     !CALL loadkmesh_para
     !------------------------------------------------------------
+#if defined __MPI 		
+    if(ionode) then
+#endif 
 		read(unitepwout,"(A)") ctmp
 		if(ctmp(1:23)=="    Using q-mesh file: ") then ! load from file
 			backspace(unitepwout)
@@ -825,6 +1059,17 @@ module readepw
     !nqtotf = nqf1 * nqf2 * nqf3
     write(stdout,"(5X,A,I12)") & 
     "Total number of the uniform phonon fine mesh to be used(nqtotf) = ",nqtotf
+#if defined __MPI 		
+    endif
+    call mp_bcast(nqf1,ionode_id)
+    call mp_bcast(nqf2,ionode_id)
+    call mp_bcast(nqf3,ionode_id)
+    call mp_bcast(nqtotf,ionode_id)
+    call mp_bcast(nqf,ionode_id)
+    write(procout,"(5X,A,I12)") & 
+    "Total number of the uniform phonon fine mesh to be used(nqtotf) = ",nqtotf
+#endif 
+
     
     !  total number of q points (fine grid)
     if(.not. allocated(xqf)) then 
@@ -884,6 +1129,9 @@ module readepw
     !!
     !!-----------------------------------------------------------------------
     !END SUBROUTINE loadqmesh_serial
+#if defined __MPI 		
+    if(ionode) then
+#endif 
     read(unitepwout,"(A)") ctmp
     if(ctmp(6:67)/= "WARNING: q-point weigths do not add up to 1 [loadqmesh_serial]") backspace(unitepwout)   
     read(unitepwout,"(45X,i10)") nqtotf
@@ -911,6 +1159,17 @@ module readepw
     !read(unitepwout,"(27X,3i4)") nkf1,nkf2,nkf3
     write(stdout,"(5X,A,I12)") &
     "Total number of K-point in fine mesh to be used(nktotf)         = ",nktotf    
+#if defined __MPI 		
+    endif
+    call mp_bcast(nqtotf,ionode_id)
+    call mp_bcast(nktotf,ionode_id)
+    call mp_bcast(nkf1,ionode_id)
+    call mp_bcast(nkf2,ionode_id)
+    call mp_bcast(nkf3,ionode_id)
+    write(procout,"(5X,A,I12)") &
+    "Total number of K-point in fine mesh to be used(nktotf)         = ",nktotf   
+#endif 
+
     
     
     if(allocated(xkf)) deallocate(xkf) 
@@ -971,6 +1230,9 @@ module readepw
     !!-----------------------------------------------------------------------
     !END SUBROUTINE loadkmesh_para 
     !!-----------------------------------------------------------------------    
+#if defined __MPI 		
+    if(ionode) then
+#endif     
     read(unitepwout,"(A)") ctmp
     if(ctmp(6:13)/= "WARNING:") backspace(unitepwout)   
     read(unitepwout,"(45X,i10)") nkqtotf
@@ -980,7 +1242,9 @@ module readepw
     
     ! Defines the total number of k-points
     nktotf = nkqtotf / 2    
-    
+#if defined __MPI 		
+    endif
+#endif      
     
     !!
     !! Allocate velocity and dipole matrix elements after getting grid size
@@ -999,6 +1263,9 @@ module readepw
     !!
     !WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
     !!        
+#if defined __MPI 		
+    if(ionode) then
+#endif  
     read(unitepwout,"(/32X,f10.6)") ef
     ef = ef /ryd2ev
 		WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'    
@@ -1386,10 +1653,126 @@ module readepw
     if (.not. vme) vmef = 2.0*vmef  !in unit of Ryd*bohr   
     
     write(stdout,"(5X,A)") "Reading epw.out successfull!"
-
 #if defined __MPI 		
     endif
-#endif
+
+    call mp_bcast(ibndmin,ionode_id)
+    call mp_bcast(ibndmax,ionode_id)
+    call mp_bcast(ebndmin,ionode_id)
+    call mp_bcast(ebndmax,ionode_id)
+    call mp_bcast(nktotf,ionode_id)
+    call mp_bcast(nqtotf,ionode_id)
+    call mp_bcast(nmodes,ionode_id)
+    call mp_bcast(ecbmin,ionode_id)
+    call mp_bcast(evbmax,ionode_id)
+    call mp_bcast(eps_acustic,ionode_id)
+    call mp_bcast(nvbmax,ionode_id)
+    call mp_bcast(ncbmin,ionode_id)
+    call mp_bcast(evbmax,ionode_id)
+    call mp_bcast(ecbmin,ionode_id)
+    call mp_bcast(icbm,ionode_id)
+    call mp_bcast(ef,ionode_id)
+    
+    if(.not. allocated(xkf)) then
+      allocate(xkf(3,nktotf),stat=ierr,errmsg=msg)
+      if(ierr /=0) then
+        call errore('readepw','Error allocating xkf',1)            
+        call io_error(msg)
+      endif
+    endif
+    call mp_bcast(xkf,ionode_id)
+
+    if(.not. allocated(wkf)) then
+      allocate(wkf(nktotf),stat=ierr,errmsg=msg)
+      if(ierr /=0) then
+        call errore('readepw','Error allocating wkf',1)    
+        call io_error(msg)
+      endif
+    endif
+    call mp_bcast(wkf,ionode_id)
+
+    if(.not. allocated(xqf)) then 
+      allocate(xqf(3,nqtotf),stat=ierr,errmsg=msg)
+      !  fine q point grid
+      if(ierr /=0) then
+				call errore('readepw','Error allocating xqf',1)
+				call io_error(msg)
+			endif
+    endif
+    call mp_bcast(xqf,ionode_id)
+    
+    if(.not. allocated(wqf)) then 
+      allocate(wqf(nqtotf),stat=ierr,errmsg=msg)
+      !  weights on the fine q grid
+      if(ierr /=0) then
+				call errore('readepw','Error allocating wqf',1)    
+				call io_error(msg)
+			endif
+    endif
+    call mp_bcast(wqf,ionode_id)
+    
+    
+    if(.not. allocated(wf)) then
+      allocate(wf(nmodes,nqtotf),stat=ierr,errmsg=msg)
+      if(ierr /=0) then
+        call errore('readepw','Error allocating wf',1)                
+        call io_error(msg)
+      endif
+    endif
+    call mp_bcast(wf,ionode_id)
+
+    if(.not. allocated(etf)) then
+      allocate(etf(ibndmin:ibndmax,1:nktotf),stat=ierr,errmsg=msg)
+      if(ierr /=0) then
+        call errore('readepw','Error allocating etf',1)
+        call io_error(msg)
+      endif    
+    endif
+    call mp_bcast(etf,ionode_id)
+    
+    if(.not. allocated(gmnvkq)) then
+      allocate(gmnvkq(ibndmin:ibndmax,ibndmin:ibndmax,1:nmodes,1:nktotf,1:nqtotf),stat=ierr,errmsg=msg)
+      if(ierr /=0) then
+        call errore('readepw','Error allocating gmnvkq',1)
+        call io_error(msg)
+      endif
+    endif
+    call mp_bcast(gmnvkq,ionode_id)
+
+    if(.not. allocated(vmef)) then
+      allocate(vmef(1:3,ibndmin:ibndmax,ibndmin:ibndmax,1:nktotf),stat=ierr,errmsg=msg)
+      if(ierr /= 0) call io_error(msg)
+    endif
+    call mp_bcast(vmef,ionode_id)
+
+    if(.not. allocated(kqmap)) then
+      allocate(kqmap(nktotf,nqtotf),stat=ierr,errmsg=msg)
+      if(ierr /=0) then
+        call errore('readepw','Error allocating kqmap',1)                  
+        call io_error(msg)
+      endif    
+    endif
+    call mp_bcast(kqmap,ionode_id)
+    
+    if(.not. allocated(iminusq)) then
+      allocate(iminusq(nqtotf))
+    endif
+    call mp_bcast(iminusq,ionode_id)
+    
+    if(.not. allocated(iminusk)) then
+      allocate(iminusk(nktotf))
+    endif
+    call mp_bcast(iminusk,ionode_id)
+    
+    WRITE(procout, '(/5x,a,f10.6,a)') &
+        'Fermi energy is calculated from the fine k-mesh: Ef = ', ef * ryd2ev, ' eV'
+    
+    WRITE(procout,'(/14x,a,i5,2x,a,f9.3,a)') 'ibndmin = ', ibndmin, 'ebndmin = ', ebndmin * ryd2ev, ' eV'
+    WRITE(procout,'(14x,a,i5,2x,a,f9.3,a/)') 'ibndmax = ', ibndmax, 'ebndmax = ', ebndmax * ryd2ev, ' eV' 
+
+    
+    
+#endif 
     
   end subroutine readepwout
   
