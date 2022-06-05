@@ -182,8 +182,7 @@ program lvcsh
       
       !!得到初始电子和空穴的初始的KS状态 init_ik,init_eband,init_hband(in the diabatic states)
       call init_eh_KSstat(lelecsh,lholesh,llaser,init_ik,init_eband,init_hband,init_e_en,init_h_en)
-      call MPI_Barrier(MPI_COMM_WORLD,ierr)
-      stop
+
        
       if(lelecsh) then
 				init_eband = init_eband-ieband_min+1
@@ -193,6 +192,7 @@ program lvcsh
 				
         call set_H_nk(neband,nktotf,nmodes,nqtotf,phQ,gmnvkq_e,H0_e_nk,H_e_nk)
         H_e = reshape(H_e_nk,(/ nefre,nefre /))
+
         call test_H_conjg(nefre,H_e)
         call calculate_eigen_energy_state(nefre,H_e,E_e,P_e)
         P_e_nk = reshape(P_e,(/ neband,nktotf,nefre /))
@@ -200,10 +200,12 @@ program lvcsh
 				call convert_diabatic_adiabatic(nefre,P_e,c_e,w_e)
 				
         call init_surface(nefre,nefre_sh,w_e,iesurface)
-  
+
         call calculate_nonadiabatic_coupling(nmodes,nqtotf,neband,nktotf,E_e,P_e_nk,gmnvkq_e,nefre_sh,iesurface,d_e)
+      call MPI_Barrier(MPI_COMM_WORLD,ierr)
+      stop
         dEa_dQ_e = d_e(1,iesurface,:,:)
-        call test_deadqv(nmodes,nqtotf,dEa_dQ_e)
+        !call test_deadqv(nmodes,nqtotf,dEa_dQ_e)
         E0_e = E_e;P0_e=P_e;P0_e_nk=P_e_nk;d0_e=d_e;w0_e=w_e
       endif
       
@@ -224,12 +226,12 @@ program lvcsh
         
         call calculate_nonadiabatic_coupling(nmodes,nqtotf,nhband,nktotf,E_h,P_h_nk,gmnvkq_h,nhfre_sh,ihsurface,d_h)
         dEa_dQ_h = d_h(1,ihsurface,:,:)
-        call test_deadqv(nmodes,nqtotf,dEa_dQ_h)
+        !call test_deadqv(nmodes,nqtotf,dEa_dQ_h)
         E0_h = E_h;P0_h=P_h;P0_h_nk=P_h_nk;d0_h=d_h;w0_h=w_h
       endif
   
       phQ0=phQ; phP0=phP 
-      
+        
       call write_initial_information(iaver,nmodes,nqtotf,wf,phQ,phP)
       
       !=======================!

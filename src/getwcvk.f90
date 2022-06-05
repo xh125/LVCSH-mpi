@@ -33,17 +33,6 @@ module getwcvk
     integer :: ierr
     integer :: ivbm
     
-    !write(procout,*) "ihband_min =",ihband_min
-    !write(procout,*) "ieband_max =",ieband_max
-    !write(procout,*) "fwhm       =",fwhm
-    !write(procout,*) "w_center   =",w_center
-    !write(procout,*) "icbm       =",icbm
-    !write(procout,*) "nktotf     =",nktotf
-    !write(procout,*) "efiled     =",efield_cart
-    !write(procout,*) "vmef       =",vmef
-    
-    !call mp_bcast(etf,ionode_id)
-    call mp_bcast(vmef,ionode_id)
     ivbm = icbm-1
     
     allocate(W_cvk(icbm:ieband_max,ihband_min:ivbm,nktotf),stat=ierr)
@@ -67,9 +56,6 @@ module getwcvk
       enddo
     enddo  
     
-    write(procout,*) "vmef:", vmef
-    write(procout,*) "W_cvk =",W_cvk
-    write(procout,*) "SUM(W_cvk) = ",SUM(W_cvk)
     !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
     !% Write laser information            %!
     !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
@@ -81,7 +67,6 @@ module getwcvk
     write(stdout,"(5X,A38,F12.7,A4)")  "The full width at half-maximum:fwhm = ",fwhm*ry_to_fs," fs."    
 #if defined __MPI 		
     endif
-    !call mp_bcast(W_cvk,ionode_id)
     write(procout,"(/,5X,A)") "In the laser obsorbtion,the Pump laser as follow:"
     write(procout,"(5X,A22,F12.7,A4)")  "Laser centred energy :",w_center*ryd2eV," eV."
     write(procout,"(5X,A38,F12.7,A4)")  "The full width at half-maximum:fwhm = ",fwhm*ry_to_fs," fs."     

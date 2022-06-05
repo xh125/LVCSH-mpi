@@ -281,16 +281,20 @@ module hamiltonian
     
     integer :: i,j
     logical :: lhconjg
+    complex(kind=dpc) :: A,B
     
     lhconjg = .true.
     
     do i=1,nfre-1
       do j=i+1,nfre
-        if(H(i,j) /= CONJG(H(j,i))) then
+        A = H(i,j)
+        B = H(j,i)
+        if(ABS(Real(A)/REAL(B) - 1.0) > 1.0E-7 .or. ABS(Imag(A)/Imag(B) + 1.0) > 1.0E-7) then
+        !if(H(i,j) /= CONJG(H(j,i))) then
           lhconjg = .false.
           write(*,*) "Hamiltonian is not a CONJG matrix"
-          write(*,*) "H(",i,",",j,") = ",H(i,j)
-          write(*,*) "H(",j,",",i,") = ",H(j,i)
+          write(*,"(A2,I5,A1,I5,A4,2(E18.11,1X))") "H(",i,",",j,") = ",H(i,j)
+          write(*,"(A2,I5,A1,I5,A4,2(E18.11,1X))") "H(",j,",",i,") = ",H(j,i)
         endif
       enddo
     enddo
