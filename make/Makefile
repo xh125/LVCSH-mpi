@@ -77,16 +77,16 @@ MKL_static_Link  = ${BLAS95_LIB} ${LAPACP95_LIB} -Wl,--start-group \
 
 #SRC
 SRCS_F= errore.f90 randoms.f90 version.f90 kinds.f90 string.f90 constants.f90 date_and_times.f90 \
-        io.f90 environments.f90 elph_tetra_mod.f90 recvec.f90 data_buffer.f90 global_mpi.f90 \
+        io.f90 global_mpi.f90 environments.f90 elph_tetra_mod.f90 recvec.f90 data_buffer.f90 \
         mp.f90 mp_base.f90 \
         memory_report.f90 pwcom.f90 phcom.f90 lasercom.f90 surfacecom.f90 parameters.f90 \
         utility.f90 readinput.f90 \
         cell_base.f90 ions_base.f90 symm_base.f90 readscf.f90 \
         readphout.f90 elph2.f90 epwcom.f90 grid.f90 \
         lrcom.f90 wannierEPW.f90 readepw.f90 types.f90 \
-        getwcvk.f90 initialsh.f90 \
+        getwcvk.f90 dynamics.f90 initialsh.f90 \
         hamiltonian.f90 sortting.f90 fssh.f90 sc_fssh.f90 cc_fssh.f90 surfacehopping.f90 \
-        dynamics.f90 saveinf.f90 write_sh_information.f90 lvcsh.f90     					 
+        saveinf.f90 write_sh_information.f90 lvcsh.f90     					 
 
 SRCS_C=
 

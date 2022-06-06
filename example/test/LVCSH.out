@@ -1,0 +1,109 @@
+            _____  ____   ____   ______   ______   ____  ____  
+           |_   _||_  _| |_  _|.' ___  |.' ____ \ |_   ||   _| 
+             | |    \ \   / / / .'   \_|| (___ \_|  | |__| |   
+             | |   _ \ \ / /  | |        _.____`.   |  __  |   
+            _| |__/ | \ ' /   \ `.___.'\| \____) | _| |  | |_  
+           |________|  \_/     `.____ .' \______.'|____||____| 
+                                                               
+                                                               
+                     Developed by XieHua at department of physic, USTC   
+                                            Email:xh125@mail.ustc.edu.cn 
+                                                     
+ LVCSH complied with using Intel Fortran Complier and MKL:
+ Intel(R) Math Kernel Library Version 2020.0.4 Product Build 20200917 for 
+ Intel(R) 64 architecture applications                                                                                                                                                  
+ Intel MKL uses            1  threads
+ MPI Version: 3.1
+ The LVCSH calculation with parallel version (MPI &OpenMP),running on 
+           4 processor cores.
+ Number of MPI processes:           4
+ Intel MKL does not employ threading. MKL Threads/MPI process:           1
+
+ =============================================================================
+ =  DATA TYPE INFORMATION:                                                   =
+ =============================================================================
+
+ REAL: Data type name:                                                      DP
+       Kind value:                                                           8
+       Precision:                                                           15
+       Smallest nonnegligible quantity relative to 1:           0.22204460E-15
+       Smallest positive number:                                0.22250739-307
+       Largest representable number:                            0.17976931+309
+
+       Data type name:                                                     sgl
+       Kind value:                                                           4
+       Precision:                                                            6
+       Smallest nonnegligible quantity relative to 1:           0.11920929E-06
+       Smallest positive number:                                0.11754944E-37
+       Largest representable number:                            0.34028235E+39
+
+ INTEGER: Data type name:                                            (default)
+          Kind value:                                                        4
+          Bit size:                                                         32
+          Largest representable number:                             2147483647
+
+
+ LOGICAL: Data type name:                                            (default)
+          Kind value:                                                        4
+
+
+ CHARACTER: Data type name:                                          (default)
+            Kind value:                                                      1
+
+ =============================================================================
+
+ =============================================================================
+ -> Using CODATA 2010 constant values                                       
+    (http://physics.nist.gov/cuu/Constants/index.html)                      
+ =============================================================================
+
+ Program LVCSH v.0.8.4 startes on  6Jun2022 at 20:03:25 
+
+ =============================================================================
+           The namelist file as follows
+ =============================================================================
+ &shinput                                                                       
+ calculation   = "lvcsh"                                                        
+ verbosity     = "high"                                                         
+ prtgmnvkq     = .false.                                                        
+ outdir        = "./"                                                           
+ lfeedback     = .true.                                                         
+ l_dEa2_dQ2    = .true.                                                         
+ methodsh      = "FSSH"                                                         
+ ldecoherence  = .true.                                                         
+ Cdecoherence  = 0.1                                                            
+ lit_gmnvkq    = 0.1                                                            
+ lit_ephonon   = 0.0                                                            
+ eps_acustic   = 5.0                                                            
+ lehpairsh     = .true.                                                         
+ ieband_min    = 3                                                              
+ ieband_max    = 3                                                              
+ ihband_min    = 2                                                              
+ ihband_max    = 2                                                              
+ lreadscfout   = .false.                                                        
+ scfoutname    = "scf.out"                                                      
+ lreadphout    = .false.                                                        
+ phoutname     = "ph.out"                                                       
+ epwoutname    = "./epw40.out"                                                  
+ nefre_sh      = 20                                                             
+ nhfre_sh      = 20                                                             
+ nnode         = 1                                                              
+ ncore         = 1                                                              
+ naver         = 10                                                             
+ nsnap         = 500                                                            
+ nstep         = 2                                                              
+ dt            = 0.2                                                            
+ savedsnap     = 5                                                              
+ pre_nstep     = 5000                                                           
+ pre_dt        = 0.5                                                            
+ ld_fric       = 0.01                                                           
+ temp          = 300                                                            
+ l_ph_quantum  = .true.                                                         
+ llaser        = .true.                                                         
+ efield_cart   = 1.0 1.0 1.0                                                    
+ w_laser       = 2.0                                                            
+ fwhm          = 100                                                            
+ /                                                                              
+
+ Read parameter Successful!
+ =============================================================================
