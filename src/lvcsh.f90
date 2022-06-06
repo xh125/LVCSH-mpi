@@ -192,48 +192,56 @@ program lvcsh
 				
         call set_H_nk(neband,nktotf,nmodes,nqtotf,phQ,gmnvkq_e,H0_e_nk,H_e_nk)
         H_e = reshape(H_e_nk,(/ nefre,nefre /))
-
+      
         call test_H_conjg(nefre,H_e)
         call calculate_eigen_energy_state(nefre,H_e,E_e,P_e)
         P_e_nk = reshape(P_e,(/ neband,nktotf,nefre /))
+        write(procout,*) "E_e=",E_e*ryd2eV
         
 				call convert_diabatic_adiabatic(nefre,P_e,c_e,w_e)
 				
         call init_surface(nefre,nefre_sh,w_e,iesurface)
-
+      
         call calculate_nonadiabatic_coupling(nmodes,nqtotf,neband,nktotf,E_e,P_e_nk,gmnvkq_e,nefre_sh,iesurface,d_e)
-      call MPI_Barrier(MPI_COMM_WORLD,ierr)
-      stop
+      
         dEa_dQ_e = d_e(1,iesurface,:,:)
-        !call test_deadqv(nmodes,nqtotf,dEa_dQ_e)
+        call test_deadqv(nmodes,nqtotf,dEa_dQ_e)
         E0_e = E_e;P0_e=P_e;P0_e_nk=P_e_nk;d0_e=d_e;w0_e=w_e
-      endif
+      endif      
       
       if(lholesh) then
 				init_hband = init_hband-ihband_min+1
 				c_h_nk = czero
 				c_h_nk(init_hband,init_ik) = cone
 				c_h = reshape(c_h_nk,(/ nhfre /))			
-			
+        
         call set_H_nk(nhband,nktotf,nmodes,nqtotf,phQ,gmnvkq_h,H0_h_nk,H_h_nk)
         H_h = reshape(H_h_nk,(/ nhfre,nhfre /))    
+        
+        call test_H_conjg(nhfre,H_h)
+        write(procout,*) "H_h=",H_h
         call calculate_eigen_energy_state(nhfre,H_h,E_h,P_h)
         P_h_nk = reshape(P_h,(/ nhband,nktotf,nhfre /))
+        write(procout,*) "E_h=",E_h*ryd2eV
         
 				call convert_diabatic_adiabatic(nhfre,P_h,c_h,w_h)
-				
+
 				call init_surface(nhfre,nhfre_sh,w_h,ihsurface)
-        
+
         call calculate_nonadiabatic_coupling(nmodes,nqtotf,nhband,nktotf,E_h,P_h_nk,gmnvkq_h,nhfre_sh,ihsurface,d_h)
+ 
         dEa_dQ_h = d_h(1,ihsurface,:,:)
-        !call test_deadqv(nmodes,nqtotf,dEa_dQ_h)
+
+        call test_deadqv(nmodes,nqtotf,dEa_dQ_h)
         E0_h = E_h;P0_h=P_h;P0_h_nk=P_h_nk;d0_h=d_h;w0_h=w_h
       endif
-  
-      phQ0=phQ; phP0=phP 
+ 
+      phQ0=phQ; phP0=phP  
         
       call write_initial_information(iaver,nmodes,nqtotf,wf,phQ,phP)
-      
+
+      call MPI_Barrier(MPI_COMM_WORLD,ierr)
+      stop       
       !=======================!
       != loop over snapshots =!
       !=======================!

@@ -1,4 +1,8 @@
+#define __MPI
 module write_sh_information
+#if defined __MPI 		
+  use global_mpi
+#endif
   use kinds,only : dp,dpc
   implicit none
   
@@ -24,6 +28,9 @@ module write_sh_information
       !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
       !% Write the elctron-hole information in adiabatic base   %!
       !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
+#if defined __MPI 		
+    if(ionode) then
+#endif  
       write(stdout,"(/,5X,A)") "In adiabatic base,the elctron-hole state as follow:"
       if(lholesh) then
         write(stdout,"(5X,A14,I5,1X,A20,F12.7,A3)") &
@@ -36,7 +43,21 @@ module write_sh_information
       if(lelecsh .and. lholesh) then
         write(stdout,"(5X,A17,F12.7,A3)")  "elec-hole energy=",(E_e(iesurface)+E_h(ihsurface))*ryd2eV," eV"  
       endif
-      
+#if defined __MPI 		
+    endif
+      write(procout,"(/,5X,A)") "In adiabatic base,the elctron-hole state as follow:"
+      if(lholesh) then
+        write(procout,"(5X,A14,I5,1X,A20,F12.7,A3)") &
+        "Init_hsurface=",ihsurface,"Initial hole Energy:",-E_h(ihsurface)*ryd2eV," eV" 
+      endif
+      if(lelecsh) then
+        write(procout,"(5X,A14,I5,1X,A20,F12.7,A3)") &
+        "Init_esurface=",iesurface,"Initial elec Energy:",E_e(iesurface)*ryd2eV," eV"       
+      endif
+      if(lelecsh .and. lholesh) then
+        write(procout,"(5X,A17,F12.7,A3)")  "elec-hole energy=",(E_e(iesurface)+E_h(ihsurface))*ryd2eV," eV"  
+      endif    
+#endif        
       
       !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
       !% calculate phonon energy                                %!
@@ -52,13 +73,16 @@ module write_sh_information
       !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
       !% Write initial non-adiabatic dynamica information        %!
       !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
+#if defined __MPI 		
+    if(ionode) then
+#endif 
       if(lholesh) then
         if(lelecsh) then
           write(stdout,"(/,A)") " time(fs)    rt(s) hsur esur&
           &     E_h(eV)     E_e(eV)    E_eh(eV)    T_ph(eV)    U_ph(eV)    E_ph(eV)   E_tot(eV)"         
           write(stdout,"(F9.2,F9.2,I5,I5,7(1X,F11.4))") 0.00,0.00,&
-          ihsurface,iesurface,&
-          -e_h(ihsurface)*ryd2eV,e_e(iesurface)*ryd2eV,(e_e(iesurface)+e_h(ihsurface))*ryd2eV,&
+          ihsurface,iesurface,-e_h(ihsurface)*ryd2eV,e_e(iesurface)*ryd2eV,&
+          (e_e(iesurface)+e_h(ihsurface))*ryd2eV,&
           SUM_phK*ryd2eV,SUM_phU*ryd2eV,SUM_phE*ryd2eV,(E_e(iesurface)+E_h(ihsurface)+SUM_phE)*ryd2eV       
         else 
           write(stdout,"(/,A)") " time(fs)    rt(s) hsur&
@@ -78,7 +102,35 @@ module write_sh_information
           write(stdout,"(/,A)") "Error!! lelecsh and lholesh must have one need to be set TRUE."
         endif
       endif
-  
+#if defined __MPI 		
+    endif
+       if(lholesh) then
+        if(lelecsh) then
+          write(procout,"(/,A)") " time(fs)    rt(s) hsur esur&
+          &     E_h(eV)     E_e(eV)    E_eh(eV)    T_ph(eV)    U_ph(eV)    E_ph(eV)   E_tot(eV)"         
+          write(procout,"(F9.2,F9.2,I5,I5,7(1X,F11.4))") 0.00,0.00,&
+          ihsurface,iesurface,&
+          -e_h(ihsurface)*ryd2eV,e_e(iesurface)*ryd2eV,(e_e(iesurface)+e_h(ihsurface))*ryd2eV,&
+          SUM_phK*ryd2eV,SUM_phU*ryd2eV,SUM_phE*ryd2eV,(E_e(iesurface)+E_h(ihsurface)+SUM_phE)*ryd2eV       
+        else 
+          write(procout,"(/,A)") " time(fs)    rt(s) hsur&
+          &     E_h(eV)    T_ph(eV)    U_ph(eV)    E_ph(eV)   E_tot(eV)"       
+          write(procout,"(F9.2,F9.2,I5,5(1X,F11.4))") 0.00,0.00,&
+          ihsurface,-e_h(ihsurface)*ryd2eV,&
+          SUM_phK*ryd2eV,SUM_phU*ryd2eV,SUM_phE*ryd2eV,(E_h(ihsurface)+SUM_phE)*ryd2eV     
+        endif
+      else
+        if(lelecsh) then
+          write(procout,"(/,A)") " time(fs)    rt(s) esur&
+          &     E_e(eV)    T_ph(eV)    U_ph(eV)     E_ph(eV)   E_tot(eV)" 
+          write(procout,"(F9.2,F9.2,I5,5(1X,F11.4))") 0.00,0.00,&
+          iesurface,e_e(iesurface)*ryd2eV,&
+          SUM_phK*ryd2eV,SUM_phU*ryd2eV,SUM_phE*ryd2eV,(E_e(iesurface)+SUM_phE)*ryd2eV     
+        else
+          write(procout,"(/,A)") "Error!! lelecsh and lholesh must have one need to be set TRUE."
+        endif
+      endif   
+#endif   
   
   
       !=============================!
@@ -88,8 +140,6 @@ module write_sh_information
         isnap = 0
         do iq=1,nqtotf
           do imode=1,nmodes
-            !phQsit(imode,iq,isnap) = phQsit(imode,iq,isnap)+phQ(imode,iq)
-            !phPsit(imode,iq,isnap) = phPsit(imode,iq,isnap)+phP(imode,iq)
             phKsit(imode,iq,isnap) = phKsit(imode,iq,isnap)+phK(imode,iq)
             phUsit(imode,iq,isnap) = phUsit(imode,iq,isnap)+phU(imode,iq)
           enddo

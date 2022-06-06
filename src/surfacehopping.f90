@@ -1,3 +1,4 @@
+#define __MPI
 module surfacehopping
   use kinds, only : dp,dpc
   use constants,only : cone,czero,ci
@@ -349,6 +350,9 @@ module surfacehopping
   ! ref : PPT-91
   ! The most time-consuming part of the program
   subroutine calculate_nonadiabatic_coupling(nmodes,nq,nband,nk,ee,p_nk,gmnvkq,nfre_sh,isurface,dd)
+#if defined __MPI 		
+  use global_mpi
+#endif
     use kinds,only : dp
     use elph2,only : iminusq
     implicit none
@@ -449,6 +453,8 @@ module surfacehopping
     ! Let dijqv(i,j,-q,v) = dijqv(j,i,q,v)*
     call test_dijqv(isurface,nfre,nmodes,nq,dd)
     
+    !write(procout,*) "dijqv =",dd
+    
   end subroutine calculate_nonadiabatic_coupling
   
   
@@ -543,6 +549,7 @@ module surfacehopping
     complex(kind=dpc), intent(in) :: dd(2,nfre,nmodes,nq)
     
     integer :: ifre,imode,iq,iq_
+    complex(kind=dpc) :: A,B
     
     ! dijqv(a,i,q,v) = dijqv(i,a,q,v)
     !do iq=1,nq
@@ -584,13 +591,19 @@ module surfacehopping
       do imode=1,nmodes
         do ifre=1,nfre
           if(ifre /= isurface) then
-            if(dd(2,ifre,imode,iq_) /= -1.0*CONJG(dd(1,ifre,imode,iq))) then
+            A =  dd(2,ifre,imode,iq_)
+            B =  -1.0*CONJG(dd(1,ifre,imode,iq))
+            if(ABS(REAL(A)/REAL(B) - 1.0) > 1.0E-7 .or. ABS(IMAG(A)/IMAG(B) - 1.0) > 1.0E-7) then            
+            !if(dd(2,ifre,imode,iq_) /= -1.0*CONJG(dd(1,ifre,imode,iq))) then
               write(*,*) "dajqv(",ifre,",",imode,",",iq,") /= -1.0*CONJG(djaqv(",ifre,",",imode,",",iq_,"))"
               write(*,*) "dajqv(",ifre,",",imode,",",iq,") =",dd(1,ifre,imode,iq)
               write(*,*) "djaqv(",ifre,",",imode,",",iq_,") =",dd(2,ifre,imode,iq_)
             endif
           else
-            if(dd(2,isurface,imode,iq_) /= CONJG(dd(1,isurface,imode,iq))) then
+            A =  dd(2,ifre,imode,iq_)
+            B =  CONJG(dd(1,ifre,imode,iq))
+            if(ABS(REAL(A)/REAL(B) - 1.0) > 1.0E-7 .or. ABS(IMAG(A)/IMAG(B) - 1.0) > 1.0E-7) then          
+            !if(dd(2,isurface,imode,iq_) /= CONJG(dd(1,isurface,imode,iq))) then
               write(*,*) "daaqv(",ifre,",",imode,",",iq,") /= CONJG(daaqv(",ifre,",",imode,",",iq_,"))"
               write(*,*) "daaqv(",ifre,",",imode,",",iq,") =",dd(1,ifre,imode,iq)
               write(*,*) "daaqv(",ifre,",",imode,",",iq_,") =",dd(2,ifre,imode,iq_)
