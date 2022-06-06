@@ -20,7 +20,7 @@
 !
 #define __USE_BARRIER  
 #define __MPI  
-#define __TRACE
+!#define __TRACE
 !=----------------------------------------------------------------------------=!
 !
 ! These routines allocate buffer spaces used in reduce_base_real_gpu.
@@ -161,18 +161,13 @@ END SUBROUTINE mp_synchronize
 #if defined __TRACE
    WRITE(*, *) 'BCAST_INTEGER IN'
 #endif
-   write(*,*) "n = ",n
-   write(*,*) "msgsiz_max =",msgsiz_max
-   !write(*,*) iproc,"array =",array
-   write(*,*) "root=",root
-   write(*,*) "gid=",gid
+
 #if defined __USE_BARRIER
    CALL mp_synchronize(gid)
 #endif
    !     
     IF(n <= msgsiz_max) THEN
       CALL MPI_BCAST(array, n, MPI_INTEGER, root, gid, ierr)
-      write(*,*) "It's OK!"
       IF(ierr /= 0) CALL errore(' bcast_integer ', ' error in mpi_bcast 1 ', ierr)
     ELSE
       nblk   = n / msgsiz_max

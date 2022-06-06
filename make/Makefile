@@ -12,7 +12,7 @@ bindir       = $(project_home)/bin
 VPATH = $(srcdir)
 
 # output exe file
-exe	    = LVCSH.x
+exe	    = LVCSH
 
 # IFLAGS = how to locate directories with *.h or *.f90 file to be included
 IFLAGS         = -I$(project_home)/include

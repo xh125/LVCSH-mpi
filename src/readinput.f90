@@ -293,16 +293,8 @@ module readinput
   subroutine bcast_namelist()
     implicit none
     
-     
-    
-    write(*,*) "In bcast_namelist"
     call mp_bcast(calculation   ,ionode_id)  
-      call MPI_Barrier(MPI_COMM_WORLD,ierr)
-      write(procout,*) "processor ",iproc,"is OK!"
-      stop  
-    
     call mp_bcast(lfeedback     ,ionode_id)
-   
     call mp_bcast(verbosity     ,ionode_id)
     call mp_bcast(outdir        ,ionode_id)
     call mp_bcast(methodsh      ,ionode_id)
@@ -356,10 +348,6 @@ module readinput
     call mp_bcast(l_dEa2_dQ2    ,ionode_id)
     call mp_bcast(lsetthreads   ,ionode_id) 
     call mp_bcast(mkl_threads   ,ionode_id)
-
-      call MPI_Barrier(MPI_COMM_WORLD,ierr)
-      write(procout,*) "processor ",iproc,"is OK!"
-      stop 
 
     write(procout,"(/,1X,A15,I5,1X,A10)") "Input file for ",iproc,"processor."   
     write(procout,*) "calculation  =",trim(calculation) 
@@ -419,7 +407,11 @@ module readinput
     write(procout,*) "lsetthreads  =",lsetthreads  
     write(procout,*) "mkl_threads  =",mkl_threads  
     
-    call MPI_Barrier(MPI_COMM_WORLD,ierr)
+    if(naver < nproc) then
+      if(ionode) write(stdout,*) "The parameter naver need to set larger than num of processor in MPI."
+      write(procout,*) "The parameter naver need to set larger than num of processor in MPI."
+      stop
+    endif
     
   end subroutine bcast_namelist
 #endif 

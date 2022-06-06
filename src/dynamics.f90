@@ -330,16 +330,13 @@ module dynamics
     !call test_wqv(nmodes,nqtotf,wf)
     
     !call test_xv(nmodes,nqtotf,phQ,phP)
-    write(procout,*) "It's OK1"
     
     dEa_dQ = 0.0
     dEa2_dQ2 = 0.0
-    write(procout,*) "It's OK2"
     do istep=1,pre_nstep
       call rk4_nuclei(nmodes,nqtotf,dEa_dQ,ld_gamma,wf,phQ,phP,pre_dt)
       call add_bath_effect(nmodes,nqtotf,wf,ld_gamma,temp,dEa2_dQ2,pre_dt,l_ph_quantum,phQ,phP)
     enddo
-    write(procout,*) "It's OK3"  
     !call test_xv(nmodes,nqtotf,phQ,phP)
   
     time = pre_nstep*pre_dt*ry_to_fs

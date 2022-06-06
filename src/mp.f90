@@ -390,19 +390,10 @@ module mp
       imsg(i) = ichar(msg(i:i))
     END DO
     
-    write(*,*) "group = ",group
-    write(*,*) "mpi_comm_world",mpi_comm_world
     CALL bcast_integer( imsg, msglen, source, group )
-    write(*,*) "It's OK!"
     DO i = 1, msglen
       msg(i:i) = char(imsg(i))
     END DO
-
-      call MPI_Barrier(MPI_COMM_WORLD,ierr)
-      write(*,*) "processor ",trim(msg)
-      stop 
-    
-    write(*,*) "iproc",iproc," length:",msglen,trim(adjustl(msg))
     
     DEALLOCATE (imsg, STAT=ierr)
     IF (ierr/=0) CALL mp_stop( 8016 )

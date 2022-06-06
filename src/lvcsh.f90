@@ -113,10 +113,7 @@ program lvcsh
   call cpu_time(t0)  
   call environment_start( 'LVCSH' )
  
-  call get_inputfile(inputfilename)
-      call MPI_Barrier(MPI_COMM_WORLD,ierr)
-      write(*,*) "processor ",iproc,"is OK!"
-      stop  
+  call get_inputfile(inputfilename) 
 
   call readepwout(epwoutname)
   if(lreadscfout) call readpwscf_out(scfoutname)
@@ -199,7 +196,6 @@ program lvcsh
         call test_H_conjg(nefre,H_e)
         call calculate_eigen_energy_state(nefre,H_e,E_e,P_e)
         P_e_nk = reshape(P_e,(/ neband,nktotf,nefre /))
-        write(procout,*) "E_e=",E_e*ryd2eV
         
 				call convert_diabatic_adiabatic(nefre,P_e,c_e,w_e)
 				
@@ -211,8 +207,6 @@ program lvcsh
         call test_deadqv(nmodes,nqtotf,dEa_dQ_e)
         E0_e = E_e;P0_e=P_e;P0_e_nk=P_e_nk;d0_e=d_e;w0_e=w_e
       endif      
-      
-      call MPI_Barrier(MPI_COMM_WORLD,ierr)
 
       if(lholesh) then
 				init_hband = init_hband-ihband_min+1
@@ -224,10 +218,9 @@ program lvcsh
         H_h = reshape(H_h_nk,(/ nhfre,nhfre /))    
         
         call test_H_conjg(nhfre,H_h)
-        !write(procout,*) "H_h=",H_h
+
         call calculate_eigen_energy_state(nhfre,H_h,E_h,P_h)
         P_h_nk = reshape(P_h,(/ nhband,nktotf,nhfre /))
-        write(procout,*) "E_h=",-1.0*E_h*ryd2eV
         
 				call convert_diabatic_adiabatic(nhfre,P_h,c_h,w_h)
 
@@ -245,8 +238,6 @@ program lvcsh
         
       call write_initial_information(iaver,nmodes,nqtotf,wf,phQ,phP)
 
-      call MPI_Barrier(MPI_COMM_WORLD,ierr)
-      stop       
       !=======================!
       != loop over snapshots =!
       !=======================!
@@ -271,7 +262,7 @@ program lvcsh
           !update phQ,phP to time t0+dt
           if(.not. l_dEa_dQ) dEa_dQ = 0.0
           call rk4_nuclei(nmodes,nqtotf,dEa_dQ,ld_gamma,wf,phQ,phP,dt)
-          
+               
           
           !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
           !% update c,e,p,d,w,g and change potential energy surface        %!
@@ -437,6 +428,9 @@ program lvcsh
           SUM_phE = SUM_phK+SUM_phU 
           SUM_phK0= SUM_phK
           time_ = ((isnap-1)*nstep+istep)*dt*ry_to_fs
+#if defined __MPI 		
+    if(ionode) then
+#endif          
           if(lholesh) then
             if(lelecsh) then
 							if(trim(verbosity)=="high" .or. isnap == 1 .or. isnap == nsnap) then
@@ -460,6 +454,32 @@ program lvcsh
               write(stdout,"(/,A)") "Error!! lelecsh and lholesh must have one need to be set TRUE."
             endif
           endif        
+#if defined __MPI 		
+    endif
+          if(lholesh) then
+            if(lelecsh) then
+							if(trim(verbosity)=="high" .or. isnap == 1 .or. isnap == nsnap) then
+								write(procout,"(F9.2,F9.2,I5,I5,7(1X,F11.4))") time_,(time2-time1),ihsurface,iesurface,&
+								-e_h(ihsurface)*ryd2eV,e_e(iesurface)*ryd2eV,(e_e(iesurface)+e_h(ihsurface))*ryd2eV,&
+								SUM_phK*ryd2eV,SUM_phU*ryd2eV,SUM_phE*ryd2eV,(E_e(iesurface)+E_h(ihsurface)+SUM_phE)*ryd2eV
+							endif
+            else 
+							if(trim(verbosity)=="high" .or. isnap == 1 .or. isnap == nsnap) then
+								write(procout,"(F9.2,F9.2,I5,5(1X,F11.4))") time_,(time2-time1),ihsurface,-e_h(ihsurface)*ryd2eV,&
+								SUM_phK*ryd2eV,SUM_phU*ryd2eV,SUM_phE*ryd2eV,(E_h(ihsurface)+SUM_phE)*ryd2eV
+							endif
+            endif
+          else
+            if(lelecsh) then
+							if(trim(verbosity)=="high" .or. isnap == 1 .or. isnap == nsnap) then
+								write(procout,"(F9.2,F9.2,I5,5(1X,F11.4))") time_,(time2-time1),iesurface,E_e(iesurface)*ryd2eV,&
+								SUM_phK*ryd2eV,SUM_phU*ryd2eV,SUM_phE*ryd2eV,(E_e(iesurface)+SUM_phE)*ryd2eV            
+							endif
+            else
+              write(procout,"(/,A)") "Error!! lelecsh and lholesh must have one need to be set TRUE."
+            endif
+          endif  
+#endif
         
         enddo
         
@@ -500,47 +520,60 @@ program lvcsh
       enddo
       
       call get_date_and_time(cdate,ctime)
+#if defined __MPI 		
+    if(ionode) then
+#endif
       write(stdout,'(1X,"This trajectory end on ",A9," at ",A9)') cdate,ctime      
-      
+#if defined __MPI 		
+    endif
+    write(procout,'(1X,"This trajectory end on ",A9," at ",A9)') cdate,ctime
+#endif      
     enddo
     
-    phKsit = phKsit / naver
-    phUsit = phUsit / naver
+    
+    phKsit = phKsit / itraj
+    phUsit = phUsit / itraj
     if(lelecsh) then
-      csit_e = csit_e /naver
-      wsit_e = wsit_e /naver
-      psit_e = psit_e /naver
-      pes_e  = pes_e  /naver
+      csit_e = csit_e /itraj
+      wsit_e = wsit_e /itraj
+      psit_e = psit_e /itraj
+      pes_e  = pes_e  /itraj
     endif
     
     if(lholesh) then
-      csit_h = csit_h /naver
-      wsit_h = wsit_h /naver
-      psit_h = psit_h /naver
-      pes_h  = pes_h  /naver
+      csit_h = csit_h /itraj
+      wsit_h = wsit_h /itraj
+      psit_h = psit_h /itraj
+      pes_h  = pes_h  /itraj
     endif
+
   
     !====================!
     != save information =!
     !====================!
-    call save_phK(nmodes,nqtotf,nsnap,phKsit)
-    call save_phU(nmodes,nqtotf,nsnap,phUsit)
+    call save_phK(nmodes,nqtotf,itraj,nsnap,phKsit)
+    call save_phU(nmodes,nqtotf,itraj,nsnap,phUsit)
     
     if(lelecsh) then
-      call save_pes(nefre,nsnap,naver,pes_one_e,pes_e,pes_e_file)
-      call save_csit(nefre,nsnap,naver,csit_e,csit_e_file)
-      call save_wsit(nefre,nsnap,naver,wsit_e,wsit_e_file)
-      call save_psit(nefre,nsnap,naver,psit_e,psit_e_file)
+      call save_pes(nefre,nsnap,itraj,pes_one_e,pes_e,pes_e_file)
+      call save_csit(nefre,nsnap,itraj,csit_e,csit_e_file)
+      call save_wsit(nefre,nsnap,itraj,wsit_e,wsit_e_file)
+      call save_psit(nefre,nsnap,itraj,psit_e,psit_e_file)
       call plot_band_occupatin_withtime(neband,nktotf,Enk_e,xkf,nsnap,psit_e,csit_e,savedsnap,band_e_file)
     endif
     
     if(lholesh) then
-      call save_pes(nhfre,nsnap,naver,pes_one_h,pes_h,pes_h_file)
-      call save_csit(nhfre,nsnap,naver,csit_h,csit_h_file)
-      call save_wsit(nhfre,nsnap,naver,wsit_h,wsit_h_file)
-      call save_psit(nhfre,nsnap,naver,psit_h,psit_h_file)
+      call save_pes(nhfre,nsnap,itraj,pes_one_h,pes_h,pes_h_file)
+      call save_csit(nhfre,nsnap,itraj,csit_h,csit_h_file)
+      call save_wsit(nhfre,nsnap,itraj,wsit_h,wsit_h_file)
+      call save_psit(nhfre,nsnap,itraj,psit_h,psit_h_file)
       call plot_band_occupatin_withtime(nhband,nktotf,Enk_h,xkf,nsnap,psit_h,csit_h,savedsnap,band_h_file)
     endif
+      
+      call MPI_Barrier(MPI_COMM_WORLD,ierr)
+      write(*,*) "processor ",iproc,"is OK!"
+      stop    
+  
   
   elseif(trim(calculation)=="plot") then
     write(stdout,"(/A)") "Start to write files for plotting!"

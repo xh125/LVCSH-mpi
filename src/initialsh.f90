@@ -125,7 +125,6 @@ module initialsh
     !allocate(W_cvk(icbm:ieband_max,ihband_min:ivbm,nkf) !光激发下的跃迁几率大小
     if (llaser) then
       W_cvk_all = SUM(W_cvk)
-      write(procout,*) "W_cvk_all =", W_cvk_all
       call random_number(flagr)
       flagr = flagr*W_cvk_all
       flagd = 0.0

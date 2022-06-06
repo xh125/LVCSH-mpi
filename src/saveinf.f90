@@ -1,4 +1,8 @@
+#define __MPI
 module saveinf
+#if defined __MPI 		
+  use global_mpi
+#endif
   use kinds,only : dp,dpc
   use surfacecom,only : dt,nstep,temp,nqv,l_ph_quantum,eps_acustic
   use io,only : io_file_unit,open_file,close_file,stdout
@@ -243,14 +247,18 @@ module saveinf
 	
   
 	!Write average phK infortmation to the file: phKsit.dat.gnu	
-  subroutine save_phK(nmodes,nq,nsnap,phKsit)  
-    integer,intent(in) :: nmodes,nq,nsnap
+  subroutine save_phK(nmodes,nq,naver,nsnap,phKsit)  
+    integer,intent(in) :: nmodes,nq,nsnap,naver
     real(kind=dp),intent(in) :: phKsit(nmodes,nq,0:nsnap)
     
     integer :: phK_unit
 		character(len=maxlen) :: phK_file_    
     phK_unit = io_file_unit()
-		phK_file_ = trim(outdir)//trim(adjustl(phK_file))
+    if(llinux) then
+      phK_file_ = trim(work_path)//"/"//trim(adjustl(phK_file))
+    else
+      phK_file_ = trim(work_path)//"\"//trim(adjustl(phK_file))
+    endif
     call open_file(phK_file_,phK_unit)
 
     if(.not. allocated(cphmode)) allocate(cphmode(nmodes,nq))
@@ -262,7 +270,8 @@ module saveinf
       enddo
     enddo
 
-		write(phK_unit,"(A)") "Average of Normal mode kinetic energy for one core sample.SUM_phK,((phK(imode,iq),imode=1,nmodes),iq=1,nq)"
+		write(phK_unit,"(1X,A10,I10,A96)") "Average of",naver,&
+          " Normal mode kinetic energy for one core sample.SUM_phK,((phK(imode,iq),imode=1,nmodes),iq=1,nq)"
 		write(phK_unit,"(*(1X,A12))") "time","SUM_phK",(("K"//trim(adjustl(cphmode(imode,iq))),imode=1,nmodes),iq=1,nq)			
     !write(phK_unit,"(*(1X,A12))") "time ","SUM_phK",(("phK(mode,q)",imode=1,nmodes),iq=1,nq)
 		write(phK_unit,"(*(1X,A12))") "fs ","  meV  ",(("   meV     ",imode=1,nmodes),iq=1,nq)
@@ -274,7 +283,7 @@ module saveinf
     
     call close_file(phK_file_,phK_unit)
    
-	  write(stdout,"(A,A)") "Save average phK infortmation to the file: ",trim(phK_file_)
+	  write(procout,"(A,A)") "Save average phK infortmation to the file: ",trim(phK_file_)
 	 
   end subroutine save_phK
 
@@ -381,14 +390,19 @@ module saveinf
 
 
 	!Write average phU infortmation to the file: phUsit.dat.gnu
-  subroutine save_phU(nmodes,nq,nsnap,phUsit)  
-    integer,intent(in) :: nmodes,nq,nsnap
+  subroutine save_phU(nmodes,nq,naver,nsnap,phUsit)  
+    integer,intent(in) :: nmodes,nq,nsnap,naver
     real(kind=dp),intent(in) :: phUsit(nmodes,nq,0:nsnap)
     
     integer :: phU_unit
 		character(len=maxlen) :: phU_file_
     phU_unit = io_file_unit()
-		phU_file_ = trim(outdir)//trim(adjustl(phU_file))
+    if(llinux) then
+      phU_file_ = trim(work_path)//"/"//trim(adjustl(phU_file))
+    else
+      phU_file_ = trim(work_path)//"\"//trim(adjustl(phU_file))
+    endif		
+    
     call open_file(phU_file_,phU_unit)
 
     if(.not. allocated(cphmode)) allocate(cphmode(nmodes,nq))
@@ -400,7 +414,8 @@ module saveinf
       enddo
     enddo
 		
-		write(phU_unit,"(A)") "Average of Normal mode potential energy for one core sample.SUM_phU,((phU(imode,iq),imode=1,nmodes),iq=1,nq)"
+		write(phU_unit,"(1X,A10,I10,A96)") "Average of",naver,&
+          " Normal mode potential energy for one core sample.SUM_phU,((phU(imode,iq),imode=1,nmodes),iq=1,nq)"
 		write(phU_unit,"(*(1X,A12))") "time ","SUM_phU",(("U"//trim(adjustl(cphmode(imode,iq))),imode=1,nmodes),iq=1,nq)
 		write(phU_unit,"(*(1X,A12))") "fs ","  meV  ",(("   meV     ",imode=1,nmodes),iq=1,nq)
     write(phU_unit,"(2(1X,A12),*(1X,F12.5))") "Omega(meV)","SUM_phU",((wf(imode,iq)*ryd2meV,imode=1,nmodes),iq=1,nq)
@@ -411,7 +426,7 @@ module saveinf
     
     call close_file(phU_file_,phU_unit)
    
-	  write(stdout,"(A,A)") "Save average phU infortmation to the file: ",trim(phU_file_)
+	  write(procout,"(A,A)") "Save average phU infortmation to the file: ",trim(phU_file_)
 	 
   end subroutine save_phU  
 
@@ -502,7 +517,6 @@ module saveinf
   end subroutine plot_phU  
 
 
-
   subroutine plot_ph_temp(nmodes,nq,nsnap,phKsit,phUsit)
     implicit none
     integer , intent(in) :: nmodes,nq,nsnap
@@ -519,7 +533,13 @@ module saveinf
     allocate(phEsit(nq,0:nsnap))    
     do imode=1,nmodes
       write(ctmp1,*) imode
-      phT_file_ = trim(outdir)//"ph_temp_mode"//trim(adjustl(ctmp1))//".dat"  
+
+      if(llinux) then
+        phT_file_ = trim(work_path)//"/"//"ph_temp_mode"//trim(adjustl(ctmp1))//".dat"
+      else
+        phT_file_ = trim(work_path)//"\"//"ph_temp_mode"//trim(adjustl(ctmp1))//".dat"
+      endif		
+
     
     
       phT_unit = io_file_unit()
@@ -597,7 +617,13 @@ module saveinf
 		character(len=maxlen) :: wsit_file_
 		integer :: wsit_unit
     wsit_unit = io_file_unit()
-		wsit_file_ = trim(outdir)//trim(adjustl(wsit_file))
+		
+    if(llinux) then
+      wsit_file_ = trim(work_path)//"/"//trim(adjustl(wsit_file))
+    else
+      wsit_file_ = trim(work_path)//"\"//trim(adjustl(wsit_file))
+    endif    
+    
     call open_file(wsit_file_,wsit_unit)
 
     if(.not. allocated(cefree)) allocate(cefree(nfre))
@@ -616,7 +642,7 @@ module saveinf
     
     call close_file(wsit_file_,wsit_unit)
 
-		write(stdout,"(A,A)")"Save the average electron(hole) wavefction population on &
+		write(procout,"(A,A)")"Save the average electron(hole) wavefction population on &
 		          &different adiabatic wave function to file:",trim(wsit_file_)
   
     deallocate(cefree)
@@ -699,7 +725,13 @@ module saveinf
     
 		character(len=maxlen) :: pes_file_
 		integer :: pes_unit
-		pes_file_= trim(outdir)//trim(adjustl(pes_file))
+		
+    if(llinux) then
+      pes_file_ = trim(work_path)//"/"//trim(adjustl(pes_file))
+    else
+      pes_file_ = trim(work_path)//"\"//trim(adjustl(pes_file))
+    endif      
+    
     pes_unit = io_file_unit()
     call open_file(pes_file_,pes_unit)
 
@@ -716,12 +748,17 @@ module saveinf
       write(pes_unit,"(*(1X,E12.5))") dt*nstep*isnap*ry_to_fs,(pes(ifre,isnap)*RYTOEV,ifre=0,nfre)
     enddo
 
-		write(stdout,"(A,A)") "Save average of active PES and PES for all trajecotry to the file:",trim(pes_file_)
+		write(procout,"(A,A)") "Save average of active PES and PES for all trajecotry to the file:",trim(pes_file_)
 
     
 		call close_file(pes_file_,pes_unit)
 
-		pes_file_= trim(outdir)//trim(adjustl(pes_file))//".first.dat"
+    if(llinux) then
+      pes_file_ = trim(work_path)//"/"//trim(adjustl(pes_file))//".first.dat"
+    else
+      pes_file_ = trim(work_path)//"\"//trim(adjustl(pes_file))//".first.dat"
+    endif     
+    
     pes_unit = io_file_unit()
     call open_file(pes_file_,pes_unit)
 
@@ -733,7 +770,7 @@ module saveinf
     enddo
 
     call close_file(pes_file_,pes_unit)		
-		write(stdout,"(A,A)") "Save the first trajecotry active PES and PES to the file:",trim(pes_file_)
+		write(procout,"(A,A)") "Save the first trajecotry active PES and PES to the file:",trim(pes_file_)
     
     deallocate(cefree)
     
@@ -858,7 +895,12 @@ module saveinf
 		character(len=maxlen) :: csit_file_
     integer :: csit_unit
     csit_unit = io_file_unit()
-		csit_file_ = trim(outdir)//trim(adjustl(csit_file))
+		
+    if(llinux) then
+      csit_file_ = trim(work_path)//"/"//trim(adjustl(csit_file))
+    else
+      csit_file_ = trim(work_path)//"\"//trim(adjustl(csit_file))
+    endif          
     call open_file(csit_file_,csit_unit)
 
     if(.not. allocated(cefree)) allocate(cefree(nfre))
@@ -875,7 +917,7 @@ module saveinf
     enddo
     
     call close_file(csit_file_,csit_unit)
-		write(stdout,"(A,A)")"Save the average electron(hole) wavefction population on &
+		write(procout,"(A,A)")"Save the average electron(hole) wavefction population on &
 		          &different diabatic wave function to file:",trim(csit_file_)
   
     deallocate(cefree)
@@ -958,7 +1000,12 @@ module saveinf
 		character(len=maxlen) :: psit_file_
     integer :: psit_unit
     psit_unit = io_file_unit()
-		psit_file_ = trim(outdir)//trim(adjustl(psit_file))
+    if(llinux) then
+      psit_file_ = trim(work_path)//"/"//trim(adjustl(psit_file))
+    else
+      psit_file_ = trim(work_path)//"\"//trim(adjustl(psit_file))
+    endif  		
+
     call open_file(psit_file_,psit_unit)
 
     if(.not. allocated(cefree)) allocate(cefree(nfre))
@@ -976,7 +1023,7 @@ module saveinf
     
     call close_file(psit_file_,psit_unit)
 
-	  write(stdout,"(A,A)")"Save the average electron(hole) active PES project to &
+	  write(procout,"(A,A)")"Save the average electron(hole) active PES project to &
 		          &different diabatic wave function to file:",trim(psit_file_)
   
     deallocate(cefree)
@@ -1065,7 +1112,12 @@ module saveinf
     
     do iband=1,nband
       write(ctmp1,*) iband
-      band_file_=trim(outdir)//trim(adjustl(band_file))//"_"//trim(adjustl(ctmp1))//".dat"  
+      if(llinux) then
+        band_file_ = trim(work_path)//"/"//trim(adjustl(band_file))//"_"//trim(adjustl(ctmp1))//".dat"
+      else
+        band_file_ = trim(work_path)//"\"//trim(adjustl(band_file))//"_"//trim(adjustl(ctmp1))//".dat"
+      endif       
+       
       band_unit = io_file_unit()
       call open_file(band_file_,band_unit)
       write(band_unit,"(A32,I12,A)") "Carrier occupation on the iband=",iband," structure at different time"
@@ -1091,7 +1143,7 @@ module saveinf
 		
       call close_file(band_file_,band_unit)
 		enddo
-    write(stdout,"(A,A)") "Write Carrier occupation on the band structure at different time to file:",trim(band_file_)
+    write(procout,"(A,A)") "Write Carrier occupation on the band structure at different time to file:",trim(band_file_)
 	
 	end subroutine plot_band_occupatin_withtime
 
@@ -1112,7 +1164,13 @@ module saveinf
     
     do iband=1,nband
       write(ctmp1,*) iband
-      temp_file_=trim(outdir)//trim(adjustl(temp_file))//"_"//trim(adjustl(ctmp1))//".dat"  
+      
+      if(llinux) then
+        temp_file_ = trim(work_path)//"/"//trim(adjustl(temp_file))//"_"//trim(adjustl(ctmp1))//".dat"
+      else
+        temp_file_ = trim(work_path)//"\"//trim(adjustl(temp_file))//"_"//trim(adjustl(ctmp1))//".dat"
+      endif                
+ 
       temp_unit = io_file_unit()
       call open_file(temp_file_,temp_unit)
       
@@ -1143,7 +1201,7 @@ module saveinf
       enddo
       call close_file(temp_file_,temp_unit)
 		enddo
-    write(stdout,"(A,A)") "Write Carrier occupation on the band structure at different time to file:",trim(temp_file_)    
+    write(procout,"(A,A)") "Write Carrier occupation on the band structure at different time to file:",trim(temp_file_)    
     
   end subroutine plot_eh_temp
   
