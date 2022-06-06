@@ -1,8 +1,11 @@
+#define __MPI
 module readinput
-  use kinds,     only : dp,dpc
-  use constants, only : maxlen
+#if defined __MPI 		
   use global_mpi
   use mp
+#endif
+  use kinds,     only : dp,dpc
+  use constants, only : maxlen
   use parameters,only : calculation,verbosity,outdir,ldecoherence,Cdecoherence,lit_gmnvkq,lit_ephonon,&
                         lreadscfout,scfoutname,lreadphout,phoutname,lreadfildyn,fildyn,epwoutname,&
                         methodsh,lfeedback,naver,nstep,nsnap,pre_nstep,pre_dt,mix_thr,&
@@ -28,13 +31,16 @@ module readinput
   subroutine get_inputfile(filename)
     implicit none
     character(*),intent(in) :: filename
+#if defined __MPI 		
     if(ionode) then
+#endif
       call treat_inputfile(filename)
       call read_namelist()
-    endif
-    
-    call MPI_Barrier(MPI_COMM_WORLD,ierr)
+#if defined __MPI 		
+    endif    
     call bcast_namelist()
+#endif 
+
     call param_in_atomicunits()
     
   end subroutine
@@ -281,14 +287,22 @@ module readinput
     fwhm_2T2 = fwhm**2.0/4.0*log(2.0)
     
   end subroutine param_in_atomicunits
-  
+
+
+#if defined __MPI   
   subroutine bcast_namelist()
-    use mpi
     implicit none
     
-    !write(*,*) "In bcast_namelist"
-    call mp_bcast(calculation   ,ionode_id)    
+     
+    
+    write(*,*) "In bcast_namelist"
+    call mp_bcast(calculation   ,ionode_id)  
+      call MPI_Barrier(MPI_COMM_WORLD,ierr)
+      write(procout,*) "processor ",iproc,"is OK!"
+      stop  
+    
     call mp_bcast(lfeedback     ,ionode_id)
+   
     call mp_bcast(verbosity     ,ionode_id)
     call mp_bcast(outdir        ,ionode_id)
     call mp_bcast(methodsh      ,ionode_id)
@@ -342,6 +356,10 @@ module readinput
     call mp_bcast(l_dEa2_dQ2    ,ionode_id)
     call mp_bcast(lsetthreads   ,ionode_id) 
     call mp_bcast(mkl_threads   ,ionode_id)
+
+      call MPI_Barrier(MPI_COMM_WORLD,ierr)
+      write(procout,*) "processor ",iproc,"is OK!"
+      stop 
 
     write(procout,"(/,1X,A15,I5,1X,A10)") "Input file for ",iproc,"processor."   
     write(procout,*) "calculation  =",trim(calculation) 
@@ -404,6 +422,7 @@ module readinput
     call MPI_Barrier(MPI_COMM_WORLD,ierr)
     
   end subroutine bcast_namelist
+#endif 
   
   function get_ik(kx,nkx)
     use kinds,only : dp

@@ -1,3 +1,4 @@
+#define __MPI
 module mp
   use kinds,only : dp,dpc
   use io,only : stdout
@@ -30,12 +31,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-
+    
+#if defined(__MPI)
     msglen = 1
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_integer( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_i1
 !
 !--------------------------------------------------------------------------!
@@ -46,12 +48,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)  
     msglen = size(msg)
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_integer( msg, msglen, source, group )
-  
+#endif   
   END SUBROUTINE mp_bcast_iv
 !
 !--------------------------------------------------------------------------!
@@ -62,12 +65,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)   
     msglen = size(msg)
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_integer( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_im
 !
 !--------------------------------------------------------------------------!
@@ -79,12 +83,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)   
     msglen = size(msg)
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_integer( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_it
 !
 !--------------------------------------------------------------------------!
@@ -95,12 +100,13 @@ module mp
     INTEGER :: msglen, source
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
-  
+
+#if defined(__MPI)   
     msglen = 1
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_real( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_r1
 !
 !--------------------------------------------------------------------------!
@@ -113,12 +119,12 @@ module mp
     INTEGER :: group
     INTEGER :: msglen
 
-  
+#if defined(__MPI)   
     msglen = size(msg)
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_real( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_rv
 !
 !--------------------------------------------------------------------------!
@@ -130,12 +136,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)   
     msglen = size(msg)
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_real( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_rm
 !
 !--------------------------------------------------------------------------!
@@ -149,12 +156,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)   
     msglen = size(msg)
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_real( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_rt
 !
 !--------------------------------------------------------------------------!
@@ -168,12 +176,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)   
     msglen = size(msg)
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_real( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_r4d
 
 !
@@ -186,12 +195,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)   
     msglen = size(msg)
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_real( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_r5d
 
 !--------------------------------------------------------------------------!
@@ -203,12 +213,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)   
     msglen = 1
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_cmpl( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_c1
 !
 !--------------------------------------------------------------------------!
@@ -219,12 +230,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)   
     msglen = size(msg)
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_cmpl( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_cv
 !
 !--------------------------------------------------------------------------!
@@ -235,12 +247,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)   
     msglen = size(msg)
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_cmpl( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_cm
 !
 !--------------------------------------------------------------------------!
@@ -251,12 +264,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)   
     msglen = size(msg)
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_cmpl( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_ct
 
 !
@@ -268,12 +282,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)   
     msglen = size(msg)
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_cmpl( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_c4d
 
   SUBROUTINE mp_bcast_c5d(msg,source,gid)
@@ -283,12 +298,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)   
     msglen = size(msg)
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_cmpl( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_c5d
 
 !
@@ -301,12 +317,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)   
     msglen = 1
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_logical( msg, msglen, source, group )
-    
+#endif    
   END SUBROUTINE mp_bcast_l
 !
 !--------------------------------------------------------------------------!
@@ -319,12 +336,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)   
     msglen = size(msg)
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_logical( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_lv
 
 !--------------------------------------------------------------------------!
@@ -338,12 +356,13 @@ module mp
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen
-  
+
+#if defined(__MPI)   
     msglen = size(msg)
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     CALL bcast_logical( msg, msglen, source, group )
-  
+#endif  
   END SUBROUTINE mp_bcast_lm
 
 
@@ -353,15 +372,15 @@ module mp
   SUBROUTINE mp_bcast_z(msg,source,gid)
     IMPLICIT NONE
     CHARACTER (len=*) :: msg
-    INTEGER :: source
+    INTEGER,intent(in) :: source
     INTEGER, OPTIONAL, INTENT(IN) :: gid
     INTEGER :: group
     INTEGER :: msglen, ierr, i
     INTEGER, ALLOCATABLE :: imsg(:)
-  
+
+#if defined(__MPI)   
     ierr = 0
     msglen = len(msg)
-    !write(*,*) "iproc",iproc," length:",msglen,trim(adjustl(msg))
     group = mpi_comm_world
     IF( PRESENT( gid ) ) group = gid
     IF (ierr/=0) CALL mp_stop( 8014 )
@@ -371,22 +390,23 @@ module mp
       imsg(i) = ichar(msg(i:i))
     END DO
     
-
+    write(*,*) "group = ",group
+    write(*,*) "mpi_comm_world",mpi_comm_world
     CALL bcast_integer( imsg, msglen, source, group )
-    !write(*,*) "It's OK!"
+    write(*,*) "It's OK!"
     DO i = 1, msglen
       msg(i:i) = char(imsg(i))
     END DO
 
-    !write(*,*) "iproc",iproc," length:",msglen,trim(adjustl(msg))
+      call MPI_Barrier(MPI_COMM_WORLD,ierr)
+      write(*,*) "processor ",trim(msg)
+      stop 
+    
+    write(*,*) "iproc",iproc," length:",msglen,trim(adjustl(msg))
     
     DEALLOCATE (imsg, STAT=ierr)
     IF (ierr/=0) CALL mp_stop( 8016 )
-
-    !call MPI_Barrier(group,ierr)   
-    !write(*,*) "iproc",iproc," length:",msglen,trim(adjustl(msg))
-    !call MPI_Barrier(group,ierr)
-
+#endif
   END SUBROUTINE mp_bcast_z
 !
 !--------------------------------------------------------------------------!
@@ -401,7 +421,8 @@ module mp
     INTEGER :: group
     INTEGER :: msglen, m1, m2, ierr, i, j
     INTEGER, ALLOCATABLE :: imsg(:,:)
-  
+
+#if defined(__MPI)   
     ierr = 0
     m1 = LEN(msg)
     m2 = SIZE(msg)
@@ -416,6 +437,7 @@ module mp
       END DO
     END DO
     CALL bcast_integer( imsg, msglen, source, group )
+    
     DO j = 1, m2
       DO i = 1, m1
         msg(j)(i:i) = char(imsg(i,j))
@@ -423,7 +445,7 @@ module mp
     END DO
     DEALLOCATE (imsg, STAT=ierr)
     IF (ierr/=0) CALL mp_stop( 8018 )
-  
+#endif  
   END SUBROUTINE mp_bcast_zv
 !
 ! end mp_bcast  
@@ -441,7 +463,9 @@ module mp
     WRITE( stdout, fmt='( "*** error msg:  ",A60)' ) TRIM( err_msg )
     WRITE( stdout, fmt='( "*** error code: ",I5)' ) code
 
+#if defined(__MPI) 
     CALL mpi_abort(mpi_comm_world,code,ierr)
+#endif
     STOP
   END SUBROUTINE mp_stop 
   

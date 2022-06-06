@@ -1,7 +1,11 @@
+#define __MPI
+
 module environments
+#if defined __MPI 		
+  use global_mpi
+#endif
   use kinds, only: dp
   use global_version, only : version_number
-  use global_mpi
   use io,only : stdout,stdout_name,io_file_unit
   use date_and_times,only : get_date_and_time
   use constants, only : maxlen,constants_version_str1,constants_version_str2
@@ -27,6 +31,9 @@ module environments
     if(ionode) open(unit=stdout,file=stdout_name,status='REPLACE')
     !call io_date(cdate,ctime)
     call mkl_get_version_string(mkl_version )
+    if(lsetthreads) then
+      call mkl_set_num_threads(mkl_threads)
+    endif
     max_threads = mkl_get_max_threads()
     
     call openning_message( code_version)
@@ -41,11 +48,13 @@ module environments
     
     character(len=*),intent(in) :: code_version
     character(len=9) :: cdate,ctime
-    character(len=maxlen) :: ctmp
+    character(len=maxlen) :: ctmp,ctmp1,ctmp2
     
     call get_date_and_time(cdate,ctime)
-    
+
+#if defined __MPI 		
     if(ionode) then
+#endif   
       ! Display the logo. Use https://www.asciiarts.net/ 
       write(stdout,'(10X,a)') "  _____  ____   ____   ______   ______   ____  ____  "
       write(stdout,'(10X,a)') " |_   _||_  _| |_  _|.' ___  |.' ____ \ |_   ||   _| "
@@ -66,8 +75,18 @@ module environments
       write(stdout,"(1X,A)")   mkl_version(74:)
       !write(stdout,"(1X,A77)") repeat("=",77)
       write(ctmp  ,*) max_threads
-      write(stdout,*) "By default, Intel MKL uses "//trim(adjustl(ctmp))//" threads"
-      write(stdout,*) "where "//trim(adjustl(ctmp))//" is the number of physical cores on the system"
+      write(stdout,*) "Intel MKL uses ",max_threads," threads"
+      write(ctmp1,*) ver_mpi
+      write(ctmp2,*) subver_mpi
+      write(stdout,*) "MPI Version: "//trim(adjustl(ctmp1))//"."//trim(adjustl(ctmp2))
+      write(stdout,*) "The LVCSH calculation with parallel version (MPI &OpenMP),running on ",&
+                        nproc*max_threads,"processor cores."
+      write(stdout,*) "Number of MPI processes:",nproc
+      if(max_threads == 1) then
+        write(stdout,*) "Intel MKL does not employ threading. MKL Threads/MPI process:", max_threads
+      else
+        write(stdout,*) "MKL Threads/MPI process:", max_threads
+      endif
     
 
       call print_kind_info (stdout)
@@ -80,7 +99,9 @@ module environments
       write(stdout,'(/,1X,"Program ",A," startes on ",A9," at ",A9)') &
                     &trim(code_version),cdate,ctime
     
-    endif  
+#if defined __MPI 		
+    endif
+#endif  
       return
   end subroutine openning_message
   
@@ -100,18 +121,18 @@ module environments
   end subroutine closing_message
   
 
-  subroutine set_mkl_threads(mkl_threads)
-    implicit none
-    integer,intent(in) :: mkl_threads
-    if(mkl_threads <= max_threads) then
-      call mkl_set_num_threads(mkl_threads)
-    else
-      write(stdout,"(5x,A)") "The mkl_threads is setting wrong!!"
-      write(stdout,"(5x,A,I,A,I)"),"The max_threads is:",max_threads,"mkl_threads need <",max_threads
-    endif
-    write(stdout,*) repeat("=",77)
-    write(stdout,"(5X,A,i3,A)") "Reset Intel MKL uses ",mkl_threads," threads." 
-    write(stdout,*) 
-  end subroutine set_mkl_threads
+  !subroutine set_mkl_threads(mkl_threads)
+  !  implicit none
+  !  integer,intent(in) :: mkl_threads
+  !  if(mkl_threads <= max_threads) then
+  !    call mkl_set_num_threads(mkl_threads)
+  !  else
+  !    write(stdout,"(5x,A)") "The mkl_threads is setting wrong!!"
+  !    write(stdout,"(5x,A,I,A,I)"),"The max_threads is:",max_threads,"mkl_threads need <",max_threads
+  !  endif
+  !  write(stdout,*) repeat("=",77)
+  !  write(stdout,"(5X,A,i3,A)") "Reset Intel MKL uses ",mkl_threads," threads." 
+  !  write(stdout,*) 
+  !end subroutine set_mkl_threads
 
 end module environments

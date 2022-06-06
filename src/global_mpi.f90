@@ -1,6 +1,7 @@
 module global_mpi
   use mpi
   use io,only : io_file_unit
+  use constants ,only : maxlen  
   implicit none
   integer :: ierr
   integer :: iproc,nproc,procout
@@ -23,6 +24,7 @@ module global_mpi
     ionode = .false.
     !initialize mpi
     call MPI_Init(ierr)
+    write(*,*) "MPI_COMM_WORLD=",MPI_COMM_WORLD
     call MPI_COMM_RANK(MPI_COMM_WORLD,iproc,ierr)
     call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,ierr)
     write(iproc_str,"(i0.3)") iproc
@@ -66,7 +68,7 @@ module global_mpi
   end subroutine initmpi
   
   subroutine endmpi
-    use constants ,only : maxlen
+
     implicit none
     
     character(len=maxlen) :: msg

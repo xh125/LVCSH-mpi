@@ -32,8 +32,7 @@ program lvcsh
   use global_mpi
 #endif
   use constants,only      : ryd2eV,ry_to_fs,ryd2meV,czero,cone
-  use environments,only   : environment_start,mkl_threads,set_mkl_threads,&
-                            lsetthreads
+  use environments,only   : environment_start
   use readinput,only      : get_inputfile
   use readscf,only        : readpwscf_out
   use readphout,only      : readph_out
@@ -113,7 +112,12 @@ program lvcsh
   call initmpi
   call cpu_time(t0)  
   call environment_start( 'LVCSH' )
+ 
   call get_inputfile(inputfilename)
+      call MPI_Barrier(MPI_COMM_WORLD,ierr)
+      write(*,*) "processor ",iproc,"is OK!"
+      stop  
+
   call readepwout(epwoutname)
   if(lreadscfout) call readpwscf_out(scfoutname)
   if(lreadphout)  call readph_out(phoutname)
@@ -148,7 +152,7 @@ program lvcsh
     ! ref : https://journals.aps.org/prb/pdf/10.1103/PhysRevB.72.045314
     !get W_cvk(icband,ivband,ik)
     call init_random_seed()
-    if(lsetthreads) call set_mkl_threads(mkl_threads)
+    !if(lsetthreads) call set_mkl_threads(mkl_threads)
     
     
     !==========================!
@@ -183,7 +187,6 @@ program lvcsh
       !!得到初始电子和空穴的初始的KS状态 init_ik,init_eband,init_hband(in the diabatic states)
       call init_eh_KSstat(lelecsh,lholesh,llaser,init_ik,init_eband,init_hband,init_e_en,init_h_en)
 
-       
       if(lelecsh) then
 				init_eband = init_eband-ieband_min+1
 				c_e_nk = czero
@@ -209,6 +212,8 @@ program lvcsh
         E0_e = E_e;P0_e=P_e;P0_e_nk=P_e_nk;d0_e=d_e;w0_e=w_e
       endif      
       
+      call MPI_Barrier(MPI_COMM_WORLD,ierr)
+
       if(lholesh) then
 				init_hband = init_hband-ihband_min+1
 				c_h_nk = czero
@@ -219,10 +224,10 @@ program lvcsh
         H_h = reshape(H_h_nk,(/ nhfre,nhfre /))    
         
         call test_H_conjg(nhfre,H_h)
-        write(procout,*) "H_h=",H_h
+        !write(procout,*) "H_h=",H_h
         call calculate_eigen_energy_state(nhfre,H_h,E_h,P_h)
         P_h_nk = reshape(P_h,(/ nhband,nktotf,nhfre /))
-        write(procout,*) "E_h=",E_h*ryd2eV
+        write(procout,*) "E_h=",-1.0*E_h*ryd2eV
         
 				call convert_diabatic_adiabatic(nhfre,P_h,c_h,w_h)
 

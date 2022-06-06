@@ -5,14 +5,14 @@ SHELL = /bin/sh
 # path
 #project_home = $(dir $(abspath $(MAKEFILE_LIST)))
 project_home = ..
-srcdir       = $(project_home)/src_complex
-bindir       = $(project_home)/bin_complex
+srcdir       = $(project_home)/src
+bindir       = $(project_home)/bin
 
 # the path to find the source code. 
 VPATH = $(srcdir)
 
 # output exe file
-exe	    = LVCSH_complex.x
+exe	    = LVCSH.x
 
 # IFLAGS = how to locate directories with *.h or *.f90 file to be included
 IFLAGS         = -I$(project_home)/include
@@ -21,7 +21,7 @@ IFLAGS         = -I$(project_home)/include
 MOD_FLAG      = -I
 
 # Compiler 
-F90     = ifort 
+F90     = mpiifort 
 MPIF90 	= mpiifort 
 CC      = icc 
 MPICC   = mpiicc
@@ -76,13 +76,15 @@ MKL_static_Link  = ${BLAS95_LIB} ${LAPACP95_LIB} -Wl,--start-group \
 									 -lpthread -lm -ldl
 
 #SRC
-SRCS_F= kinds.f90 constants.f90 date_and_times.f90 version.f90 io.f90 environments.f90 \
+SRCS_F= errore.f90 randoms.f90 version.f90 kinds.f90 string.f90 constants.f90 date_and_times.f90 \
+        io.f90 environments.f90 elph_tetra_mod.f90 recvec.f90 data_buffer.f90 global_mpi.f90 \
+        mp.f90 mp_base.f90 \
         memory_report.f90 pwcom.f90 phcom.f90 lasercom.f90 surfacecom.f90 parameters.f90 \
         utility.f90 readinput.f90 \
         cell_base.f90 ions_base.f90 symm_base.f90 readscf.f90 \
-        elph_tetra_mod.f90 readphout.f90 elph2.f90 epwcom.f90 grid.f90 \
-        recvec.f90 lrcom.f90 wannierEPW.f90 errore.f90 readepw.f90 types.f90 \
-        randoms.f90  getwcvk.f90 initialsh.f90 \
+        readphout.f90 elph2.f90 epwcom.f90 grid.f90 \
+        lrcom.f90 wannierEPW.f90 readepw.f90 types.f90 \
+        getwcvk.f90 initialsh.f90 \
         hamiltonian.f90 sortting.f90 fssh.f90 sc_fssh.f90 cc_fssh.f90 surfacehopping.f90 \
         dynamics.f90 saveinf.f90 write_sh_information.f90 lvcsh.f90     					 
 
