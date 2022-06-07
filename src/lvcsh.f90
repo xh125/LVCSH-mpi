@@ -584,7 +584,52 @@ program lvcsh
     phUsit = phUsit/naver
     if(ionode) call save_phU(nmodes,nqtotf,naver,nsnap,phUsit,job_path) 
 
-      
+    if(lelecsh) then
+      csit_e = csit_e *itraj
+      wsit_e = wsit_e *itraj
+      psit_e = psit_e *itraj
+      pes_e  = pes_e  *itraj
+      call mpi_barrier(mpi_comm_world,ierr)
+      call mp_sum(csit_e )
+      call mp_sum(wsit_e )
+      call mp_sum(psit_e ) 
+      call mp_sum(pes_e  )
+      csit_e =csit_e /naver
+      wsit_e =wsit_e /naver
+      psit_e =psit_e /naver
+      pes_e  =pes_e  /naver
+      if(ionode) then
+        call save_pes(nefre,nsnap, naver,pes_one_e,pes_e,pes_e_file,job_path)
+        call save_csit(nefre,nsnap,naver,csit_e,csit_e_file,job_path)
+        call save_wsit(nefre,nsnap,naver,wsit_e,wsit_e_file,job_path)
+        call save_psit(nefre,nsnap,naver,psit_e,psit_e_file,job_path)
+        call plot_band_occupatin_withtime(neband,nktotf,Enk_e,xkf,nsnap,psit_e,csit_e,savedsnap,band_e_file)
+      endif
+    endif
+    
+    if(lholesh) then
+      csit_h = csit_h *itraj
+      wsit_h = wsit_h *itraj
+      psit_h = psit_h *itraj
+      pes_h  = pes_h  *itraj
+      call mpi_barrier(mpi_comm_world,ierr)
+      call mp_sum(csit_h )
+      call mp_sum(wsit_h )
+      call mp_sum(psit_h )
+      call mp_sum(pes_h  )
+      csit_h =csit_h /naver
+      wsit_h =wsit_h /naver
+      psit_h =psit_h /naver
+      pes_h  =pes_h  /naver      
+      if(ionode) then
+        call save_pes(nhfre,nsnap, naver,pes_one_h,pes_h,pes_h_file,job_path)
+        call save_csit(nhfre,nsnap,naver,csit_h,csit_h_file,job_path)
+        call save_wsit(nhfre,nsnap,naver,wsit_h,wsit_h_file,job_path)
+        call save_psit(nhfre,nsnap,naver,psit_h,psit_h_file,job_path)
+        call plot_band_occupatin_withtime(nhband,nktotf,Enk_h,xkf,nsnap,psit_h,csit_h,savedsnap,band_h_file,job_path)
+      endif
+    endif
+
     call MPI_Barrier(MPI_COMM_WORLD,ierr)
     write(*,*) "processor ",iproc,"is OK!"
     write(*,*) "processor ",iproc,"itraj=",itraj
