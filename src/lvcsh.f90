@@ -547,7 +547,6 @@ program lvcsh
       pes_h  = pes_h  /itraj
     endif
 
-  
     !====================!
     != save information =!
     !====================!
@@ -569,10 +568,22 @@ program lvcsh
       call save_psit(nhfre,nsnap,itraj,psit_h,psit_h_file)
       call plot_band_occupatin_withtime(nhband,nktotf,Enk_h,xkf,nsnap,psit_h,csit_h,savedsnap,band_h_file)
     endif
+
+
+    !Reduction the results and print in jobdir.
+    phKsit = phKsit * itraj
+    call mpi_barrier(mpi_comm_world,ierr)
+    
+    
+    !phUsit = phUsit * itraj    
+
       
-      call MPI_Barrier(MPI_COMM_WORLD,ierr)
-      write(*,*) "processor ",iproc,"is OK!"
-      stop    
+    call MPI_Barrier(MPI_COMM_WORLD,ierr)
+    write(*,*) "processor ",iproc,"is OK!"
+    write(*,*) "processor ",iproc,"itraj=",itraj
+    write(*,*) "processor ",nproc,"itraj=",naver
+    call endmpi()
+    stop    
   
   
   elseif(trim(calculation)=="plot") then

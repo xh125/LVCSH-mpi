@@ -1,6 +1,6 @@
 #define __MPI
 module mp
-  use kinds,only : dp,dpc
+  use kinds,only : dp,dpc,i8b
   use io,only : stdout
   use mpi
   use global_mpi,only : iproc,ionode
@@ -15,7 +15,18 @@ module mp
       mp_bcast_c5d
   END INTERFACE
 
-  public :: mp_bcast
+  INTERFACE mp_sum
+    MODULE PROCEDURE mp_sum_i1, mp_sum_iv, mp_sum_im, mp_sum_it, &
+      mp_sum_r1, mp_sum_rv, mp_sum_rm, mp_sum_rt, mp_sum_r4d, &
+      mp_sum_c1, mp_sum_cv, mp_sum_cm, mp_sum_ct, mp_sum_c4d, &
+      mp_sum_c5d, mp_sum_c6d, mp_sum_rmm, mp_sum_cmm, mp_sum_r5d
+  END INTERFACE
+
+  INTERFACE mp_root_sum
+    MODULE PROCEDURE mp_root_sum_rm, mp_root_sum_cm
+  END INTERFACE
+
+  public :: mp_bcast,mp_sum,mp_root_sum
  
 
   character(len=80), private :: err_msg = ' '
@@ -441,6 +452,439 @@ module mp
 !
 ! end mp_bcast  
  
+!------------------------------------------------------------------------------!
+!
+!..mp_sum
+      SUBROUTINE mp_sum_i1(msg,gid)
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT) :: msg
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = 1
+        CALL reduce_base_integer( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_i1
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_sum_iv(msg, gid)
+      !------------------------------------------------------------------------------!
+      !! 
+      !! MPI sum an integer vector from all cores and bcast the result to all.  
+      !! 
+      IMPLICIT NONE
+      ! 
+      INTEGER, INTENT(inout) :: msg(:)
+      INTEGER, INTENT(in) :: gid
+#if defined(__MPI)
+      INTEGER :: msglen
+      msglen = SIZE(msg)
+      CALL reduce_base_integer(msglen, msg, gid, -1)
+#endif
+      !------------------------------------------------------------------------------!
+      END SUBROUTINE mp_sum_iv
+      !------------------------------------------------------------------------------!
+      ! 
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_sum_i8v(msg, gid)
+      !------------------------------------------------------------------------------!
+      !! 
+      !! MPI sum an integer vector from all cores and bcast the result to all.  
+      !! 
+      IMPLICIT NONE
+      ! 
+      INTEGER(KIND = i8b), INTENT(inout) :: msg(:)
+      INTEGER, INTENT(in) :: gid
+#if defined(__MPI)
+      INTEGER :: msglen
+      msglen = SIZE(msg)
+      CALL reduce_base_integer8(msglen, msg, gid, -1)
+#endif
+      !------------------------------------------------------------------------------!
+      END SUBROUTINE mp_sum_i8v
+      !------------------------------------------------------------------------------!
+      !
+      !------------------------------------------------------------------------------!
+      SUBROUTINE mp_sum_im(msg,gid)
+      !------------------------------------------------------------------------------!
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT) :: msg(:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_integer( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_im
+!
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_it(msg,gid)
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT) :: msg(:,:,:)
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_integer( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_it
+
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_i4(msg,gid)
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT) :: msg(:,:,:,:)
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_integer( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_i4
+
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_i5(msg,gid)
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT) :: msg(:,:,:,:,:)
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_integer( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_i5
+
+
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_r1(msg,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT) :: msg
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = 1
+        CALL reduce_base_real( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_r1
+
+!
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_rv(msg,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT) :: msg(:)
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_real( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_rv
+!
+!------------------------------------------------------------------------------!
+
+
+      SUBROUTINE mp_sum_rm(msg, gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT) :: msg(:,:)
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_real( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_rm
+
+
+      SUBROUTINE mp_root_sum_rm( msg, res, root, gid )
+        IMPLICIT NONE
+        REAL (DP), INTENT (IN)  :: msg(:,:)
+        REAL (DP), INTENT (OUT) :: res(:,:)
+        INTEGER,   INTENT (IN)  :: root
+        INTEGER,   INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen, ierr, taskid
+
+        msglen = size(msg)
+
+        CALL mpi_comm_rank( gid, taskid, ierr)
+        IF( ierr /= 0 ) CALL mp_stop( 8059 )
+        !
+        IF( taskid == root ) THEN
+           IF( msglen > size(res) ) CALL mp_stop( 8060 )
+        END IF
+
+        CALL reduce_base_real_to( msglen, msg, res, gid, root )
+
+#else
+
+        res = msg
+
+#endif
+
+      END SUBROUTINE mp_root_sum_rm
+
+
+      SUBROUTINE mp_root_sum_cm( msg, res, root, gid )
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (IN)  :: msg(:,:)
+        COMPLEX (DP), INTENT (OUT) :: res(:,:)
+        INTEGER,   INTENT (IN)  :: root
+        INTEGER,  INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen, ierr, taskid
+
+        msglen = size(msg)
+
+        CALL mpi_comm_rank( gid, taskid, ierr)
+        IF( ierr /= 0 ) CALL mp_stop( 8061 )
+
+        IF( taskid == root ) THEN
+           IF( msglen > size(res) ) CALL mp_stop( 8062 )
+        END IF
+
+        CALL reduce_base_real_to( 2 * msglen, msg, res, gid, root )
+
+#else
+
+        res = msg
+
+#endif
+
+      END SUBROUTINE mp_root_sum_cm
+
+!
+!------------------------------------------------------------------------------!
+
+
+!------------------------------------------------------------------------------!
+!
+
+      SUBROUTINE mp_sum_rmm( msg, res, root, gid )
+        IMPLICIT NONE
+        REAL (DP), INTENT (IN) :: msg(:,:)
+        REAL (DP), INTENT (OUT) :: res(:,:)
+        INTEGER, INTENT (IN) :: root
+        INTEGER, INTENT (IN) :: gid
+        INTEGER :: group
+        INTEGER :: msglen
+        INTEGER :: taskid, ierr
+
+        msglen = size(msg)
+
+#if defined(__MPI)
+
+        group = gid
+        !
+        CALL mpi_comm_rank( group, taskid, ierr)
+        IF( ierr /= 0 ) CALL mp_stop( 8063 )
+
+        IF( taskid == root ) THEN
+           IF( msglen > size(res) ) CALL mp_stop( 8064 )
+        END IF
+        !
+        CALL reduce_base_real_to( msglen, msg, res, group, root )
+        !
+
+#else
+        res = msg
+#endif
+
+      END SUBROUTINE mp_sum_rmm
+
+
+!
+!------------------------------------------------------------------------------!
+
+
+      SUBROUTINE mp_sum_rt( msg, gid )
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT) :: msg(:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_real( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_rt
+
+!
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_sum_r4d(msg,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT) :: msg(:,:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_real( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_r4d
+
+
+
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_c1(msg,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT) :: msg
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = 1
+        CALL reduce_base_real( 2 * msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_c1
+!
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_cv(msg,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT) :: msg(:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_real( 2 * msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_cv
+!
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_sum_cm(msg, gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT) :: msg(:,:)
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_real( 2 * msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_cm
+!
+!------------------------------------------------------------------------------!
+
+
+      SUBROUTINE mp_sum_cmm(msg, res, gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (IN) :: msg(:,:)
+        COMPLEX (DP), INTENT (OUT) :: res(:,:)
+        INTEGER, INTENT (IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_real_to( 2 * msglen, msg, res, gid, -1 )
+#else
+        res = msg
+#endif
+      END SUBROUTINE mp_sum_cmm
+
+
+!
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_sum_ct(msg,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT) :: msg(:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = SIZE(msg)
+        CALL reduce_base_real( 2 * msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_ct
+
+!
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_sum_c4d(msg,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT) :: msg(:,:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_real( 2 * msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_c4d
+!
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_sum_c5d(msg,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT) :: msg(:,:,:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_real( 2 * msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_c5d
+
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_sum_r5d(msg,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT) :: msg(:,:,:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_real( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_r5d
+
+
+      SUBROUTINE mp_sum_r6d(msg,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT) :: msg(:,:,:,:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_real( msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_r6d
+
+!
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_sum_c6d(msg,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT) :: msg(:,:,:,:,:,:)
+        INTEGER, INTENT(IN) :: gid
+#if defined(__MPI)
+        INTEGER :: msglen
+        msglen = size(msg)
+        CALL reduce_base_real( 2 * msglen, msg, gid, -1 )
+#endif
+      END SUBROUTINE mp_sum_c6d
+
+
+
+
+
+!
+!------------------------------------------------------------------------------!
+
+
+
 
 !------------------------------------------------------------------------------!
 !
