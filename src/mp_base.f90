@@ -18,7 +18,8 @@
 !  collective routines if processors are not well synchronized
 !  A barrier fixes the problem
 !
-#define __USE_BARRIER  
+#define __USE_BARRIER
+#define __USE_INPLACE_MPI  
 #define __MPI  
 !#define __TRACE
 !=----------------------------------------------------------------------------=!
@@ -918,6 +919,10 @@ END SUBROUTINE reduce_base_cmpl
   END SUBROUTINE reduce_base_integer8
   !----------------------------------------------------------------------------
   !
+#endif
+  
+  !----------------------------------------------------------------------------
+  !
   ! ... "reduce"-like subroutines
   !
   !----------------------------------------------------------------------------
@@ -1179,6 +1184,5 @@ SUBROUTINE reduce_base_integer_to( ldim, ps, psout, comm, root )
   !
 END SUBROUTINE reduce_base_integer_to 
 
-#endif
 
 

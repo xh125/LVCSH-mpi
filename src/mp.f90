@@ -1,4 +1,5 @@
 #define __MPI
+! reference : qe-7.0/want-want-2.6.1/src/baselib/mp.f90
 module mp
   use kinds,only : dp,dpc,i8b
   use io,only : stdout
@@ -458,62 +459,45 @@ module mp
       SUBROUTINE mp_sum_i1(msg,gid)
         IMPLICIT NONE
         INTEGER, INTENT (INOUT) :: msg
-        INTEGER, INTENT(IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
         msglen = 1
-        CALL reduce_base_integer( msglen, msg, gid, -1 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_integer( msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_i1
-      !
-      !------------------------------------------------------------------------------!
-      SUBROUTINE mp_sum_iv(msg, gid)
-      !------------------------------------------------------------------------------!
-      !! 
-      !! MPI sum an integer vector from all cores and bcast the result to all.  
-      !! 
-      IMPLICIT NONE
-      ! 
-      INTEGER, INTENT(inout) :: msg(:)
-      INTEGER, INTENT(in) :: gid
+!
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_sum_iv(msg,gid)
+        IMPLICIT NONE
+        INTEGER, INTENT (INOUT) :: msg(:)
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: msglen
 #if defined(__MPI)
-      INTEGER :: msglen
-      msglen = SIZE(msg)
-      CALL reduce_base_integer(msglen, msg, gid, -1)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        msglen = size(msg)
+        CALL reduce_base_integer( msglen, msg, group, -1 )
 #endif
-      !------------------------------------------------------------------------------!
       END SUBROUTINE mp_sum_iv
-      !------------------------------------------------------------------------------!
-      ! 
-      !------------------------------------------------------------------------------!
-      SUBROUTINE mp_sum_i8v(msg, gid)
-      !------------------------------------------------------------------------------!
-      !! 
-      !! MPI sum an integer vector from all cores and bcast the result to all.  
-      !! 
-      IMPLICIT NONE
-      ! 
-      INTEGER(KIND = i8b), INTENT(inout) :: msg(:)
-      INTEGER, INTENT(in) :: gid
-#if defined(__MPI)
-      INTEGER :: msglen
-      msglen = SIZE(msg)
-      CALL reduce_base_integer8(msglen, msg, gid, -1)
-#endif
-      !------------------------------------------------------------------------------!
-      END SUBROUTINE mp_sum_i8v
-      !------------------------------------------------------------------------------!
-      !
-      !------------------------------------------------------------------------------!
+!
+!------------------------------------------------------------------------------!
+
       SUBROUTINE mp_sum_im(msg,gid)
-      !------------------------------------------------------------------------------!
         IMPLICIT NONE
         INTEGER, INTENT (INOUT) :: msg(:,:)
-        INTEGER, INTENT(IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
         msglen = size(msg)
-        CALL reduce_base_integer( msglen, msg, gid, -1 )
+        CALL reduce_base_integer( msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_im
 !
@@ -522,51 +506,30 @@ module mp
       SUBROUTINE mp_sum_it(msg,gid)
         IMPLICIT NONE
         INTEGER, INTENT (INOUT) :: msg(:,:,:)
-        INTEGER, INTENT (IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT (IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
         msglen = size(msg)
-        CALL reduce_base_integer( msglen, msg, gid, -1 )
+        CALL reduce_base_integer( msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_it
-
-!------------------------------------------------------------------------------!
-
-      SUBROUTINE mp_sum_i4(msg,gid)
-        IMPLICIT NONE
-        INTEGER, INTENT (INOUT) :: msg(:,:,:,:)
-        INTEGER, INTENT (IN) :: gid
-#if defined(__MPI)
-        INTEGER :: msglen
-        msglen = size(msg)
-        CALL reduce_base_integer( msglen, msg, gid, -1 )
-#endif
-      END SUBROUTINE mp_sum_i4
-
-!------------------------------------------------------------------------------!
-
-      SUBROUTINE mp_sum_i5(msg,gid)
-        IMPLICIT NONE
-        INTEGER, INTENT (INOUT) :: msg(:,:,:,:,:)
-        INTEGER, INTENT (IN) :: gid
-#if defined(__MPI)
-        INTEGER :: msglen
-        msglen = size(msg)
-        CALL reduce_base_integer( msglen, msg, gid, -1 )
-#endif
-      END SUBROUTINE mp_sum_i5
-
 
 !------------------------------------------------------------------------------!
 
       SUBROUTINE mp_sum_r1(msg,gid)
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT) :: msg
-        INTEGER, INTENT (IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT (IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
         msglen = 1
-        CALL reduce_base_real( msglen, msg, gid, -1 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_real( msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_r1
 
@@ -576,11 +539,14 @@ module mp
       SUBROUTINE mp_sum_rv(msg,gid)
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT) :: msg(:)
-        INTEGER, INTENT (IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT (IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
         msglen = size(msg)
-        CALL reduce_base_real( msglen, msg, gid, -1 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_real( msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_rv
 !
@@ -590,11 +556,14 @@ module mp
       SUBROUTINE mp_sum_rm(msg, gid)
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT) :: msg(:,:)
-        INTEGER, INTENT (IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT (IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
         msglen = size(msg)
-        CALL reduce_base_real( msglen, msg, gid, -1 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_real( msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_rm
 
@@ -604,20 +573,25 @@ module mp
         REAL (DP), INTENT (IN)  :: msg(:,:)
         REAL (DP), INTENT (OUT) :: res(:,:)
         INTEGER,   INTENT (IN)  :: root
-        INTEGER,   INTENT (IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT (IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen, ierr, taskid
 
-        msglen = size(msg)
+#if defined(__MPI)
 
-        CALL mpi_comm_rank( gid, taskid, ierr)
+        msglen = size(msg)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+
+        CALL mpi_comm_rank( group, taskid, ierr)
         IF( ierr /= 0 ) CALL mp_stop( 8059 )
         !
         IF( taskid == root ) THEN
            IF( msglen > size(res) ) CALL mp_stop( 8060 )
         END IF
 
-        CALL reduce_base_real_to( msglen, msg, res, gid, root )
+        CALL reduce_base_real_to( msglen, msg, res, group, root )
+
 
 #else
 
@@ -633,20 +607,26 @@ module mp
         COMPLEX (DP), INTENT (IN)  :: msg(:,:)
         COMPLEX (DP), INTENT (OUT) :: res(:,:)
         INTEGER,   INTENT (IN)  :: root
-        INTEGER,  INTENT (IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT (IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen, ierr, taskid
+
+#if defined(__MPI)
 
         msglen = size(msg)
 
-        CALL mpi_comm_rank( gid, taskid, ierr)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+
+        CALL mpi_comm_rank( group, taskid, ierr)
         IF( ierr /= 0 ) CALL mp_stop( 8061 )
 
         IF( taskid == root ) THEN
            IF( msglen > size(res) ) CALL mp_stop( 8062 )
         END IF
 
-        CALL reduce_base_real_to( 2 * msglen, msg, res, gid, root )
+        CALL reduce_base_real_to( 2 * msglen, msg, res, group, root )
+
 
 #else
 
@@ -667,8 +647,8 @@ module mp
         IMPLICIT NONE
         REAL (DP), INTENT (IN) :: msg(:,:)
         REAL (DP), INTENT (OUT) :: res(:,:)
-        INTEGER, INTENT (IN) :: root
-        INTEGER, INTENT (IN) :: gid
+        INTEGER, OPTIONAL, INTENT (IN) :: root
+        INTEGER, OPTIONAL, INTENT (IN) :: gid
         INTEGER :: group
         INTEGER :: msglen
         INTEGER :: taskid, ierr
@@ -677,17 +657,28 @@ module mp
 
 #if defined(__MPI)
 
-        group = gid
-        !
-        CALL mpi_comm_rank( group, taskid, ierr)
-        IF( ierr /= 0 ) CALL mp_stop( 8063 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
 
-        IF( taskid == root ) THEN
-           IF( msglen > size(res) ) CALL mp_stop( 8064 )
+        IF( PRESENT( root ) ) THEN
+           !
+           CALL mpi_comm_rank( group, taskid, ierr)
+           IF( ierr /= 0 ) CALL mp_stop( 8063 )
+
+           IF( taskid == root ) THEN
+              IF( msglen > size(res) ) CALL mp_stop( 8064 )
+           END IF
+           !
+           CALL reduce_base_real_to( msglen, msg, res, group, root )
+           !
+        ELSE
+           !
+           IF( msglen > size(res) ) CALL mp_stop( 8065 )
+           !
+           CALL reduce_base_real_to( msglen, msg, res, group, -1 )
+           !
         END IF
-        !
-        CALL reduce_base_real_to( msglen, msg, res, group, root )
-        !
+
 
 #else
         res = msg
@@ -703,11 +694,14 @@ module mp
       SUBROUTINE mp_sum_rt( msg, gid )
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT) :: msg(:,:,:)
-        INTEGER, INTENT(IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
         msglen = size(msg)
-        CALL reduce_base_real( msglen, msg, gid, -1 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_real( msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_rt
 
@@ -719,11 +713,14 @@ module mp
       SUBROUTINE mp_sum_r4d(msg,gid)
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT) :: msg(:,:,:,:)
-        INTEGER, INTENT(IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
         msglen = size(msg)
-        CALL reduce_base_real( msglen, msg, gid, -1 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_real( msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_r4d
 
@@ -734,11 +731,15 @@ module mp
       SUBROUTINE mp_sum_c1(msg,gid)
         IMPLICIT NONE
         COMPLEX (DP), INTENT (INOUT) :: msg
-        INTEGER, INTENT(IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+
+#if defined(__MPI)
         msglen = 1
-        CALL reduce_base_real( 2 * msglen, msg, gid, -1 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_real( 2 * msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_c1
 !
@@ -747,11 +748,14 @@ module mp
       SUBROUTINE mp_sum_cv(msg,gid)
         IMPLICIT NONE
         COMPLEX (DP), INTENT (INOUT) :: msg(:)
-        INTEGER, INTENT(IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
         msglen = size(msg)
-        CALL reduce_base_real( 2 * msglen, msg, gid, -1 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_real( 2 * msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_cv
 !
@@ -760,11 +764,14 @@ module mp
       SUBROUTINE mp_sum_cm(msg, gid)
         IMPLICIT NONE
         COMPLEX (DP), INTENT (INOUT) :: msg(:,:)
-        INTEGER, INTENT (IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT (IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
         msglen = size(msg)
-        CALL reduce_base_real( 2 * msglen, msg, gid, -1 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_real( 2 * msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_cm
 !
@@ -775,11 +782,14 @@ module mp
         IMPLICIT NONE
         COMPLEX (DP), INTENT (IN) :: msg(:,:)
         COMPLEX (DP), INTENT (OUT) :: res(:,:)
-        INTEGER, INTENT (IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT (IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
         msglen = size(msg)
-        CALL reduce_base_real_to( 2 * msglen, msg, res, gid, -1 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_real_to( 2 * msglen, msg, res, group, -1 )
 #else
         res = msg
 #endif
@@ -794,11 +804,14 @@ module mp
       SUBROUTINE mp_sum_ct(msg,gid)
         IMPLICIT NONE
         COMPLEX (DP), INTENT (INOUT) :: msg(:,:,:)
-        INTEGER, INTENT(IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
         msglen = SIZE(msg)
-        CALL reduce_base_real( 2 * msglen, msg, gid, -1 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_real( 2 * msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_ct
 
@@ -810,11 +823,14 @@ module mp
       SUBROUTINE mp_sum_c4d(msg,gid)
         IMPLICIT NONE
         COMPLEX (DP), INTENT (INOUT) :: msg(:,:,:,:)
-        INTEGER, INTENT(IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
         msglen = size(msg)
-        CALL reduce_base_real( 2 * msglen, msg, gid, -1 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_real( 2 * msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_c4d
 !
@@ -825,11 +841,14 @@ module mp
       SUBROUTINE mp_sum_c5d(msg,gid)
         IMPLICIT NONE
         COMPLEX (DP), INTENT (INOUT) :: msg(:,:,:,:,:)
-        INTEGER, INTENT(IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
         msglen = size(msg)
-        CALL reduce_base_real( 2 * msglen, msg, gid, -1 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_real( 2 * msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_c5d
 
@@ -840,25 +859,16 @@ module mp
       SUBROUTINE mp_sum_r5d(msg,gid)
         IMPLICIT NONE
         REAL (DP), INTENT (INOUT) :: msg(:,:,:,:,:)
-        INTEGER, INTENT(IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
         msglen = size(msg)
-        CALL reduce_base_real( msglen, msg, gid, -1 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_real( msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_r5d
-
-
-      SUBROUTINE mp_sum_r6d(msg,gid)
-        IMPLICIT NONE
-        REAL (DP), INTENT (INOUT) :: msg(:,:,:,:,:,:)
-        INTEGER, INTENT(IN) :: gid
-#if defined(__MPI)
-        INTEGER :: msglen
-        msglen = size(msg)
-        CALL reduce_base_real( msglen, msg, gid, -1 )
-#endif
-      END SUBROUTINE mp_sum_r6d
 
 !
 !------------------------------------------------------------------------------!
@@ -868,20 +878,16 @@ module mp
       SUBROUTINE mp_sum_c6d(msg,gid)
         IMPLICIT NONE
         COMPLEX (DP), INTENT (INOUT) :: msg(:,:,:,:,:,:)
-        INTEGER, INTENT(IN) :: gid
-#if defined(__MPI)
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
         INTEGER :: msglen
+#if defined(__MPI)
         msglen = size(msg)
-        CALL reduce_base_real( 2 * msglen, msg, gid, -1 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_real( 2 * msglen, msg, group, -1 )
 #endif
       END SUBROUTINE mp_sum_c6d
-
-
-
-
-
-!
-!------------------------------------------------------------------------------!
 
 
 

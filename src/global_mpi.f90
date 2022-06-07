@@ -26,6 +26,7 @@ module global_mpi
     call MPI_Init(ierr)
     call MPI_COMM_RANK(MPI_COMM_WORLD,iproc,ierr)
     call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,ierr)
+    call allocate_buffers()
     write(iproc_str,"(i0.3)") iproc
     ionode_id = 0
     if(iproc == 0) ionode = .true.

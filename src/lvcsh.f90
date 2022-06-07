@@ -30,6 +30,7 @@ program lvcsh
   use blas95  
 #if defined __MPI 		
   use global_mpi
+  use mp
 #endif
   use constants,only      : ryd2eV,ry_to_fs,ryd2meV,czero,cone
   use environments,only   : environment_start
@@ -573,9 +574,15 @@ program lvcsh
     !Reduction the results and print in jobdir.
     phKsit = phKsit * itraj
     call mpi_barrier(mpi_comm_world,ierr)
-    
-    
-    !phUsit = phUsit * itraj    
+    call mp_sum(phKsit)
+    phKsit = phKsit/naver
+    if(ionode) call save_phK(nmodes,nqtotf,naver,nsnap,phKsit,job_path)
+ 
+    phUsit = phUsit * itraj
+    call mpi_barrier(mpi_comm_world,ierr)
+    call mp_sum(phUsit)
+    phUsit = phUsit/naver
+    if(ionode) call save_phU(nmodes,nqtotf,naver,nsnap,phUsit,job_path) 
 
       
     call MPI_Barrier(MPI_COMM_WORLD,ierr)

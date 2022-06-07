@@ -247,17 +247,26 @@ module saveinf
 	
   
 	!Write average phK infortmation to the file: phKsit.dat.gnu	
-  subroutine save_phK(nmodes,nq,naver,nsnap,phKsit)  
+  subroutine save_phK(nmodes,nq,naver,nsnap,phKsit,dir)  
     integer,intent(in) :: nmodes,nq,nsnap,naver
     real(kind=dp),intent(in) :: phKsit(nmodes,nq,0:nsnap)
+    character(len=*),optional :: dir
     
     integer :: phK_unit
-		character(len=maxlen) :: phK_file_    
+		character(len=maxlen) :: phK_file_
+    
+    character(len=maxlen) :: save_path
+    if(present(dir)) then
+      save_path = dir
+    else
+      save_path = work_path
+    endif
+    
     phK_unit = io_file_unit()
     if(llinux) then
-      phK_file_ = trim(work_path)//"/"//trim(adjustl(phK_file))
+      phK_file_ = trim(save_path)//"/"//trim(adjustl(phK_file))
     else
-      phK_file_ = trim(work_path)//"\"//trim(adjustl(phK_file))
+      phK_file_ = trim(save_path)//"\"//trim(adjustl(phK_file))
     endif
     call open_file(phK_file_,phK_unit)
 
@@ -390,17 +399,26 @@ module saveinf
 
 
 	!Write average phU infortmation to the file: phUsit.dat.gnu
-  subroutine save_phU(nmodes,nq,naver,nsnap,phUsit)  
+  subroutine save_phU(nmodes,nq,naver,nsnap,phUsit,dir)  
     integer,intent(in) :: nmodes,nq,nsnap,naver
     real(kind=dp),intent(in) :: phUsit(nmodes,nq,0:nsnap)
+    character(len=*),optional :: dir
     
     integer :: phU_unit
 		character(len=maxlen) :: phU_file_
+    
+    character(len=maxlen) :: save_path
+    if(present(dir)) then
+      save_path = dir
+    else
+      save_path = work_path
+    endif
+    
     phU_unit = io_file_unit()
     if(llinux) then
-      phU_file_ = trim(work_path)//"/"//trim(adjustl(phU_file))
+      phU_file_ = trim(save_path)//"/"//trim(adjustl(phU_file))
     else
-      phU_file_ = trim(work_path)//"\"//trim(adjustl(phU_file))
+      phU_file_ = trim(save_path)//"\"//trim(adjustl(phU_file))
     endif		
     
     call open_file(phU_file_,phU_unit)
@@ -517,10 +535,11 @@ module saveinf
   end subroutine plot_phU  
 
 
-  subroutine plot_ph_temp(nmodes,nq,nsnap,phKsit,phUsit)
+  subroutine plot_ph_temp(nmodes,nq,nsnap,phKsit,phUsit,dir)
     implicit none
     integer , intent(in) :: nmodes,nq,nsnap
     real(kind=dp),intent(in) :: phKsit(nmodes,nq,0:nsnap),phUsit(nmodes,nq,0:nsnap)
+    character(len=*),optional :: dir
     
     real(kind=dp), allocatable :: phTemp(:,:),phEsit(:,:)
     
@@ -529,15 +548,22 @@ module saveinf
     integer :: phT_unit
     character(len=maxlen) :: phT_file_
 
+    character(len=maxlen) :: save_path
+    if(present(dir)) then
+      save_path = dir
+    else
+      save_path = work_path
+    endif
+
     allocate(phTemp(nq,0:nsnap))
     allocate(phEsit(nq,0:nsnap))    
     do imode=1,nmodes
       write(ctmp1,*) imode
 
       if(llinux) then
-        phT_file_ = trim(work_path)//"/"//"ph_temp_mode"//trim(adjustl(ctmp1))//".dat"
+        phT_file_ = trim(save_path)//"/"//"ph_temp_mode"//trim(adjustl(ctmp1))//".dat"
       else
-        phT_file_ = trim(work_path)//"\"//"ph_temp_mode"//trim(adjustl(ctmp1))//".dat"
+        phT_file_ = trim(save_path)//"\"//"ph_temp_mode"//trim(adjustl(ctmp1))//".dat"
       endif		
 
     
@@ -608,20 +634,29 @@ module saveinf
 
 
 	!The electron(hole) population on different adiabatic wave function.
-  subroutine save_wsit(nfre,nsnap,naver,wsit,wsit_file)
+  subroutine save_wsit(nfre,nsnap,naver,wsit,wsit_file,dir)
     implicit none
     integer,intent(in) :: nfre,nsnap,naver
     real(kind=dp),intent(in) :: wsit(nfre,0:nsnap)
     character(len=*),intent(in) :: wsit_file
+    character(len=*),intent(in),optional :: dir
     
 		character(len=maxlen) :: wsit_file_
 		integer :: wsit_unit
+
+
+    character(len=maxlen) :: save_path
+    if(present(dir)) then
+      save_path = dir
+    else
+      save_path = work_path
+    endif
     wsit_unit = io_file_unit()
 		
     if(llinux) then
-      wsit_file_ = trim(work_path)//"/"//trim(adjustl(wsit_file))
+      wsit_file_ = trim(save_path)//"/"//trim(adjustl(wsit_file))
     else
-      wsit_file_ = trim(work_path)//"\"//trim(adjustl(wsit_file))
+      wsit_file_ = trim(save_path)//"\"//trim(adjustl(wsit_file))
     endif    
     
     call open_file(wsit_file_,wsit_unit)
@@ -717,19 +752,27 @@ module saveinf
 
 	! save the first trajecotry active PES and first trajecotry PES : pes_e.dat_f.gnu
 	! save the average active PES and PES for all trajecotry. : pes_e.dat_average.gnu
-  subroutine save_pes(nfre,nsnap,naver,pes_one,pes,pes_file)
+  subroutine save_pes(nfre,nsnap,naver,pes_one,pes,pes_file,dir)
     implicit none
     integer , intent(in) :: nfre,nsnap,naver
     real(kind=dp),intent(in) :: pes_one(0:nfre,0:nsnap),pes(0:nfre,0:nsnap)
     character(len=*),intent(in) :: pes_file
+    character(len=*),intent(in),optional :: dir
     
 		character(len=maxlen) :: pes_file_
 		integer :: pes_unit
+
+    character(len=maxlen) :: save_path
+    if(present(dir)) then
+      save_path = dir
+    else
+      save_path = work_path
+    endif
 		
     if(llinux) then
-      pes_file_ = trim(work_path)//"/"//trim(adjustl(pes_file))
+      pes_file_ = trim(save_path)//"/"//trim(adjustl(pes_file))
     else
-      pes_file_ = trim(work_path)//"\"//trim(adjustl(pes_file))
+      pes_file_ = trim(save_path)//"\"//trim(adjustl(pes_file))
     endif      
     
     pes_unit = io_file_unit()
@@ -754,9 +797,9 @@ module saveinf
 		call close_file(pes_file_,pes_unit)
 
     if(llinux) then
-      pes_file_ = trim(work_path)//"/"//trim(adjustl(pes_file))//".first.dat"
+      pes_file_ = trim(save_path)//"/"//trim(adjustl(pes_file))//".first.dat"
     else
-      pes_file_ = trim(work_path)//"\"//trim(adjustl(pes_file))//".first.dat"
+      pes_file_ = trim(save_path)//"\"//trim(adjustl(pes_file))//".first.dat"
     endif     
     
     pes_unit = io_file_unit()
@@ -886,20 +929,29 @@ module saveinf
 
 
 	!The electron(hole) population on different diabatic wave function.
-  subroutine save_csit(nfre,nsnap,naver,csit,csit_file)
+  subroutine save_csit(nfre,nsnap,naver,csit,csit_file,dir)
     implicit none
     integer,intent(in) :: nfre,nsnap,naver
     real(kind=dp),intent(in) :: csit(nfre,0:nsnap)
     character(len=*),intent(in) :: csit_file
-		
+		character(len=*),intent(in),optional :: dir
+    
 		character(len=maxlen) :: csit_file_
     integer :: csit_unit
+
+    character(len=maxlen) :: save_path
+    if(present(dir)) then
+      save_path = dir
+    else
+      save_path = work_path
+    endif
+
     csit_unit = io_file_unit()
 		
     if(llinux) then
-      csit_file_ = trim(work_path)//"/"//trim(adjustl(csit_file))
+      csit_file_ = trim(save_path)//"/"//trim(adjustl(csit_file))
     else
-      csit_file_ = trim(work_path)//"\"//trim(adjustl(csit_file))
+      csit_file_ = trim(save_path)//"\"//trim(adjustl(csit_file))
     endif          
     call open_file(csit_file_,csit_unit)
 
@@ -923,11 +975,12 @@ module saveinf
     deallocate(cefree)
   end subroutine save_csit
 	
-  subroutine read_csit(inode,icore,nfre,nsnap,naver,csit,csit_file)
+  subroutine read_csit(inode,icore,nfre,nsnap,naver,csit,csit_file,dir)
     implicit none
     integer,intent(in) :: nfre,nsnap,naver,inode,icore
     real(kind=dp),intent(inout) :: csit(nfre,0:nsnap)
     character(len=*),intent(in) :: csit_file
+    character(len=*),intent(in),optional :: dir
     
     integer :: csit_unit
 		character(len=maxlen) :: csit_file_
@@ -991,19 +1044,28 @@ module saveinf
 
 
 	!The active adiabatic PES project to diabatic states. psit(ifre)=|P(ifre,isurface)|**2
-  subroutine save_psit(nfre,nsnap,naver,psit,psit_file)
+  subroutine save_psit(nfre,nsnap,naver,psit,psit_file,dir)
     implicit none
     integer,intent(in) :: nfre,nsnap,naver
     real(kind=dp),intent(in) :: psit(nfre,0:nsnap)
     character(len=*),intent(in) :: psit_file
- 		
+ 		character(len=*),intent(in),optional :: dir
+    
 		character(len=maxlen) :: psit_file_
     integer :: psit_unit
+    character(len=maxlen) :: save_path
+    if(present(dir)) then
+      save_path = dir
+    else
+      save_path = work_path
+    endif    
+    
+    
     psit_unit = io_file_unit()
     if(llinux) then
-      psit_file_ = trim(work_path)//"/"//trim(adjustl(psit_file))
+      psit_file_ = trim(save_path)//"/"//trim(adjustl(psit_file))
     else
-      psit_file_ = trim(work_path)//"\"//trim(adjustl(psit_file))
+      psit_file_ = trim(save_path)//"\"//trim(adjustl(psit_file))
     endif  		
 
     call open_file(psit_file_,psit_unit)
@@ -1096,7 +1158,7 @@ module saveinf
   end subroutine plot_psit	
 
 
-  subroutine plot_band_occupatin_withtime(nband,nk,Enk,xk,nsnap,psit,csit,dsnap,band_file)
+  subroutine plot_band_occupatin_withtime(nband,nk,Enk,xk,nsnap,psit,csit,dsnap,band_file,dir)
 		implicit none
 		integer , intent(in) :: nband,nk,dsnap
 		real(kind=dp),intent(in) :: Enk(nband,nk)
@@ -1104,18 +1166,26 @@ module saveinf
 		integer , intent(in) :: nsnap
 		real(kind=dp),intent(in) :: psit(1:nband*nk,0:nsnap),csit(1:nband*nk,0:nsnap)
 		character(len=*),intent(in) :: band_file
-		
+		character(len=*),intent(in),optional :: dir
+    
 		character(len=maxlen) :: band_file_
 		integer :: band_unit
 		integer :: ipol,iband,ik,ifre
 		real(kind=dp) :: kx,ky,kz
+
+    character(len=maxlen) :: save_path
+    if(present(dir)) then
+      save_path = dir
+    else
+      save_path = work_path
+    endif
     
     do iband=1,nband
       write(ctmp1,*) iband
       if(llinux) then
-        band_file_ = trim(work_path)//"/"//trim(adjustl(band_file))//"_"//trim(adjustl(ctmp1))//".dat"
+        band_file_ = trim(save_path)//"/"//trim(adjustl(band_file))//"_"//trim(adjustl(ctmp1))//".dat"
       else
-        band_file_ = trim(work_path)//"\"//trim(adjustl(band_file))//"_"//trim(adjustl(ctmp1))//".dat"
+        band_file_ = trim(save_path)//"\"//trim(adjustl(band_file))//"_"//trim(adjustl(ctmp1))//".dat"
       endif       
        
       band_unit = io_file_unit()
@@ -1148,7 +1218,7 @@ module saveinf
 	end subroutine plot_band_occupatin_withtime
 
 	
-  subroutine plot_eh_temp(nband,nk,Enk,xk,nsnap,psit,csit,dsnap,temp_file)
+  subroutine plot_eh_temp(nband,nk,Enk,xk,nsnap,psit,csit,dsnap,temp_file,dir)
     implicit none
 		integer , intent(in) :: nband,nk,dsnap
 		real(kind=dp),intent(in) :: Enk(nband,nk)
@@ -1156,19 +1226,27 @@ module saveinf
 		integer , intent(in) :: nsnap
 		real(kind=dp),intent(in) :: psit(1:nband*nk,0:nsnap),csit(1:nband*nk,0:nsnap)
 		character(len=*),intent(in) :: temp_file
-		
+		character(len=*),intent(in),optional :: dir
+    
 		character(len=maxlen) :: temp_file_
 		integer :: temp_unit
 		integer :: ipol,iband,ik,ifre
 		real(kind=dp) :: kx,ky,kz
+
+    character(len=maxlen) :: save_path
+    if(present(dir)) then
+      save_path = dir
+    else
+      save_path = work_path
+    endif
     
     do iband=1,nband
       write(ctmp1,*) iband
       
       if(llinux) then
-        temp_file_ = trim(work_path)//"/"//trim(adjustl(temp_file))//"_"//trim(adjustl(ctmp1))//".dat"
+        temp_file_ = trim(save_path)//"/"//trim(adjustl(temp_file))//"_"//trim(adjustl(ctmp1))//".dat"
       else
-        temp_file_ = trim(work_path)//"\"//trim(adjustl(temp_file))//"_"//trim(adjustl(ctmp1))//".dat"
+        temp_file_ = trim(save_path)//"\"//trim(adjustl(temp_file))//"_"//trim(adjustl(ctmp1))//".dat"
       endif                
  
       temp_unit = io_file_unit()
