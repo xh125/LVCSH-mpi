@@ -532,65 +532,77 @@ program lvcsh
 #endif      
     enddo
     
-    
-    phKsit = phKsit / itraj
-    phUsit = phUsit / itraj
-    
-    if(lelecsh) then
-      csit_e = csit_e /itraj
-      wsit_e = wsit_e /itraj
-      psit_e = psit_e /itraj
-      pes_e  = pes_e  /itraj
-    endif
-    
-    if(lholesh) then
-      csit_h = csit_h /itraj
-      wsit_h = wsit_h /itraj
-      psit_h = psit_h /itraj
-      pes_h  = pes_h  /itraj
-    endif
 
     !====================!
     != save information =!
     !====================!
-    call save_phK(nmodes,nqtotf,itraj,nsnap,phKsit)
-    call save_phU(nmodes,nqtotf,itraj,nsnap,phUsit)
+    if(verbosity == "high") then
+      phKsit = phKsit / itraj
+      phUsit = phUsit / itraj
+      
+      if(lelecsh) then
+        csit_e = csit_e /itraj
+        wsit_e = wsit_e /itraj
+        psit_e = psit_e /itraj
+        pes_e  = pes_e  /itraj
+      endif
+      
+      if(lholesh) then
+        csit_h = csit_h /itraj
+        wsit_h = wsit_h /itraj
+        psit_h = psit_h /itraj
+        pes_h  = pes_h  /itraj
+      endif    
     
-    if(lelecsh) then
-      call save_pes(nefre,nsnap,itraj,pes_one_e,pes_e,pes_e_file)
-      call save_csit(nefre,nsnap,itraj,csit_e,csit_e_file)
-      call save_wsit(nefre,nsnap,itraj,wsit_e,wsit_e_file)
-      call save_psit(nefre,nsnap,itraj,psit_e,psit_e_file)
-      call plot_band_occupatin_withtime(neband,nktotf,Enk_e,xkf,nsnap,psit_e,csit_e,savedsnap,band_e_file)
+      call save_phK(nmodes,nqtotf,itraj,nsnap,phKsit)
+      call save_phU(nmodes,nqtotf,itraj,nsnap,phUsit)
+      
+      if(lelecsh) then
+        call save_pes(nefre,nsnap,itraj,pes_one_e,pes_e,pes_e_file)
+        call save_csit(nefre,nsnap,itraj,csit_e,csit_e_file)
+        call save_wsit(nefre,nsnap,itraj,wsit_e,wsit_e_file)
+        call save_psit(nefre,nsnap,itraj,psit_e,psit_e_file)
+        call plot_band_occupatin_withtime(neband,nktotf,Enk_e,xkf,nsnap,psit_e,csit_e,savedsnap,band_e_file)
+      endif
+      
+      if(lholesh) then
+        call save_pes(nhfre,nsnap,itraj,pes_one_h,pes_h,pes_h_file)
+        call save_csit(nhfre,nsnap,itraj,csit_h,csit_h_file)
+        call save_wsit(nhfre,nsnap,itraj,wsit_h,wsit_h_file)
+        call save_psit(nhfre,nsnap,itraj,psit_h,psit_h_file)
+        call plot_band_occupatin_withtime(nhband,nktotf,Enk_h,xkf,nsnap,psit_h,csit_h,savedsnap,band_h_file)
+      endif
+      
+      phKsit = phKsit * itraj
+      phUsit = phUsit * itraj
+      
+      if(lelecsh) then
+        csit_e = csit_e *itraj
+        wsit_e = wsit_e *itraj
+        psit_e = psit_e *itraj
+        pes_e  = pes_e  *itraj
+      endif             
+                        
+      if(lholesh) then  
+        csit_h = csit_h *itraj
+        wsit_h = wsit_h *itraj
+        psit_h = psit_h *itraj
+        pes_h  = pes_h  *itraj
+      endif      
     endif
-    
-    if(lholesh) then
-      call save_pes(nhfre,nsnap,itraj,pes_one_h,pes_h,pes_h_file)
-      call save_csit(nhfre,nsnap,itraj,csit_h,csit_h_file)
-      call save_wsit(nhfre,nsnap,itraj,wsit_h,wsit_h_file)
-      call save_psit(nhfre,nsnap,itraj,psit_h,psit_h_file)
-      call plot_band_occupatin_withtime(nhband,nktotf,Enk_h,xkf,nsnap,psit_h,csit_h,savedsnap,band_h_file)
-    endif
-
 
     !Reduction the results and print in jobdir.
-    phKsit = phKsit * itraj
     call mpi_barrier(mpi_comm_world,ierr)
     call mp_sum(phKsit)
     phKsit = phKsit/naver
     if(ionode) call save_phK(nmodes,nqtotf,naver,nsnap,phKsit,job_path)
  
-    phUsit = phUsit * itraj
     call mpi_barrier(mpi_comm_world,ierr)
     call mp_sum(phUsit)
     phUsit = phUsit/naver
     if(ionode) call save_phU(nmodes,nqtotf,naver,nsnap,phUsit,job_path) 
 
     if(lelecsh) then
-      csit_e = csit_e *itraj
-      wsit_e = wsit_e *itraj
-      psit_e = psit_e *itraj
-      pes_e  = pes_e  *itraj
       call mpi_barrier(mpi_comm_world,ierr)
       call mp_sum(csit_e )
       call mp_sum(wsit_e )
@@ -611,10 +623,6 @@ program lvcsh
     endif
     
     if(lholesh) then
-      csit_h = csit_h *itraj
-      wsit_h = wsit_h *itraj
-      psit_h = psit_h *itraj
-      pes_h  = pes_h  *itraj
       call mpi_barrier(mpi_comm_world,ierr)
       call mp_sum(csit_h )
       call mp_sum(wsit_h )
