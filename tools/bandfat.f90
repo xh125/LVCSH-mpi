@@ -13,8 +13,8 @@ module io
 	use constants
 	implicit none
 	integer,public,save :: stdout,stdin
-	character(len=maxlen) :: stdout_name="fatband.out"
-  character(len=maxlen) :: stdin_name = "fatband.in"
+	character(len=maxlen) :: stdout_name="bandfat.out"
+  character(len=maxlen) :: stdin_name = "bandfat.in"
 	character(len=maxlen) :: msg
 	integer :: ierr
 	contains
@@ -109,10 +109,10 @@ module parameters
 	use constants
 	use io
 	implicit none
-  character(len=maxlen) :: filband
+  character(len=maxlen) :: filband,filband0
 	character(len=maxlen) :: filproj
 	character(len=maxlen) :: bandfatfile
-	integer :: bandsunit,projsunit,bandfatunit
+	integer :: bandsunit,projsunit,bandfatunit,bands0unit
 	
   namelist /fatinput/ filband,filproj,bandfatfile
   
@@ -172,17 +172,22 @@ program main
 	read(bandsunit,"(12X,I4,6X,I6)") nbnd,nks
 	allocate(kpoints(3,nks),Enk(nbnd,nks))
 	write(ctmp,*) nbnd
-	cformat = "("//trim(adjustl(ctmp))//"F9.3)"
 	do ik=1,nks
-		read(bandsunit,*) (kpoints(ipol,ik),ipol=1,3)
-		read(bandsunit,cformat) (Enk(iband,ik),iband=1,nbnd)
+		read(bandsunit,'(10x,3f10.6)') (kpoints(ipol,ik),ipol=1,3)
+		read(bandsunit,"(10f9.3)") (Enk(iband,ik),iband=1,nbnd)
 	enddo
 	
 	allocate(lkline(nks))
 	lkline = 0.0
-	do ik=2,nks
-		lkline(ik) = lkline(ik-1)+ sqrt(SUM((kpoints(:,ik)-kpoints(:,ik-1))**2))
-	enddo
+	filband0 = trim(filband)//".gnu"
+  bands0unit = io_file_unit()
+  call open_file(filband0,bands0unit)
+  do ik =1,nks
+    read(bands0unit,"(f10.4)") lkline(ik)
+  enddo
+  call close_file(filband0,bands0unit)
+  
+  
 	
 	
 	!WRITE (iunplot, '(3i8)') natomwfc, nkstot, nbnd

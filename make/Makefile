@@ -132,7 +132,7 @@ OBJS       = $(SRCS_F:.f90=.o) $(SRCS_C:.c=.o)
 all: $(exe)
 
 ##
-${exe} : ${OBJS}	bindir
+${exe} : ${OBJS}	bindir tools
 #	${F90} -o ${exe} ${OBJS} ${MKL_dynamic_Link}
 	${F90} -o ${exe} ${OBJS} ${MKL_static_Link}
 	cp -f ${exe} ../bin
@@ -140,6 +140,10 @@ ${exe} : ${OBJS}	bindir
 bindir :
 	cd ../ ; test -d bin || mkdir bin
 
+tools : bindir
+  cd ../tools ; ifort bandfat.f90 -o bandfat.x
+  cp -f bandfat.x ../bin
+  
 #make clean
 .PHONY : clean
 clean:
