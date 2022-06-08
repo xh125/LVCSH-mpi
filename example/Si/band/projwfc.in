@@ -1,0 +1,6 @@
+&projwfc
+prefix = 'Si'
+outdir = './outdir'
+lsym = .false.
+filproj = 'fatband'
+/

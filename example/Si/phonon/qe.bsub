@@ -22,9 +22,6 @@ export MODULEPATH=/share/home/ZhuangW/xh/modulefiles:$MODULEPATH
 
 module load Quantum_Espresso/6.8.0
 
-
-#mpirun -np $NP dos.x -npool $NP <dos.in > dos.out
-#mpirun -np $NP pw.x -npool $NP <scf.in> scf.out
-#mpirun -np $NP pw.x -npool $NP <nscf-bands.in> nscf-bands.out
-#mpirun -np $NP bands.x -npool $NP <bands.in> bands.out
-mpirun -np $NP projwfc.x -npool $NP <projwfc.in> projwfc.out
+mpirun -np $NP pw.x -npool $NP <scf.in > scf.out
+mpirun -np $NP ph.x -npool $NP <ph.in> ph.out
+#mpirun -np $NP projwfc.x -npool $NP <projwfc.in> projwfc.out
