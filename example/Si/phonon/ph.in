@@ -7,6 +7,6 @@
  ldisp=.true.
  nq1=6, nq2=6, nq3=6
  !amass(1)=0.0
- fildyn=“Si.dyn”,
+ fildyn='Si.dyn'
  fildvscf='dvscf'
  /
