@@ -14,6 +14,7 @@ module io
 	implicit none
 	integer,public,save :: stdout,stdin
 	character(len=maxlen) :: stdout_name="fatband.out"
+  character(len=maxlen) :: stdin_name = "fatband.in"
 	character(len=maxlen) :: msg
 	integer :: ierr
 	contains
@@ -108,11 +109,41 @@ module parameters
 	use constants
 	use io
 	implicit none
-	character(len=maxlen) :: bandsfile="bands.dat"
-	character(len=maxlen) :: projsfile="fatband.projwfc_up"
-	character(len=maxlen) :: bandfatfile="fatband.dat.gnu"
+  character(len=maxlen) :: filband
+	character(len=maxlen) :: filproj
+	character(len=maxlen) :: bandfatfile
 	integer :: bandsunit,projsunit,bandfatunit
 	
+  namelist /fatinput/ filband,filproj,bandfatfile
+  
+  contains
+  
+  subroutine readinput()
+    implicit none
+    
+    stdin = io_file_unit()
+    call open_file(stdin_name,stdin)
+    
+    filband="bands.dat"
+    filproj="fatband"
+    bandfatfile="fatband.dat.gnu"
+
+    read(UNIT=stdin,nml=fatinput,iostat=ierr,iomsg=msg)
+    if(ierr /= 0) then
+      call io_error('Error: Problem reading namelist file fatinput')
+      call io_error(msg)
+    endif  
+    close(stdin)    
+    
+    write(stdout,"(1X,A13,1X,A)") "filband     =", trim(filband)
+    write(stdout,*) "filband need to set as the input of bands.x  "
+    write(stdout,"(/,1X,A13,1X,A)") "filproj     =", trim(filproj)
+    write(stdout,*) "filproj need to set as the input of projwfc.x "
+    write(stdout,"(/,1X,A13,1X,A)") "bandfatfile =", trim(bandfatfile)
+    write(stdout,*) "the fatband are write to file: ",trim(bandfatfile)
+    
+  end subroutine readinput
+  
 end module parameters	
 
 program main
@@ -131,12 +162,13 @@ program main
 	
 	stdout = io_file_unit()
 	call open_file(stdout_name,stdout)
+  call readinput()
 	bandfatunit = io_file_unit()
 	call open_file(bandfatfile,bandfatunit)
 	
 	
 	bandsunit = io_file_unit()
-	call open_file(bandsfile,bandsunit)
+	call open_file(filband,bandsunit)
 	read(bandsunit,"(12X,I4,6X,I6)") nbnd,nks
 	allocate(kpoints(3,nks),Enk(nbnd,nks))
 	write(ctmp,*) nbnd
@@ -156,7 +188,8 @@ program main
 	!WRITE (iunplot, '(3i8)') natomwfc, nkstot, nbnd
   !WRITE (iunplot, '(2l5)') noncolin, lspinorb
 	projsunit = io_file_unit()
-	call open_file(projsfile,projsunit)
+  filproj = trim(filproj)//".projwfc_up"
+	call open_file(filproj,projsunit)
 	call findkline(projsunit,"    F    F",1,10)
 	backspace(projsunit)
 	read(projsunit,"(3i8)") natomwfc,nks,nbnd
