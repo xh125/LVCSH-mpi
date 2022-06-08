@@ -14,7 +14,7 @@ module readinput
                         llaser,efield_cart,w_laser,fwhm,eps_acustic,&
                         lsetthreads,mkl_threads,lelecsh,lholesh,lehpairsh,&
                         ieband_min,ieband_max,ihband_min,ihband_max,nefre_sh,nhfre_sh,&
-												nnode,ncore,savedsnap,lsortpes,l_dEa_dQ,l_dEa2_dQ2
+												nnode,ncore,savedsnap,lsortpes,l_dEa_dQ,l_dEa2_dQ2,nsample,dirsample
   use io,        only : io_file_unit,io_error,msg
   use utility,   only : utility_lowercase
 
@@ -226,7 +226,9 @@ module readinput
 		nnode         = 1
 		ncore         = 1
 		savedsnap     = 100
-
+    nsample       = 1
+    dirsample     = "sample"
+    
     l_dEa_dQ      = .true.
     l_dEa2_dQ2    = .true.
     
@@ -348,6 +350,35 @@ module readinput
     call mp_bcast(l_dEa2_dQ2    ,ionode_id)
     call mp_bcast(lsetthreads   ,ionode_id) 
     call mp_bcast(mkl_threads   ,ionode_id)
+    call mp_bcast(nsample       ,ionode_id)
+    call mp_bcast(dirsample     ,ionode_id)
+
+
+  if(trim(calculation) == "lvcsh") then
+    !creat work_path
+    if(llinux) then
+      work_path = trim(job_path)//"/"//iproc_str
+    else
+      work_path = trim(job_path)//"\"//iproc_str
+    endif
+    
+    !inquire(file=trim(adjustl(work_path)),exist=filelive)
+    inquire(directory=trim(adjustl(work_path)),exist=dirlive)
+    !write(*,*) "dirlive:",dirlive
+    if(.not. dirlive) call system("mkdir "//trim(work_path))
+    !write(*,*) "Work direct for ",iproc," processor is :",work_path
+    procout = io_file_unit()
+    if(llinux) then
+      procout_name = trim(work_path)//"/LVCSH_"//trim(adjustl(iproc_str))//".out"
+    else
+      procout_name = trim(work_path)//"\LVCSH_"//trim(adjustl(iproc_str))//".out"
+    endif
+    !write(*,*) trim(procout_name)
+    open(unit=procout,file=procout_name,status='REPLACE')
+    write(procout,*) "Output of the ",iproc,"processor."
+    write(procout,*) "Job_path is :",trim(job_path)
+    write(procout,*) "Work_path is :",trim(work_path)
+
 
     write(procout,"(/,1X,A15,I5,1X,A10)") "Input file for ",iproc,"processor."   
     write(procout,*) "calculation  =",trim(calculation) 
@@ -412,6 +443,11 @@ module readinput
       write(procout,*) "The parameter naver need to set larger than num of processor in MPI."
       stop
     endif
+  
+  else
+    if(ionode) write(stdout,*) "Together the results in ",nsample,"samples."
+    if(ionode) write(stdout,*) "The prefix directory name of each ensemble is :",trim(dirsample)
+  endif  
     
   end subroutine bcast_namelist
 #endif 

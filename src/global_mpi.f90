@@ -42,28 +42,28 @@ module global_mpi
     !if(ionode) write(*,*) "Job direct is:",job_path
     
     !creat work_path
-    if(llinux) then
-      work_path = trim(job_path)//"/"//iproc_str
-    else
-      work_path = trim(job_path)//"\"//iproc_str
-    endif
-    
-    !inquire(file=trim(adjustl(work_path)),exist=filelive)
-    inquire(directory=trim(adjustl(work_path)),exist=dirlive)
-    !write(*,*) "dirlive:",dirlive
-    if(.not. dirlive) call system("mkdir "//trim(work_path))
-    !write(*,*) "Work direct for ",iproc," processor is :",work_path
-    procout = io_file_unit()
-    if(llinux) then
-      procout_name = trim(work_path)//"/LVCSH_"//trim(adjustl(iproc_str))//".out"
-    else
-      procout_name = trim(work_path)//"\LVCSH_"//trim(adjustl(iproc_str))//".out"
-    endif
-    !write(*,*) trim(procout_name)
-    open(unit=procout,file=procout_name,status='REPLACE')
-    write(procout,*) "Output of the ",iproc,"processor."
-    write(procout,*) "Job_path is :",trim(job_path)
-    write(procout,*) "Work_path is :",trim(work_path)
+    !if(llinux) then
+    !  work_path = trim(job_path)//"/"//iproc_str
+    !else
+    !  work_path = trim(job_path)//"\"//iproc_str
+    !endif
+    !
+    !!inquire(file=trim(adjustl(work_path)),exist=filelive)
+    !inquire(directory=trim(adjustl(work_path)),exist=dirlive)
+    !!write(*,*) "dirlive:",dirlive
+    !if(.not. dirlive) call system("mkdir "//trim(work_path))
+    !!write(*,*) "Work direct for ",iproc," processor is :",work_path
+    !procout = io_file_unit()
+    !if(llinux) then
+    !  procout_name = trim(work_path)//"/LVCSH_"//trim(adjustl(iproc_str))//".out"
+    !else
+    !  procout_name = trim(work_path)//"\LVCSH_"//trim(adjustl(iproc_str))//".out"
+    !endif
+    !!write(*,*) trim(procout_name)
+    !open(unit=procout,file=procout_name,status='REPLACE')
+    !write(procout,*) "Output of the ",iproc,"processor."
+    !write(procout,*) "Job_path is :",trim(job_path)
+    !write(procout,*) "Work_path is :",trim(work_path)
     
   end subroutine initmpi
   

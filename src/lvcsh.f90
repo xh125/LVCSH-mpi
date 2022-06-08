@@ -41,7 +41,8 @@ program lvcsh
   use parameters, only    : lreadscfout,scfoutname,lreadphout,phoutname,nnode, &
                             epwoutname,inputfilename,llaser,init_ik,init_eband,&
                             init_hband,init_e_en,init_h_en,mix_thr,lsortpes,   &
-                            calculation,verbosity,naver_sum,savedsnap,ncore
+                            calculation,verbosity,naver_sum,savedsnap,ncore,&
+                            nsample,dirsample
   use hamiltonian,only    : nefre,neband,H_e,H_e_nk,E_e,P_e,P_e_nk,P0_e_nk,    &
                             gmnvkq_e,Enk_e,H0_e_nk,E0_e,P0_e,nhfre,nhband,H_h, &
                             H_h_nk,E_h,P_h,P_h_nk,P0_h_nk,gmnvkq_h,Enk_h,      &
@@ -534,6 +535,7 @@ program lvcsh
     
     phKsit = phKsit / itraj
     phUsit = phUsit / itraj
+    
     if(lelecsh) then
       csit_e = csit_e /itraj
       wsit_e = wsit_e /itraj
@@ -598,6 +600,7 @@ program lvcsh
       wsit_e =wsit_e /naver
       psit_e =psit_e /naver
       pes_e  =pes_e  /naver
+      call mpi_barrier(mpi_comm_world,ierr)
       if(ionode) then
         call save_pes(nefre,nsnap, naver,pes_one_e,pes_e,pes_e_file,job_path)
         call save_csit(nefre,nsnap,naver,csit_e,csit_e_file,job_path)
@@ -620,7 +623,8 @@ program lvcsh
       csit_h =csit_h /naver
       wsit_h =wsit_h /naver
       psit_h =psit_h /naver
-      pes_h  =pes_h  /naver      
+      pes_h  =pes_h  /naver
+      call mpi_barrier(mpi_comm_world,ierr)      
       if(ionode) then
         call save_pes(nhfre,nsnap, naver,pes_one_h,pes_h,pes_h_file,job_path)
         call save_csit(nhfre,nsnap,naver,csit_h,csit_h_file,job_path)
@@ -631,9 +635,6 @@ program lvcsh
     endif
 
     call MPI_Barrier(MPI_COMM_WORLD,ierr)
-    write(*,*) "processor ",iproc,"is OK!"
-    write(*,*) "processor ",iproc,"itraj=",itraj
-    write(*,*) "processor ",nproc,"itraj=",naver
     call endmpi()
     stop    
   

@@ -27,6 +27,8 @@ module parameters
 	character(len=maxlen) :: verbosity
 	character(len=maxlen) :: outdir
 	integer :: nnode,ncore,naver_sum,savedsnap
+  integer :: nsample,isample
+  character(len=maxlen) :: dirsample
   logical :: lreadscfout,lreadphout,lreadfildyn,lsortpes
   logical :: prtgmnvkq
   
@@ -39,7 +41,8 @@ module parameters
            llaser,efield_cart,w_laser,fwhm,eps_acustic,prtgmnvkq,&
            lsetthreads,mkl_threads,lelecsh,lholesh,lehpairsh,&
            ieband_min,ieband_max,ihband_min,ihband_max,nefre_sh,nhfre_sh,&
-					 nnode,ncore,savedsnap,lsortpes,l_dEa_dQ,l_dEa2_dQ2
+					 nnode,ncore,savedsnap,lsortpes,l_dEa_dQ,l_dEa2_dQ2,&
+           nsample,dirsample
 
   contains
   
