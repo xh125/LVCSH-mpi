@@ -618,7 +618,7 @@ program lvcsh
         call save_csit(nefre,nsnap,naver,csit_e,csit_e_file,job_path)
         call save_wsit(nefre,nsnap,naver,wsit_e,wsit_e_file,job_path)
         call save_psit(nefre,nsnap,naver,psit_e,psit_e_file,job_path)
-        call plot_band_occupatin_withtime(neband,nktotf,Enk_e,xkf,nsnap,psit_e,csit_e,savedsnap,band_e_file)
+        call plot_band_occupatin_withtime(neband,nktotf,Enk_e,xkf,nsnap,psit_e,csit_e,savedsnap,band_e_file,job_path)
       endif
     endif
     
