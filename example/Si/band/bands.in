@@ -1,6 +1,0 @@
-&bands
-prefix = 'Si'
-outdir = './outdir'
-filband = 'Si.bands.dat'
-lsym = .true.
-/

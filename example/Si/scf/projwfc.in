@@ -1,9 +1,0 @@
-&projwfc
-prefix = 'Si'
-outdir = './outdir'
-ngauss = 1
-degauss = 5.0d-3
-deltaE  = 0.01
-filpdos = 'Si.pdos'
-filproj = 'Si.proj'
-/
