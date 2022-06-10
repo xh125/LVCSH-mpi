@@ -280,7 +280,7 @@
     USE io_global,     ONLY : ionode_id
     USE division,      ONLY : fkbounds
     USE poolgathering, ONLY : poolgather2,poolgatherc4  
-    USE polaron,       ONLY : epfall
+    !USE polaron,       ONLY : epfall
     !
     ! Local variables
     INTEGER :: lower_bnd

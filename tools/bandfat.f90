@@ -187,9 +187,6 @@ program main
   enddo
   call close_file(filband0,bands0unit)
   
-  
-	
-	
 	!WRITE (iunplot, '(3i8)') natomwfc, nkstot, nbnd
   !WRITE (iunplot, '(2l5)') noncolin, lspinorb
 	projsunit = io_file_unit()
