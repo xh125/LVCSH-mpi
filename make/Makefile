@@ -141,9 +141,9 @@ bindir :
 	cd ../ ; test -d bin || mkdir bin
 
 tools : bindir
-  cd ../tools ; ifort bandfat.f90 -o bandfat.x
-  cp -f bandfat.x ../bin
-  
+	cd ../tools ; ifort bandfat.f90 -o bandfat.x
+	cp -f ../tools/bandfat.x ../bin
+
 #make clean
 .PHONY : clean
 clean:
