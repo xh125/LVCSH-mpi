@@ -702,7 +702,7 @@
   else
     nwfbef = nwfbef/nkqf +1
   endif
-  WRITE(stdout,'(/5x,a,I10)') 'Number of Wannier fitting band below Fermi energy is = ', nwfbef
+  !WRITE(stdout,'(/5x,a,I10)') 'Number of Wannier fitting band below Fermi energy is = ', nwfbef
   
   !
   IF (efermi_read) THEN
@@ -717,11 +717,9 @@
     IF (nbndskip > 0) THEN
       IF (.NOT. already_skipped) THEN
         IF (noncolin) THEN
-          !nelec = nelec - one * nbndskip
-          nelec = nwfbef
+          nelec = nelec - one * nbndskip
         ELSE
-          !nelec = nelec - two * nbndskip
-          nelec = nwfbef * 2
+          nelec = nelec - two * nbndskip
         ENDIF
         already_skipped = .TRUE.
         WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip
@@ -743,11 +741,9 @@
     IF (nbndskip > 0) THEN
       IF (.NOT. already_skipped) THEN
         IF (noncolin) THEN
-          !nelec = nelec - one * nbndskip
-          nelec = nwfbef
+          nelec = nelec - one * nbndskip
         ELSE
-          !nelec = nelec - two * nbndskip
-          nelec = 2 * nwfbef
+          nelec = nelec - two * nbndskip
         ENDIF
         already_skipped = .TRUE.
         WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip
