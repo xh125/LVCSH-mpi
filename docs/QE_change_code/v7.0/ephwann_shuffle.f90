@@ -314,6 +314,9 @@
   !! Used to store $e^{2\pi r \cdot k+q}$ exponential
   COMPLEX(KIND = DP), ALLOCATABLE :: vmefp(:, :, :)
   !! Phonon velocity
+  integer :: nwfbef
+  !! number of wannier functions fitting band below Fermi Energy
+  
   !
   CALL start_clock('ephwann')
   !
@@ -687,6 +690,20 @@
   ENDDO
   !
   WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
+  
+  nwfbef = 0
+  do ik=1,nkqf
+    do ibnd=1,nbndsub
+      if(etf(ibnd,ik)=<ef) nwfbef = nwfbef+1
+    enddo
+  enddo
+  if(real(nwfbef/nkqf) - nwfbef/nkqf < 0.5 ) then
+    nwfbef = nwfbef / nkqf
+  else
+    nwfbef = nwfbef/nkqf +1
+  endif
+  !WRITE(stdout,'(/5x,a,I10)') 'Number of Wannier fitting band below Fermi energy is = ', nwfbef
+  
   !
   IF (efermi_read) THEN
     !
@@ -700,9 +717,11 @@
     IF (nbndskip > 0) THEN
       IF (.NOT. already_skipped) THEN
         IF (noncolin) THEN
-          nelec = nelec - one * nbndskip
+          !nelec = nelec - one * nbndskip
+          nelec = nwfbef
         ELSE
-          nelec = nelec - two * nbndskip
+          !nelec = nelec - two * nbndskip
+          nelec = nwfbef * 2
         ENDIF
         already_skipped = .TRUE.
         WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip
@@ -724,9 +743,11 @@
     IF (nbndskip > 0) THEN
       IF (.NOT. already_skipped) THEN
         IF (noncolin) THEN
-          nelec = nelec - one * nbndskip
+          !nelec = nelec - one * nbndskip
+          nelec = nwfbef
         ELSE
-          nelec = nelec - two * nbndskip
+          !nelec = nelec - two * nbndskip
+          nelec = 2 * nwfbef
         ENDIF
         already_skipped = .TRUE.
         WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip
