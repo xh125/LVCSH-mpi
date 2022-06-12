@@ -72,7 +72,7 @@
                                check_restart_ephwrite
   USE transport,        ONLY : transport_coeffs, scattering_rate_q
   USE grid,             ONLY : qwindow, loadkmesh_fst, xqf_otf
-  USE printing,         ONLY : print_gkk, plot_band, plot_fermisurface
+  USE printing,         ONLY : print_gkk, plot_band, plot_fermisurface,print_sh
   USE io_epw,           ONLY : rwepmatw, epw_read, epw_write
   USE io_transport,     ONLY : tau_read, iter_open, print_ibte, iter_merge
   USE io_selfen,        ONLY : selfen_el_read, spectral_read
@@ -314,6 +314,9 @@
   !! Used to store $e^{2\pi r \cdot k+q}$ exponential
   COMPLEX(KIND = DP), ALLOCATABLE :: vmefp(:, :, :)
   !! Phonon velocity
+  integer :: nwfbef
+  !! number of wannier functions fitting band below Fermi Energy
+  
   !
   CALL start_clock('ephwann')
   !
@@ -687,6 +690,25 @@
   ENDDO
   !
   WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
+  
+  nwfbef = 0
+  do ik=1,nkqf
+    do ibnd=1,nbndsub
+      if(etf(ibnd,ik) <= ef) nwfbef = nwfbef+1
+    enddo
+  enddo
+  if(real(nwfbef/nkqf) - nwfbef/nkqf < 0.5 ) then
+    nwfbef = nwfbef / nkqf
+  else
+    nwfbef = nwfbef/nkqf +1
+  endif
+  WRITE(stdout,'(/5x,a,I10)') 'Number of Wannier fitting band below Fermi energy is = ', nwfbef
+  IF (noncolin) THEN
+    nelec = nwfbef
+  ELSE
+    nelec = nwfbef * 2
+  ENDIF  
+  
   !
   IF (efermi_read) THEN
     !
@@ -700,9 +722,11 @@
     IF (nbndskip > 0) THEN
       IF (.NOT. already_skipped) THEN
         IF (noncolin) THEN
-          nelec = nelec - one * nbndskip
+          !nelec = nelec - one * nbndskip
+          nelec = nwfbef
         ELSE
-          nelec = nelec - two * nbndskip
+          !nelec = nelec - two * nbndskip
+          nelec = nwfbef *2
         ENDIF
         already_skipped = .TRUE.
         WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip
@@ -724,9 +748,11 @@
     IF (nbndskip > 0) THEN
       IF (.NOT. already_skipped) THEN
         IF (noncolin) THEN
-          nelec = nelec - one * nbndskip
+          !nelec = nelec - one * nbndskip
+          nelec = nwfbef
         ELSE
-          nelec = nelec - two * nbndskip
+          !nelec = nelec - two * nbndskip
+          nelec = nwfbef * 2
         ENDIF
         already_skipped = .TRUE.
         WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip
@@ -1743,6 +1769,21 @@
       IF (.NOT. iterative_bte) CALL transport_coeffs(ef0, efcb)
     ENDIF ! if scattering
     !
+
+    !--------------------------------------------------------------------------------
+    ! Added by xiehua, used to print the vmef of dmef to the output.
+    !--------------------------------------------------------------------------------   
+    ! Write dmef or vmef to the files
+    ! vmef is in units of Ryd * bohr
+    ! dmef is in units of 1/a.u. (where a.u. is bohr)
+    ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k) 
+    ! vmef = 2 *dmef
+    ! ! ... RY for "Rydberg" atomic units (e^2=2, m=1/2, hbar=1)   
+    !Lets gather the velocities from all pools
+    if(prtgkk) call print_sh()   
+    
+    
+    
     ! Now deallocate
     DEALLOCATE(epf17, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epf17', 1)
