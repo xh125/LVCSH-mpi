@@ -694,7 +694,7 @@
   nwfbef = 0
   do ik=1,nkqf
     do ibnd=1,nbndsub
-      if(etf(ibnd,ik)=<ef) nwfbef = nwfbef+1
+      if(etf(ibnd,ik) <= ef) nwfbef = nwfbef+1
     enddo
   enddo
   if(real(nwfbef/nkqf) - nwfbef/nkqf < 0.5 ) then
@@ -702,7 +702,7 @@
   else
     nwfbef = nwfbef/nkqf +1
   endif
-  !WRITE(stdout,'(/5x,a,I10)') 'Number of Wannier fitting band below Fermi energy is = ', nwfbef
+  WRITE(stdout,'(/5x,a,I10)') 'Number of Wannier fitting band below Fermi energy is = ', nwfbef
   
   !
   IF (efermi_read) THEN
