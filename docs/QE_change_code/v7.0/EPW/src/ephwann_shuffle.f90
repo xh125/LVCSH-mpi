@@ -702,12 +702,13 @@
   else
     nwfbef = nwfbef/nkqf +1
   endif
-  WRITE(stdout,'(/5x,a,I10)') 'Number of Wannier fitting band below Fermi energy is = ', nwfbef
-  IF (noncolin) THEN
-    nelec = nwfbef
-  ELSE
-    nelec = nwfbef * 2
-  ENDIF  
+  call mp_bcast(nwfbef,ionode_id,world_comm)
+  !WRITE(stdout,'(/5x,a,I10)') 'Number of Wannier fitting band below Fermi energy is = ', nwfbef
+  !IF (noncolin) THEN
+  !  nelec = real(nwfbef)
+  !ELSE
+  !  nelec = real(nwfbef * 2)
+  !ENDIF  
   
   !
   IF (efermi_read) THEN
@@ -722,11 +723,11 @@
     IF (nbndskip > 0) THEN
       IF (.NOT. already_skipped) THEN
         IF (noncolin) THEN
-          !nelec = nelec - one * nbndskip
-          nelec = nwfbef
+          nelec = nelec - one * nbndskip
+          !nelec = real(nwfbef)
         ELSE
-          !nelec = nelec - two * nbndskip
-          nelec = nwfbef *2
+          nelec = nelec - two * nbndskip
+          !nelec = real(nwfbef *2)
         ENDIF
         already_skipped = .TRUE.
         WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip
@@ -748,11 +749,11 @@
     IF (nbndskip > 0) THEN
       IF (.NOT. already_skipped) THEN
         IF (noncolin) THEN
-          !nelec = nelec - one * nbndskip
-          nelec = nwfbef
+          nelec = nelec - one * nbndskip
+          !nelec = real(nwfbef)
         ELSE
-          !nelec = nelec - two * nbndskip
-          nelec = nwfbef * 2
+          nelec = nelec - two * nbndskip
+          !nelec = real(nwfbef * 2)
         ENDIF
         already_skipped = .TRUE.
         WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip
