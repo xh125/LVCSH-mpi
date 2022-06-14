@@ -25,6 +25,7 @@ module readinput
     character(len=maxlen) :: dummy,ctmp
     integer               :: ipos
     integer               :: ios , ios2
+    character(len=512)    :: line
     character, parameter  :: TABCHAR = char(9) !char(9)为制表符TAB
   
   contains  
@@ -108,7 +109,7 @@ module readinput
     do loop=1,tot_num_lines
       read(in_unit, '(a)', iostat = ierr ,iomsg=msg) dummy
         if(ierr /= 0) then
-          call io_error('Error: Problem opening input file SHIN')
+          write(stdout,*)'Error: Problem opening input file SHIN'
           call io_error(msg)
         endif
       !I convert all tabulation characters to spaces
@@ -244,8 +245,16 @@ module readinput
       write(stdout,"(A80)") ctmp
     enddo
     rewind(incar_unit)
-    read(UNIT=incar_unit,nml=shinput,iostat=ierr,iomsg=msg)
-    if(ierr /= 0) then
+    read(UNIT=incar_unit,nml=shinput,iostat=ios,iomsg=msg)
+    ios2 = 0
+    if(ios /= 0) then
+      backspace(incar_unit)
+      read(incar_unit,'(A512)',iostat=ios2) line
+    endif
+    if(ios2 /= 0) call errore("readinput","Could not fine namelist &shinput",2)
+    if(ios /= 0) then
+      call errore("readinput",'Bad line in namelist &shinput:'//&
+                  trim(line)//" (error could be in the previous line)",1)
       write(stdout,*)'Error: Problem reading namelist file SHIN'
       call io_error(msg)
     endif  

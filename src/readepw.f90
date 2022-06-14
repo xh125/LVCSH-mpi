@@ -1578,12 +1578,11 @@ module readepw
 				
       enddo
 		enddo
-
-
+    
     ! use fermi energy to find vbm and cbm.
     do ibnd= ibndmin,ibndmax
       enbmax = Maxval(etf(ibnd,:))
-      if(enbmax>ef*ryd2eV) then
+      if(enbmax > Real(INT(ef*ryd2eV*10000))/10000.0 ) then
         ncbmin = ibnd
         EXIT
       endif
@@ -1591,8 +1590,8 @@ module readepw
     nvbmax = ncbmin - 1
     evbmax = Maxval(etf(nvbmax,:))
     ecbmin = Minval(etf(ncbmin,:))
-    WRITE(stdout,'(/14x,a,i5,2x,a,f9.3,a)') 'Valence band max   = ', nvbmax, 'evbmax = ', evbmax , ' eV'
-    WRITE(stdout,'(14x,a,i5,2x,a,f9.3,a/)') 'Conductor band min = ', ncbmin, 'ecbmin = ', ecbmin , ' eV'    
+    WRITE(stdout,'(/14x,a,i5,2x,a,f9.4,a)') 'Valence band max   = ', nvbmax, 'evbmax = ', evbmax , ' eV'
+    WRITE(stdout,'(14x,a,i5,2x,a,f9.4,a/)') 'Conductor band min = ', ncbmin, 'ecbmin = ', ecbmin , ' eV'    
     icbm = ncbmin
     !if(icbm /= ncbmin) write(stdout,"(5X,A)") "Warning! The nelec need to be set right."
     
