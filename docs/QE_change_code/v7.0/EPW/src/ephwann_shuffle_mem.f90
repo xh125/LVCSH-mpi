@@ -38,7 +38,7 @@
                             nqf2, nqf3, mp_mesh_k, restart, plselfen, epbread,  &
                             epmatkqread, selecqread, restart_step, nsmear,      &
                             nkc1, nkc2, nkc3, nqc1, nqc2, nqc3, assume_metal,   &
-                            cumulant, eliashberg, fermi_plot,                   &
+                            cumulant, eliashberg, fermi_plot,nbndnfbfe,         &
                             nomega, omegamin, omegamax, omegastep, neta
   USE control_flags, ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
@@ -297,8 +297,8 @@
   !! Long-range temp. save
   COMPLEX(KIND = DP), ALLOCATABLE :: vmefp(:, :, :)
   !! Phonon velocity
-  integer :: nwfbef
-  !! number of wannier functions fitting band below Fermi Energy
+  !integer :: nbndnfbfe
+  !! number of not wannier functions fitting band below Fermi Energy
   !
   CALL start_clock('ephwann')
   !
@@ -631,25 +631,12 @@
   ENDDO
   !
   WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
-  
-  nwfbef = 0
-  do ik=1,nkqf
-    do ibnd=1,nbndsub
-      if(etf(ibnd,ik) <= ef) nwfbef = nwfbef+1
-    enddo
-  enddo
-  if(real(nwfbef/nkqf) - nwfbef/nkqf < 0.5 ) then
-    nwfbef = nwfbef / nkqf
-  else
-    nwfbef = nwfbef/nkqf +1
-  endif
-  call mp_bcast(nwfbef,ionode_id,world_comm)
-  !WRITE(stdout,'(/5x,a,I10)') 'Number of Wannier fitting band below Fermi energy is = ', nwfbef  
-  !IF (noncolin) THEN
-  !  nelec = real(nwfbef)
-  !ELSE
-  !  nelec = real(nwfbef * 2)
-  !ENDIF  
+
+  IF (noncolin) THEN
+    nelec = nelec - one * nbndnfbfe
+  ELSE
+    nelec = nelec - two * nbndnfbfe
+  ENDIF
   
   !
   IF (efermi_read) THEN
@@ -665,10 +652,8 @@
       IF (.NOT. already_skipped) THEN
         IF (noncolin) THEN
           nelec = nelec - one * nbndskip
-          !nelec = real(nwfbef)
         ELSE
           nelec = nelec - two * nbndskip
-          !nelec = real(nwfbef * 2)
         ENDIF
         already_skipped = .TRUE.
         WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip
@@ -691,10 +676,8 @@
       IF (.NOT. already_skipped) THEN
         IF (noncolin) THEN
           nelec = nelec - one * nbndskip
-          !nelec = real(nwfbef)
         ELSE
           nelec = nelec - two * nbndskip
-          !nelec = real(nwfbef * 2)
         ENDIF
         already_skipped = .TRUE.
         WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip

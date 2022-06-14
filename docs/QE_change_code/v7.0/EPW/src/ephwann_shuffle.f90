@@ -31,7 +31,7 @@
                                efermi_read, fermi_energy, specfun_el, band_plot,   &
                                scattering, nstemp, int_mob, scissor, carrier,      &
                                iterative_bte, longrange, scatread, nqf1, prtgkk,   &
-                               nqf2, nqf3, mp_mesh_k, restart, plselfen,           &
+                               nqf2, nqf3, mp_mesh_k, restart, plselfen,nbndnfbfe, &
                                specfun_pl, lindabs, use_ws, epbread, fermi_plot,   &
                                epmatkqread, selecqread, restart_step, nsmear,      &
                                nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal,   &
@@ -314,8 +314,8 @@
   !! Used to store $e^{2\pi r \cdot k+q}$ exponential
   COMPLEX(KIND = DP), ALLOCATABLE :: vmefp(:, :, :)
   !! Phonon velocity
-  integer :: nwfbef
-  !! number of wannier functions fitting band below Fermi Energy
+  !integer :: nbndnfbfe
+  !! number of not wannier functions fitting band below Fermi Energy
   
   !
   CALL start_clock('ephwann')
@@ -690,25 +690,12 @@
   ENDDO
   !
   WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
-  
-  nwfbef = 0
-  do ik=1,nkqf
-    do ibnd=1,nbndsub
-      if(etf(ibnd,ik) <= ef) nwfbef = nwfbef+1
-    enddo
-  enddo
-  if(real(nwfbef/nkqf) - nwfbef/nkqf < 0.5 ) then
-    nwfbef = nwfbef / nkqf
-  else
-    nwfbef = nwfbef/nkqf +1
-  endif
-  call mp_bcast(nwfbef,ionode_id,world_comm)
-  !WRITE(stdout,'(/5x,a,I10)') 'Number of Wannier fitting band below Fermi energy is = ', nwfbef
-  !IF (noncolin) THEN
-  !  nelec = real(nwfbef)
-  !ELSE
-  !  nelec = real(nwfbef * 2)
-  !ENDIF  
+
+  IF (noncolin) THEN
+    nelec = nelec - one * nbndnfbfe
+  ELSE
+    nelec = nelec - two * nbndnfbfe
+  ENDIF
   
   !
   IF (efermi_read) THEN
@@ -724,10 +711,8 @@
       IF (.NOT. already_skipped) THEN
         IF (noncolin) THEN
           nelec = nelec - one * nbndskip
-          !nelec = real(nwfbef)
         ELSE
           nelec = nelec - two * nbndskip
-          !nelec = real(nwfbef *2)
         ENDIF
         already_skipped = .TRUE.
         WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip
@@ -750,10 +735,8 @@
       IF (.NOT. already_skipped) THEN
         IF (noncolin) THEN
           nelec = nelec - one * nbndskip
-          !nelec = real(nwfbef)
         ELSE
           nelec = nelec - two * nbndskip
-          !nelec = real(nwfbef * 2)
         ENDIF
         already_skipped = .TRUE.
         WRITE(stdout, '(/5x,"Skipping the first ", i4, " bands:")') nbndskip

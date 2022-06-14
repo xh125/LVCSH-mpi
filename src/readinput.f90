@@ -24,6 +24,7 @@ module readinput
     character(len=maxlen),allocatable:: in_data(:) 
     character(len=maxlen) :: dummy,ctmp
     integer               :: ipos
+    integer               :: ios , ios2
     character, parameter  :: TABCHAR = char(9) !char(9)为制表符TAB
   
   contains  
@@ -245,7 +246,7 @@ module readinput
     rewind(incar_unit)
     read(UNIT=incar_unit,nml=shinput,iostat=ierr,iomsg=msg)
     if(ierr /= 0) then
-      call io_error('Error: Problem reading namelist file SHIN')
+      write(stdout,*)'Error: Problem reading namelist file SHIN'
       call io_error(msg)
     endif  
     close(incar_unit)
