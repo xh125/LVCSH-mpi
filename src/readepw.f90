@@ -422,10 +422,10 @@ module readepw
     call mp_bcast(minus_q,ionode_id)
     call mp_bcast(nsymq,ionode_id)
     call mp_bcast(iverbosity,ionode_id)
-    write(procout,*) "l_nsymq_le_1 = ",l_nsymq_le_1
-    write(procout,*) "minus_q = ",minus_q
-    write(procout,*) "nsymq = ",nsymq
-    write(procout,*) "iverbosity = ",iverbosity
+    !write(procout,*) "l_nsymq_le_1 = ",l_nsymq_le_1
+    !write(procout,*) "minus_q = ",minus_q
+    !write(procout,*) "nsymq = ",nsymq
+    !write(procout,*) "iverbosity = ",iverbosity
 #endif 
 		
     !
@@ -1266,9 +1266,9 @@ module readepw
 #if defined __MPI 		
     if(ionode) then
 #endif  
-    read(unitepwout,"(/32X,f10.6)") ef
+    read(unitepwout,"(/32X,f17.10)") ef
     ef = ef /ryd2ev
-		WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'    
+		WRITE(stdout,'(/5x,a,f17.10,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'    
 		
     
     !IF (efermi_read) THEN
@@ -1277,9 +1277,9 @@ module readepw
     if(ctmp(1:47)=="Fermi energy is read from the input file: Ef = ") then
       efermi_read = .true.
       backspace(unitepwout)
-      read(unitepwout,"(47X,f10.6)") ef
+      read(unitepwout,"(47X,f17.10)") ef
       ef = ef/ryd2ev
-      write(stdout,"(5X,A,f10.6,A)") "Fermi energy is read from the input file: Ef =", ef * ryd2ev, ' eV'
+      write(stdout,"(5X,A,f17.10,A)") "Fermi energy is read from the input file: Ef =", ef * ryd2ev, ' eV'
       
       read(unitepwout,"(/5X,A)") ctmp
       !
@@ -1337,9 +1337,9 @@ module readepw
       ! Fermi energy
       !WRITE(stdout, '(/5x,a,f10.6,a)') &
       !  'Fermi energy is calculated from the fine k-mesh: Ef = ', efnew * ryd2ev, ' eV'
-      read(unitepwout,"(/5x,54X,f10.6)") efnew
+      read(unitepwout,"(/5x,54X,f17.10)") efnew
       efnew = efnew/ryd2ev
-      WRITE(stdout, '(/5x,a,f10.6,a)') &
+      WRITE(stdout, '(/5x,a,f17.10,a)') &
         'Fermi energy is calculated from the fine k-mesh: Ef = ', efnew * ryd2ev, ' eV'
 
 
@@ -1503,7 +1503,7 @@ module readepw
               !ekk = etf_all(ibndmin - 1 + ibnd, ikk)
               !WRITE(stdout, '(3i9, 2f12.4, 1f20.10, 1e20.10)') ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, &
               !nu, ryd2ev * ekk, ryd2ev * ekq, ryd2mev * wf(nu, iq), ryd2mev * epc(ibnd, jbnd, nu, ik)
-              read(unitepwout,'(3i9, 2f12.4, 1f20.10, 1e20.10)') ibnd_,jbnd_,nu_,ekk,ekq,wf(nu,iq_),&
+              read(unitepwout,'(3i9, 2f18.10, 1f20.10, 1e20.10)') ibnd_,jbnd_,nu_,ekk,ekq,wf(nu,iq_),&
                 & gmnvkq(ibnd,jbnd,nu,ik_,iq_)
               !ekk = ekk /ryd2eV
               !ekq = ekq /ryd2eV
@@ -1582,7 +1582,7 @@ module readepw
     ! use fermi energy to find vbm and cbm.
     do ibnd= ibndmin,ibndmax
       enbmax = Maxval(etf(ibnd,:))
-      if(enbmax > Real(INT(ef*ryd2eV*10000))/10000.0 ) then
+      if(enbmax > Real(INT(ef*ryd2eV*1.0d10))/1.0d10 ) then
         ncbmin = ibnd
         EXIT
       endif

@@ -222,7 +222,7 @@
         ikq = ikk + 1
         !
         WRITE(stdout, '(5x, "ik = ", i7, " coord.: ", 3f12.7)') ik, xkf_all(:, ikk)
-        WRITE(stdout, '(5x, a)') ' ibnd     jbnd     imode   enk[eV]    enk+q[eV]  omega(q)[meV]   |g|[meV]'
+        WRITE(stdout, '(5x, a)') ' ibnd     jbnd     imode         enk[eV]          enk+q[eV]     omega(q)[meV]       |g|[meV]'
         WRITE(stdout, '(5x, a)') REPEAT('-', 78)
         !
         DO ibnd = 1, nbndfst
@@ -230,7 +230,7 @@
           DO jbnd = 1, nbndfst
             ekq = etf_all(ibndmin - 1 + jbnd, ikq)
             DO nu = 1, nmodes
-              WRITE(stdout, '(3i9, 2f12.4, 1f20.10, 1e20.10)') ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, &
+              WRITE(stdout, '(3i9, 2f18.10, 1f20.10, 1e20.10)') ibndmin - 1 + ibnd, ibndmin - 1 + jbnd, &
                    nu, ryd2ev * ekk, ryd2ev * ekq, ryd2mev * wf(nu, iq), ryd2mev * epc(ibnd, jbnd, nu, ik)
             ENDDO
           ENDDO
