@@ -7,6 +7,7 @@ module initialsh
 #endif
   use kinds     ,only   : dp,dpc
   use constants ,only   : maxlen,tpi,K_B_Ryd,ryd2eV,ryd2mev,cone,czero,ci
+	use parameters,only   : verbosity
   implicit none
   
   contains
@@ -85,12 +86,14 @@ module initialsh
     endif
 #if defined __MPI 		
     endif
+		if(verbosity  == "high") then
     write(procout,*) "lelecsh = ",lelecsh
     write(procout,*) "lholesh = ",lholesh
     write(procout,*) "ieband_min =",ieband_min
     write(procout,*) "ieband_max =",ieband_max
     write(procout,*) "ihband_min =",ihband_min
     write(procout,*) "ihband_max =",ihband_max
+		endif
 #endif	    
     
     
@@ -155,11 +158,14 @@ module initialsh
         write(stdout,"(5X,A29,I5,A16,I5)") "The init_eband need to set : ",icbm,"<= init_eband <=",ieband_max
 #if defined __MPI 		
     endif
+		if(verbosity  == "high") then
         write(procout,"(/5X,A29,I5)") "Wrong! The init_eband set as:",init_eband
         write(procout,"(5X,A29,I5,A16,I5)") "The init_eband need to set : ",icbm,"<= init_eband <=",ieband_max    
+		endif
 #endif  
-      endif
-      if(init_hband < ihband_min .or. init_hband > ivbm) then
+    endif
+		
+    if(init_hband < ihband_min .or. init_hband > ivbm) then
 #if defined __MPI 		
     if(ionode) then
 #endif 
@@ -167,8 +173,10 @@ module initialsh
         write(stdout,"(5X,A29,I5,A16,I5)") "The init_hband need to set : ",ihband_min,"<= init_hband <=",ivbm
 #if defined __MPI 		
     endif
+		if(verbosity  == "high") then
         write(procout,"(/5X,A29,I5)") "Wrong! The init_hband set as:",init_hband
         write(procout,"(5X,A29,I5,A16,I5)") "The init_hband need to set : ",ihband_min,"<= init_hband <=",ivbm    
+		endif
 #endif 
       endif      
     endif
@@ -188,13 +196,15 @@ module initialsh
     write(stdout,"(5X,A18,F12.5,A3)")"elec-hole energy= ",obsorbEn," eV"
 #if defined __MPI 		
     endif
+		if(verbosity  == "high") then
     write(procout,"(/5X,A)") "Initial eh_KSstate:  "
     write(procout,"(5X,A3,I5,1X,A10,3(F12.6,1X),A2)") "ik=",init_ik, "coord.: ( ",(xkf(ipol,init_ik),ipol=1,3)," )"
     write(procout,"(5X,A11,I5,A21,F12.5,A3)") "init_hband=",init_hband," Initial hole Energy:",&
                                           etf(init_hband,init_ik)*ryd2eV," eV"
     write(procout,"(5X,A11,I5,A21,F12.5,A3)") "init_eband=",init_eband," Initial elec Energy:",&
                                         etf(init_eband,init_ik)*ryd2eV," eV"      
-    write(procout,"(5X,A18,F12.5,A3)")"elec-hole energy= ",obsorbEn," eV"    
+    write(procout,"(5X,A18,F12.5,A3)")"elec-hole energy= ",obsorbEn," eV"  
+		endif
 #endif     
   end subroutine init_eh_KSstat
   
@@ -363,12 +373,13 @@ module initialsh
       write(stdout,"(/5X,A)") "The phonon dynamica set as classical."
     endif
     write(stdout,"(5X,A38,F11.5,A4,A9,F11.5,A4)") &
-    "The initial energy of phonon: SUM_phT=",0.5*SUM(ABS(ph_P)**2)*ryd2eV," eV",&
+    "The initial energy of phonon: SUM_phK=",0.5*SUM(ABS(ph_P)**2)*ryd2eV," eV",&
     " SUM_phU=",0.5*SUM(w**2*ABS(ph_Q)**2)*ryd2eV," eV"
     write(stdout,"(5X,A38,F11.5,A4)") &
     "The initial energy of phonon: SUM_phE=",0.5*SUM(ABS(ph_P)**2+w**2*ABS(ph_Q)**2)*ryd2eV," eV."    
 #if defined __MPI 		
     endif
+		if(verbosity  == "high") then
     write(procout,"(/5X,A51,F11.5,A2)") &
           "The temperature of the non-adiabatic dynamica is : ",T," K"
     write(procout,"(5X,A49,F11.5,A4)") &
@@ -382,10 +393,11 @@ module initialsh
       write(procout,"(/5X,A)") "The phonon dynamica set as classical."
     endif
     write(procout,"(5X,A38,F11.5,A4,A9,F11.5,A4)") &
-    "The initial energy of phonon: SUM_phT=",0.5*SUM(ABS(ph_P)**2)*ryd2eV," eV",&
+    "The initial energy of phonon: SUM_phK=",0.5*SUM(ABS(ph_P)**2)*ryd2eV," eV",&
     " SUM_phU=",0.5*SUM(w**2*ABS(ph_Q)**2)*ryd2eV," eV"
     write(procout,"(5X,A38,F11.5,A4)") &
-    "The initial energy of phonon: SUM_phE=",0.5*SUM(ABS(ph_P)**2+w**2*ABS(ph_Q)**2)*ryd2eV," eV."     
+    "The initial energy of phonon: SUM_phE=",0.5*SUM(ABS(ph_P)**2+w**2*ABS(ph_Q)**2)*ryd2eV," eV." 
+		endif
 #endif
     
     

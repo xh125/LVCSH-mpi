@@ -38,7 +38,6 @@ module environments
     
     call openning_message( code_version)
     
-    !write(*,*) "It's ok in environment_start:",iproc,"iproc"
     
   end subroutine environment_start
 

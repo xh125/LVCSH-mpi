@@ -191,6 +191,7 @@ module readepw
     call mp_bcast(ntyp    ,ionode_id)
     call mp_bcast(ecutwfc ,ionode_id)
     call mp_bcast(ecutrho ,ionode_id)
+		if(verbosity  == "high") then
     WRITE(procout, 1001) ibrav, alat, omega, nat, ntyp, ecutwfc, ecutrho
 1001 FORMAT(/,5x,75x,/,/,5x, &
        &     'bravais-lattice index     = ',i12,/,5x, &
@@ -200,6 +201,7 @@ module readepw
        &     'number of atomic types    = ',i12,/,5x, &
        &     'kinetic-energy cut-off    = ',f12.4,'  Ry',/,5x, &
        &     'charge density cut-off    = ',f12.4,'  Ry')
+		endif
 #endif 
 
 
@@ -287,6 +289,7 @@ module readepw
     call mp_bcast(celldm,ionode_id)
     call mp_bcast(at,ionode_id)
     call mp_bcast(bg,ionode_id)
+		if(verbosity  == "high") then
 		WRITE(procout, '(/,2(3x,3(2x,"celldm(",i1,")=",f11.5),/))') &
 				(i, celldm(i), i = 1, 6)
 		WRITE(procout, '(5x, &
@@ -296,7 +299,8 @@ module readepw
 		WRITE(procout, '(5x, &
 				& "reciprocal axes: (cart. coord. in units 2 pi/a_0)",/, &
 				&         3(15x,"b(",i1,") = (",3f8.4," )  ",/ ) )') &
-				& (apol, (bg(ipol, apol), ipol = 1, 3), apol = 1, 3)    
+				& (apol, (bg(ipol, apol), ipol = 1, 3), apol = 1, 3)   
+	  endif
 #endif
 
 
@@ -363,6 +367,7 @@ module readepw
     call mp_bcast(iatm,ionode_id)
     call mp_bcast(iamass,ionode_id)
     call mp_bcast(tau,ionode_id)
+		if(verbosity  == "high") then
 		WRITE(procout, '(/, 5x,"Atoms inside the unit cell: ")')
 		WRITE(procout, '(/,3x,"Cartesian axes")')
 		WRITE(procout, '(/,5x,"site n.  atom      mass ", &
@@ -372,6 +377,7 @@ module readepw
 				&                              ") = (",3f11.5,"  )")')  &
 				& (iat,iatm(iat), amass(iat)/amu_ry, iat,  &
 				& (tau(ipol,iat), ipol = 1, 3), iat = 1, nat)
+	  endif
 #endif  
 		else
 #if defined __MPI 		
@@ -1066,8 +1072,10 @@ module readepw
     call mp_bcast(nqf3,ionode_id)
     call mp_bcast(nqtotf,ionode_id)
     call mp_bcast(nqf,ionode_id)
+		if(verbosity  == "high") then
     write(procout,"(5X,A,I12)") & 
     "Total number of the uniform phonon fine mesh to be used(nqtotf) = ",nqtotf
+		endif
 #endif 
 
     
@@ -1166,8 +1174,10 @@ module readepw
     call mp_bcast(nkf1,ionode_id)
     call mp_bcast(nkf2,ionode_id)
     call mp_bcast(nkf3,ionode_id)
+if(verbosity  == "high") then
     write(procout,"(5X,A,I12)") &
     "Total number of K-point in fine mesh to be used(nktotf)         = ",nktotf   
+endif
 #endif 
 
     
@@ -1778,7 +1788,8 @@ module readepw
       allocate(calgmnvkq_q(totq))    
     endif
     call mp_bcast(calgmnvkq_q,ionode_id)
-    
+
+	if(verbosity  == "high") then    
     WRITE(procout, '(/5x,a,f10.6,a)') &
         'Fermi energy is calculated from the fine k-mesh: Ef = ', ef * ryd2ev, ' eV'
     
@@ -1815,7 +1826,7 @@ module readepw
 				enddo
 			enddo
 		endif
-    
+  endif  
 #endif
 
 		do iq=1,nqtotf

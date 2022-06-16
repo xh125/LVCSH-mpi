@@ -4,6 +4,7 @@ module write_sh_information
   use global_mpi
 #endif
   use kinds,only : dp,dpc
+	use parameters,only : verbosity
   implicit none
   
   contains
@@ -45,6 +46,7 @@ module write_sh_information
       endif
 #if defined __MPI 		
     endif
+		if(verbosity  == "high") then
       write(procout,"(/,5X,A)") "In adiabatic base,the elctron-hole state as follow:"
       if(lholesh) then
         write(procout,"(5X,A14,I5,1X,A20,F12.7,A3)") &
@@ -56,7 +58,8 @@ module write_sh_information
       endif
       if(lelecsh .and. lholesh) then
         write(procout,"(5X,A17,F12.7,A3)")  "elec-hole energy=",(E_e(iesurface)+E_h(ihsurface))*ryd2eV," eV"  
-      endif    
+      endif
+		endif
 #endif        
       
       !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%!
@@ -104,6 +107,7 @@ module write_sh_information
       endif
 #if defined __MPI 		
     endif
+			if(verbosity  == "high") then
        if(lholesh) then
         if(lelecsh) then
           write(procout,"(/,A)") " time(fs)    rt(s) hsur esur&
@@ -130,6 +134,7 @@ module write_sh_information
           write(procout,"(/,A)") "Error!! lelecsh and lholesh must have one need to be set TRUE."
         endif
       endif   
+		endif
 #endif   
   
   

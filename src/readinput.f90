@@ -364,7 +364,7 @@ module readinput
     call mp_bcast(dirsample     ,ionode_id)
 
 
-  if(trim(calculation) == "lvcsh") then
+  if(trim(calculation) == "lvcsh" .and. verbosity  == "high" ) then
     !creat work_path
     if(llinux) then
       work_path = trim(job_path)//"/"//iproc_str

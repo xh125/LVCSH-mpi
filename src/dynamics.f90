@@ -5,7 +5,7 @@ module dynamics
 #endif
   use kinds,only     : dp,dpc
   use constants,only : cone,czero
-  use parameters,only: temp
+  use parameters,only: temp,verbosity
   use epwcom,only    : kqmap
   
   implicit none
@@ -354,19 +354,21 @@ module dynamics
     if(ionode) then
 #endif     
     write(stdout,"(5X,A23,F6.2,A2,A19,F11.5,A4,A9,F11.5,A4)") &
-    "Energy of phonon after ", time,ctimeunit," dynamica: SUM_phT=",0.5*SUM(ABS(phP)**2)*ryd2eV," eV",&
+    "Energy of phonon after ", time,ctimeunit," dynamica: SUM_phK=",0.5*SUM(ABS(phP)**2)*ryd2eV," eV",&
     " SUM_phU=",0.5*SUM(wf**2*ABS(phQ)**2)*ryd2eV," eV"
     write(stdout,"(5X,A23,F6.2,A2,A19,F11.5,A4)") &
     "Energy of phonon after ", time,ctimeunit," dynamica: SUM_phE="&
     ,0.5*SUM(ABS(phP)**2+wf**2*ABS(phQ)**2)*ryd2eV," eV."    
 #if defined __MPI 		
     endif
+		if(verbosity  == "high") then
     write(procout,"(5X,A23,F6.2,A2,A19,F11.5,A4,A9,F11.5,A4)") &
-    "Energy of phonon after ", time,ctimeunit," dynamica: SUM_phT=",0.5*SUM(ABS(phP)**2)*ryd2eV," eV",&
+    "Energy of phonon after ", time,ctimeunit," dynamica: SUM_phK=",0.5*SUM(ABS(phP)**2)*ryd2eV," eV",&
     " SUM_phU=",0.5*SUM(wf**2*ABS(phQ)**2)*ryd2eV," eV"
     write(procout,"(5X,A23,F6.2,A2,A19,F11.5,A4)") &
     "Energy of phonon after ", time,ctimeunit," dynamica: SUM_phE="&
-    ,0.5*SUM(ABS(phP)**2+wf**2*ABS(phQ)**2)*ryd2eV," eV."      
+    ,0.5*SUM(ABS(phP)**2+wf**2*ABS(phQ)**2)*ryd2eV," eV."    
+		endif
 #endif 
   
   end subroutine pre_md

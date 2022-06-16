@@ -168,9 +168,11 @@ program lvcsh
       write(stdout,'(1X,"This trajectory start on ",A9," at ",A9)') cdate,ctime 
 #if defined __MPI 		
     endif
+		if(verbosity  == "high") then
       write(procout,'(/,1X,a,I4,a)') '###### itraj=',itraj,' ######'    
       call get_date_and_time(cdate,ctime)
-      write(procout,'(1X,"This trajectory start on ",A9," at ",A9)') cdate,ctime     
+      write(procout,'(1X,"This trajectory start on ",A9," at ",A9)') cdate,ctime  
+    endif			
 #endif      
       !==================!
       != initialization =!
@@ -528,7 +530,9 @@ program lvcsh
       write(stdout,'(1X,"This trajectory end on ",A9," at ",A9)') cdate,ctime      
 #if defined __MPI 		
     endif
+		if(verbosity  == "high") then
     write(procout,'(1X,"This trajectory end on ",A9," at ",A9)') cdate,ctime
+		endif
 #endif      
     enddo
     
