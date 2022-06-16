@@ -630,7 +630,7 @@
     CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etf(:, ik), chw, cfac, dims)
   ENDDO
   !
-  WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
+  WRITE(stdout,'(/5x,a,f17.10,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
 
   IF (noncolin) THEN
     nelec = nelec - one * nbndnfbfe
@@ -643,7 +643,7 @@
     !
     ef = fermi_energy
     WRITE(stdout,'(/5x,a)') REPEAT('=',67)
-    WRITE(stdout, '(/5x,a,f10.6,a)') 'Fermi energy is read from the input file: Ef = ', ef * ryd2ev, ' eV'
+    WRITE(stdout, '(/5x,a,f17.10,a)') 'Fermi energy is read from the input file: Ef = ', ef * ryd2ev, ' eV'
     WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     !
     ! SP: even when reading from input the number of electron needs to be correct
@@ -695,7 +695,7 @@
       efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_dummy)
     ENDIF
     !
-    WRITE(stdout, '(/5x,a,f10.6,a)') &
+    WRITE(stdout, '(/5x,a,f17.10,a)') &
         'Fermi energy is calculated from the fine k-mesh: Ef = ', efnew * ryd2ev, ' eV'
     !
     ! if 'fine' Fermi level differs by more than 250 meV, there is probably something wrong
