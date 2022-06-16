@@ -374,7 +374,7 @@
             write(stdout,"(5X,a)") ' iband   enk[eV] '
             do ibnd = 1, nbndfst
               ekk = etf_all(ibndmin - 1 + ibnd, ikk)
-              write(stdout,"(i9,f12.4)") ibndmin - 1 + ibnd,ekk*ryd2ev
+              write(stdout,"(i9,f18.10)") ibndmin - 1 + ibnd,ekk*ryd2ev
             enddo
             WRITE(stdout, '(5x, a/)') REPEAT('-', 78)
           enddo
@@ -388,7 +388,7 @@
           WRITE(stdout, '(5x, "iq = ", i7, " coord.: ", 3f12.7)') iq, xqf(:,iq)
           write(stdout,"(5X,a)") ' imode   omega(imode,iq)[meV] '
           do nu = 1, nmodes
-            write(stdout,"(i9,f12.4)") nu,ryd2mev*wf(nu,iq)
+            write(stdout,"(i9,f18.10)") nu,ryd2mev*wf(nu,iq)
           enddo
           WRITE(stdout, '(5x, a/)') REPEAT('-', 78)
         enddo
@@ -419,20 +419,20 @@
           ikk = 2*ik-1
           write(stdout,"(/5x,'ik = ', i7 ,' coord.:',3f12.7)") ik,xkf_all(:,ikk)
           if (vme == 'wannier') then
-            write(stdout,"(3A5,2A8,6A16)") "ik","ibnd","jbnd", "Enk[eV]", "Emk[eV]", "Re(v_x)","Im(v_x)", &
+            write(stdout,"(3A5,2A17,6A20)") "ik","ibnd","jbnd", "Enk[eV]", "Emk[eV]", "Re(v_x)","Im(v_x)", &
                   "Re(v_y)","Im(v_y)","Re(v_z)","Im(v_z)"
           else
-            write(stdout,"(3A5,2A8,6A16)") "ik","ibnd","jbnd","Enk[eV]"," Emk[eV]","Re(d_x)","Im(d_x)",&
+            write(stdout,"(3A5,2A17,6A20)") "ik","ibnd","jbnd","Enk[eV]"," Emk[eV]","Re(d_x)","Im(d_x)",&
                   "Re(d_y)","Im(d_y)","Re(d_z)","Im(d_z)"
           endif
           do ibnd=ibndmin,ibndmax
             do jbnd=ibndmin,ibndmax
               if (vme == 'wannier') then
-                write(stdout,"(3i5,2f8.4,3(2E16.6))") &
+                write(stdout,"(3i5,2f17.10,3(2E20.10))") &
                 ik, ibnd , jbnd, etf_all(ibnd,ikk)*ryd2ev,etf_all(jbnd,ikk)*ryd2ev,&
                 vmef_all(:,ibnd,jbnd,ikk)
               else 
-                write(stdout,"(3i5,2f8.4,3(2E16.6))") &
+                write(stdout,"(3i5,2f17.10,3(2E20.10))") &
                 ik, ibnd , jbnd , etf_all(ibnd,ikk)*ryd2ev,etf_all(jbnd,ikk)*ryd2ev,&
                 dmef_all(:,ibnd,jbnd,ikk)
               endif

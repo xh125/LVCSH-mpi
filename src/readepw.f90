@@ -1529,12 +1529,12 @@ module readepw
 				WRITE(stdout, '(/5x, "iq = ", i7, " coord.: ", 3f12.7)') calgmnvkq_q(iq), xqf(:, calgmnvkq_q(iq))
 				do ik=1,nktotf
 					WRITE(stdout, '(5x, "ik = ", i7, " coord.: ", 3f12.7)') ik, xkf(:, ik)
-					WRITE(stdout, '(5x, a)') ' ibnd     jbnd     imode   enk[eV]    enk+q[eV]  omega(q)[meV]   |g|[meV]'
+					WRITE(stdout, '(5x, a)') ' ibnd     jbnd     imode         enk[eV]          enk+q[eV]    omega(q)[meV]     |g|[meV]'
 					WRITE(stdout, '(5x, a)') REPEAT('-', 78)
 					do ibnd = ibndmin,ibndmax ! ibnd = 1,nbndfst
 						do jbnd = ibndmin,ibndmax !jbnd= 1,nbndfst
 							do nu = 1, nmodes		
-								WRITE(stdout, '(3i9, 2f12.4, 1f20.10, 1e20.10)') ibnd, jbnd,nu, etf(ibnd,ik), &
+								WRITE(stdout, '(3i9, 2f17.10, 1f20.10, 1e20.10)') ibnd, jbnd,nu, etf(ibnd,ik), &
                    &  etf(ibnd,kqmap(ik,calgmnvkq_q(iq))), wf(nu, calgmnvkq_q(iq)),&
                    &  gmnvkq(ibnd, jbnd, nu, ik,calgmnvkq_q(iq))
 							enddo
@@ -1650,7 +1650,7 @@ module readepw
       read(unitepwout,"(//)")
       do ibnd=ibndmin,ibndmax
         do jbnd=ibndmin,ibndmax
-          read(unitepwout,"(31X,3(2E16.6))") (vmef(ipol,ibnd,jbnd,ik),ipol=1,3)
+          read(unitepwout,"(49X,3(2E20.10))") (vmef(ipol,ibnd,jbnd,ik),ipol=1,3)
         enddo
       enddo
     enddo
