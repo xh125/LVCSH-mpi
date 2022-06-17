@@ -21,7 +21,7 @@ NP=`cat nodelist | wc -l`
 export MODULEPATH=/share/home/ZhuangW/xh/modulefiles:$MODULEPATH
 
 module load Quantum_Espresso/6.8.0
-
+module load lvcsh/0.2-mpi
 
 mpirun -np $NP pw.x -npool $NP <scf.in> scf.out
 mpirun -np $NP pw.x -npool $NP <nscf-bands.in > nscf-bands.out
