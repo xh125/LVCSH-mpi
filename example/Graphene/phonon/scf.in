@@ -20,9 +20,10 @@
  celldm(1) =      4.66201784
  celldm(3) =      6.08017662
 !    nbnd        = 16
+    assume_isolated = "2D" 
     occupations = "smearing"
-    smearing    = "gaussian"    
-    degauss     =  1.0d-2
+    smearing    = "cold"    
+    degauss     =  0.01
     ecutwfc     =  45
     ecutrho     =  360
 /
@@ -35,15 +36,15 @@
     startingwfc      = "atomic+random"
 /
 
-&IONS
-    ion_dynamics = "bfgs"
-/
+!&IONS
+!    ion_dynamics = "bfgs"
+!/
 
-&CELL
-    cell_dofree    = "ibrav+2Dxy"
-    cell_dynamics  = "bfgs"
-    press_conv_thr =  0.01
-/
+!&CELL
+!    cell_dofree    = "ibrav+2Dxy"
+!    cell_dynamics  = "bfgs"
+!    press_conv_thr =  0.01
+!/
 
 K_POINTS {automatic}
  12  12  1  0 0 0
