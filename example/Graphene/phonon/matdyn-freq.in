@@ -1,0 +1,11 @@
+&input
+asr   = 'crystal'
+flfrc = 'ifc.q2r'
+flfrq = 'phonon-freq'
+q_in_band_form = .true.
+/
+4
+gG     20
+M      12
+K      20
+gG     1
