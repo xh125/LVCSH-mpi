@@ -20,8 +20,9 @@ module use /share/home/zw/xiehua/modulefiles
 module load Quantum_Espresso/7.0
 
 rm -f etot_vs_ecut.dat
-for ecut in $(seq 45 5 70)
+for ecut in $(seq 40 5 100)
 do
+	erho=$[8 * $ecut]
 	cat >scf.$ecut.in<< EOF
 &CONTROL
     calculation   = "scf"  
@@ -50,7 +51,7 @@ do
     smearing    = "mp"    
     degauss     =  1.0d-2
     ecutwfc     =  $ecut
-!    ecutrho     =  480
+    ecutrho     =  $erho
 /
 
 &ELECTRONS
