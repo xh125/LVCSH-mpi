@@ -1,5 +1,5 @@
 #!/bin/bash
-#BSUB -J scf
+#BSUB -J relax
 #BSUB -q privateq-zw
 ##BSUB -q publicq
 #BSUB -n 28
@@ -19,7 +19,7 @@ rm nodelist
 module use /share/home/zw/xiehua/modulefiles
 module load Quantum_Espresso/7.0
 
-#mpirun -np $NP pw.x -nk 7 <vc-relax.in>vc-relax.out
+mpirun -np $NP pw.x -nk 7 <vc-relax.in>vc-relax.out
 #mpirun -np $NP pw.x -nk 7 <relax.in> relax.out
-mpirun -np $NP pw.x -nk 7 <scf.in> scf.out
+#mpirun -np $NP pw.x -nk 7 <scf.in> scf.out
 #mpirun -np $NP pw.x -nk 7 <nscf.in> nscf.out

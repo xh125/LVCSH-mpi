@@ -1,8 +1,8 @@
 &CONTROL
-    calculation   = "vc-relax"  
+    calculation   = "bands"  
     restart_mode  = "from_scratch"
     prefix        = "graphene"
-    outdir        = "./outdir/"
+    outdir        = "./"
     pseudo_dir    = "./pseudo/"
     verbosity     = "high"
     tprnfor       = .true.  
@@ -19,7 +19,7 @@
 !    c           = 20.0
  celldm(1) =     13.98696992
  celldm(3) =      2.70212367
-!    nbnd        = 72
+    nbnd        = 280
     assume_isolated = "2D"
     occupations = "smearing"
     smearing    = "mp"    
@@ -36,20 +36,24 @@
     startingwfc      = "atomic+random"
 /
 
-&IONS
-    ion_dynamics = "bfgs"
-!    trust_radius_ini = 0.5d-2
-!    trust_radius_min = 1.0d-5
-/
+!&IONS
+!    ion_dynamics = "bfgs"
+!/
 
-&CELL
-    cell_dofree    = "ibrav+2Dxy"
-    cell_dynamics  = "bfgs"
-    press_conv_thr =  0.01
-/
+!&CELL
+!    cell_dofree    = "ibrav+2Dxy"
+!    cell_dynamics  = "bfgs"
+!    press_conv_thr =  0.01
+!/
 
-K_POINTS {automatic}
- 12  12  1  0 0 0
+!K_POINTS {automatic}
+! 12  12  1  0 0 0
+K_POINTS {crystal_b}
+4
+gG     20
+M      12
+K      20
+gG     1
 
 ATOMIC_SPECIES
 C      12.01070  C.pbe-n-kjpaw_psl.1.0.0.UPF

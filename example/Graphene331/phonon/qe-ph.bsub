@@ -1,5 +1,5 @@
 #!/bin/bash
-#BSUB -J scf
+#BSUB -J phonon
 #BSUB -q privateq-zw
 ##BSUB -q publicq
 #BSUB -n 28
@@ -19,7 +19,7 @@ rm nodelist
 module use /share/home/zw/xiehua/modulefiles
 module load Quantum_Espresso/7.0
 
-#mpirun -np $NP pw.x -nk 7 <vc-relax.in>vc-relax.out
-#mpirun -np $NP pw.x -nk 7 <relax.in> relax.out
-mpirun -np $NP pw.x -nk 7 <scf.in> scf.out
-#mpirun -np $NP pw.x -nk 7 <nscf.in> nscf.out
+mpirun -np $NP pw.x -nk 14 <scf.in>scf.out
+mpirun -np $NP ph.x -nk 14 <ph.in> ph.out
+mpirun -np $NP q2r.x -nk 14 <q2r.in>q2r.out
+mpirun -np $NP matdyn.x -nk 14 <matdyn-freq.in> matdyn-freq.out
