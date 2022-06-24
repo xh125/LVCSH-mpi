@@ -1,0 +1,25 @@
+#!/bin/bash
+#BSUB -J lvcsh-kq6-s0
+#BSUB -q privateq-zw
+##BSUB -q publicq
+#BSUB -n 28
+#BSUB -R "span[ptile=28]"
+#BSUB -o %J.out
+#BSUB -e %J.err
+
+CURDIR=$PWD
+rm -f nodelist >& /dev/null
+for host in `echo $LSB_HOSTS`
+do
+echo $host >> nodelist
+done
+NP=`cat nodelist | wc -l`
+
+#source ~/xiehua/.bashrc
+#export OMP_NUM_THREADS=1
+#export MKL_NUM_THREADS=1
+export MODULEPATH=/share/home/zw/xiehua/modulefiles:$MODULEPATH
+
+module load lvcsh/0.2-mpi
+
+mpirun -np $NP LVCSH

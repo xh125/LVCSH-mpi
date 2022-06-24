@@ -1600,8 +1600,8 @@ endif
     nvbmax = ncbmin - 1
     evbmax = Maxval(etf(nvbmax,:))
     ecbmin = Minval(etf(ncbmin,:))
-    WRITE(stdout,'(/14x,a,i5,2x,a,f9.4,a)') 'Valence band max   = ', nvbmax, 'evbmax = ', evbmax , ' eV'
-    WRITE(stdout,'(14x,a,i5,2x,a,f9.4,a/)') 'Conductor band min = ', ncbmin, 'ecbmin = ', ecbmin , ' eV'    
+    WRITE(stdout,'(/14x,a,i5,2x,a,f17.10,a)') 'Valence band max   = ', nvbmax, 'evbmax = ', evbmax , ' eV'
+    WRITE(stdout,'(14x,a,i5,2x,a,f17.10,a/)') 'Conductor band min = ', ncbmin, 'ecbmin = ', ecbmin , ' eV'    
     icbm = ncbmin
     !if(icbm /= ncbmin) write(stdout,"(5X,A)") "Warning! The nelec need to be set right."
     

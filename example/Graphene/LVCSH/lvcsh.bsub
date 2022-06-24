@@ -1,7 +1,7 @@
 #!/bin/bash
 #BSUB -J lvcsh
-##BSUB -q privateq-zw
-#BSUB -q publicq
+#BSUB -q privateq-zw
+##BSUB -q publicq
 #BSUB -n 28
 #BSUB -R "span[ptile=28]"
 #BSUB -o %J.out

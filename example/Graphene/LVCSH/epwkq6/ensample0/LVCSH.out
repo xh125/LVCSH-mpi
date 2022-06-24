@@ -1,0 +1,555 @@
+            _____  ____   ____   ______   ______   ____  ____  
+           |_   _||_  _| |_  _|.' ___  |.' ____ \ |_   ||   _| 
+             | |    \ \   / / / .'   \_|| (___ \_|  | |__| |   
+             | |   _ \ \ / /  | |        _.____`.   |  __  |   
+            _| |__/ | \ ' /   \ `.___.'\| \____) | _| |  | |_  
+           |________|  \_/     `.____ .' \______.'|____||____| 
+                                                               
+                                                               
+                     Developed by XieHua at department of physic, USTC   
+                                            Email:xh125@mail.ustc.edu.cn 
+                                                     
+ LVCSH complied with using Intel Fortran Complier and MKL:
+ Intel(R) oneAPI Math Kernel Library Version 2021.2-Product Build 20210312
+  for Intel(R) 64 architecture applications                                                                                                                                             
+ Intel MKL uses            1  threads
+ MPI Version: 3.1
+ The LVCSH calculation with parallel version (MPI &OpenMP),running on 
+           2 processor cores.
+ Number of MPI processes:           2
+ Intel MKL does not employ threading. MKL Threads/MPI process:           1
+
+ =============================================================================
+ =  DATA TYPE INFORMATION:                                                   =
+ =============================================================================
+
+ REAL: Data type name:                                                      DP
+       Kind value:                                                           8
+       Precision:                                                           15
+       Smallest nonnegligible quantity relative to 1:           0.22204460E-15
+       Smallest positive number:                                0.22250739-307
+       Largest representable number:                            0.17976931+309
+
+       Data type name:                                                     sgl
+       Kind value:                                                           4
+       Precision:                                                            6
+       Smallest nonnegligible quantity relative to 1:           0.11920929E-06
+       Smallest positive number:                                0.11754944E-37
+       Largest representable number:                            0.34028235E+39
+
+ INTEGER: Data type name:                                            (default)
+          Kind value:                                                        4
+          Bit size:                                                         32
+          Largest representable number:                             2147483647
+
+
+ LOGICAL: Data type name:                                            (default)
+          Kind value:                                                        4
+
+
+ CHARACTER: Data type name:                                          (default)
+            Kind value:                                                      1
+
+ =============================================================================
+
+ =============================================================================
+ -> Using CODATA 2010 constant values                                       
+    (http://physics.nist.gov/cuu/Constants/index.html)                      
+ =============================================================================
+
+ Program LVCSH v.0.8.4 startes on 14Jun2022 at 22:18:12 
+
+ =============================================================================
+           The namelist file as follows
+ =============================================================================
+ &shinput                                                                       
+ calculation   = "lvcsh"                                                        
+ verbosity     = "low"                                                          
+ prtgmnvkq     = .false.                                                        
+ outdir        = "./"                                                           
+ lfeedback     = .true.                                                         
+ l_dEa2_dQ2    = .true.                                                         
+ methodsh      = "FSSH"                                                         
+ ldecoherence  = .true.                                                         
+ Cdecoherence  = 0.1                                                            
+ lit_gmnvkq    = 0.1                                                            
+ lit_ephonon   = 0.0                                                            
+ eps_acustic   = 5.0                                                            
+ lehpairsh     = .true.                                                         
+ lreadscfout   = .false.                                                        
+ scfoutname    = "../scf.out"                                                   
+ lreadphout    = .false.                                                        
+ phoutname     = "../ph.out"                                                    
+ epwoutname    = "../epw6.out"                                                  
+ naver         = 20                                                             
+ nsnap         = 500                                                            
+ nstep         = 2                                                              
+ dt            = 0.5                                                            
+ savedsnap     = 5                                                              
+ pre_nstep     = 5000                                                           
+ pre_dt        = 0.5                                                            
+ ld_fric       = 0.01                                                           
+ temp          = 300                                                            
+ l_ph_quantum  = .true.                                                         
+ llaser        = .true.                                                         
+ efield_cart   = 1.0 1.0 1.0                                                    
+ w_laser       = 5.0                                                            
+ fwhm          = 100                                                            
+ /                                                                              
+
+ Read parameter Successful!
+ =============================================================================
+
+     Program EPW v.5.4.1 starts on 14Jun2022 at 16:21:46
+
+
+
+     bravais-lattice index     =            0
+     lattice parameter (a_0)   =       0.0000  a.u.
+     unit-cell volume          =       0.0000 (a.u.)^3
+     number of atoms/cell      =            0
+     number of atomic types    =            0
+     kinetic-energy cut-off    =       0.0000  Ry
+     charge density cut-off    =       0.0000  Ry
+
+     celldm(1)=    0.00000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  0.0000  0.0000  0.0000 )  
+               a(2) = (  0.0000  0.0000  0.0000 )  
+               a(3) = (  0.0000  0.0000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  0.0000  0.0000  0.0000 )  
+               b(2) = (  0.0000  0.0000  0.0000 )  
+               b(3) = (  0.0000  0.0000  0.0000 )  
+
+     Total number of the uniform phonon fine mesh to be used(nqtotf) =           36
+     Total number of K-point in fine mesh to be used(nktotf)         =           36
+
+     Fermi energy coarse grid =  -1.722633 eV
+
+     Fermi energy is calculated from the fine k-mesh: Ef =  -1.722633 eV
+
+              ibndmin =     1  ebndmin =    -9.099 eV
+              ibndmax =     2  ebndmax =     9.681 eV
+
+     Only       36 q-points falls within the fsthick windows.
+     We only need to compute       36 q-points
+
+     Number of phonon modes (nmodes) =           6
+
+     Dynamical RAM for              gmnvkq:       0.24 MB
+
+     Read Electron-phonon vertex |g| (meV) Success.
+ Energy of Ferimi is:   -1.722600    
+
+              Valence band max   =     1  evbmax =   -1.7226 eV
+              Conductor band min =     2  ecbmin =   -1.7226 eV
+
+     Reading epw.out successfull!
+
+     The electron are non-diabatic dynamica in valence band.
+
+              ieband_min =     2  ieband_max =     2
+
+     The hole are non-diabatic dynamica in valance band.
+
+              ihband_min =     1  ihband_max =     1
+
+     Dynamical RAM for            gmnvkq_e:       0.06 MB
+
+
+     Dynamical RAM for                H0_e:       0.02 MB
+
+
+     Dynamical RAM for             H0_e_nk:       0.02 MB
+
+
+     Dynamical RAM for                 H_e:       0.02 MB
+
+
+     Dynamical RAM for              H_e_nk:       0.02 MB
+
+
+     Dynamical RAM for            gmnvkq_h:       0.06 MB
+
+
+     Dynamical RAM for                H0_h:       0.02 MB
+
+
+     Dynamical RAM for             H0_h_nk:       0.02 MB
+
+
+     Dynamical RAM for                 H_h:       0.02 MB
+
+
+     Dynamical RAM for              H_h_nk:       0.02 MB
+
+
+     Dynamical RAM for              phKsit:       0.83 MB
+
+
+     Dynamical RAM for              phUsit:       0.83 MB
+
+
+     Dynamical RAM for                 d_e:       0.12 MB
+
+
+     Dynamical RAM for           pes_one_e:       0.14 MB
+
+
+     Dynamical RAM for               pes_e:       0.14 MB
+
+
+     Dynamical RAM for              csit_e:       0.14 MB
+
+
+     Dynamical RAM for              wsit_e:       0.14 MB
+
+
+     Dynamical RAM for              psit_e:       0.14 MB
+
+
+     Dynamical RAM for                 d_h:       0.06 MB
+
+
+     Dynamical RAM for           pes_one_h:       0.14 MB
+
+
+     Dynamical RAM for               pes_h:       0.14 MB
+
+
+     Dynamical RAM for              csit_h:       0.14 MB
+
+
+     Dynamical RAM for              wsit_h:       0.14 MB
+
+
+     Dynamical RAM for              psit_h:       0.14 MB
+
+
+     In the laser obsorbtion,the Pump laser as follow:
+     Laser centred energy :   5.0000000 eV.
+     The full width at half-maximum:fwhm =  100.0000000 fs.
+
+ ###### itraj=   1 ######
+ This trajectory start on 14Jun2022 at 22:18:12 
+
+     The temperature of the non-adiabatic dynamica is :   300.00000 K
+     The average energy of phonon(quantum): <SUM_phE>=   12.95558 eV.
+     The average energy of phonon(class)  : <SUM_phE>=    5.50648 eV.
+
+     The phonon dynamica set as quantum
+     The initial energy of phonon: SUM_phT=    7.02936  eV SUM_phU=    5.83623  eV
+     The initial energy of phonon: SUM_phE=   12.86559 eV.
+     Energy of phonon after   2.50ps dynamica: SUM_phT=    6.95740  eV SUM_phU=    7.73955  eV
+     Energy of phonon after   2.50ps dynamica: SUM_phE=   14.69694 eV.
+
+     Initial eh_KSstate:  
+     ik=   20 coord.: (     0.500000     0.166667     0.000000  )
+     init_hband=    1 Initial hole Energy:    -2.65290 eV
+     init_eband=    2 Initial elec Energy:     2.51730 eV
+     elec-hole energy=      5.17020 eV
+
+     In adiabatic base,the elctron-hole state as follow:
+     Init_hsurface=   16 Initial hole Energy:  -2.9546847 eV
+     Init_esurface=    6 Initial elec Energy:   2.1203648 eV
+     elec-hole energy=   5.0750495 eV
+
+ time(fs)    rt(s) hsur esur     E_h(eV)     E_e(eV)    E_eh(eV)    T_ph(eV)    U_ph(eV)    E_ph(eV)   E_tot(eV)
+     0.00     0.00   16    6     -2.9547      2.1204      5.0750      6.9574      7.7395     14.6969     19.7720
+     0.50     0.00   16    6     -2.9472      2.1217      5.0689      7.2873      7.4040     14.6913     19.7602
+     1.00     0.00   16    6     -2.9436      2.1213      5.0650      7.6864      7.0575     14.7439     19.8089
+   499.50     0.00    3    6     -2.0775      2.1108      4.1883      7.3331      9.0891     16.4223     20.6106
+   500.00     0.00    3    6     -2.0842      2.1228      4.2071      7.3776      8.9687     16.3462     20.5533
+ This trajectory end on 14Jun2022 at 22:18:14 
+
+ ###### itraj=   2 ######
+ This trajectory start on 14Jun2022 at 22:18:14 
+
+     The temperature of the non-adiabatic dynamica is :   300.00000 K
+     The average energy of phonon(quantum): <SUM_phE>=   12.95558 eV.
+     The average energy of phonon(class)  : <SUM_phE>=    5.50648 eV.
+
+     The phonon dynamica set as quantum
+     The initial energy of phonon: SUM_phT=    5.93202  eV SUM_phU=    5.46107  eV
+     The initial energy of phonon: SUM_phE=   11.39309 eV.
+     Energy of phonon after   2.50ps dynamica: SUM_phT=    7.21605  eV SUM_phU=    5.72747  eV
+     Energy of phonon after   2.50ps dynamica: SUM_phE=   12.94352 eV.
+
+     Initial eh_KSstate:  
+     ik=   20 coord.: (     0.500000     0.166667     0.000000  )
+     init_hband=    1 Initial hole Energy:    -2.65290 eV
+     init_eband=    2 Initial elec Energy:     2.51730 eV
+     elec-hole energy=      5.17020 eV
+
+     In adiabatic base,the elctron-hole state as follow:
+     Init_hsurface=   14 Initial hole Energy:  -2.7202797 eV
+     Init_esurface=   15 Initial elec Energy:   2.7917608 eV
+     elec-hole energy=   5.5120405 eV
+
+ time(fs)    rt(s) hsur esur     E_h(eV)     E_e(eV)    E_eh(eV)    T_ph(eV)    U_ph(eV)    E_ph(eV)   E_tot(eV)
+     0.00     0.00   14   15     -2.7203      2.7918      5.5120      7.2160      5.7275     12.9435     18.4556
+     0.50     0.00   14   15     -2.7215      2.7975      5.5190      7.1792      5.6850     12.8642     18.3832
+     1.00     0.00   14   15     -2.7131      2.8089      5.5220      7.3019      5.6811     12.9830     18.5050
+   499.50     0.00    4    4     -2.2915      1.5220      3.8136      7.9217      9.4723     17.3940     21.2076
+   500.00     0.00    4    4     -2.3137      1.5104      3.8241      7.9958      9.3176     17.3134     21.1375
+ This trajectory end on 14Jun2022 at 22:18:16 
+
+ ###### itraj=   3 ######
+ This trajectory start on 14Jun2022 at 22:18:16 
+
+     The temperature of the non-adiabatic dynamica is :   300.00000 K
+     The average energy of phonon(quantum): <SUM_phE>=   12.95558 eV.
+     The average energy of phonon(class)  : <SUM_phE>=    5.50648 eV.
+
+     The phonon dynamica set as quantum
+     The initial energy of phonon: SUM_phT=    6.05605  eV SUM_phU=    5.37261  eV
+     The initial energy of phonon: SUM_phE=   11.42867 eV.
+     Energy of phonon after   2.50ps dynamica: SUM_phT=    7.66894  eV SUM_phU=    5.50442  eV
+     Energy of phonon after   2.50ps dynamica: SUM_phE=   13.17335 eV.
+
+     Initial eh_KSstate:  
+     ik=   34 coord.: (     0.833333     0.500000     0.000000  )
+     init_hband=    1 Initial hole Energy:    -2.65290 eV
+     init_eband=    2 Initial elec Energy:     2.51730 eV
+     elec-hole energy=      5.17020 eV
+
+     In adiabatic base,the elctron-hole state as follow:
+     Init_hsurface=   14 Initial hole Energy:  -2.7993121 eV
+     Init_esurface=    6 Initial elec Energy:   2.0814367 eV
+     elec-hole energy=   4.8807488 eV
+
+ time(fs)    rt(s) hsur esur     E_h(eV)     E_e(eV)    E_eh(eV)    T_ph(eV)    U_ph(eV)    E_ph(eV)   E_tot(eV)
+     0.00     0.00   14    6     -2.7993      2.0814      4.8807      7.6689      5.5044     13.1734     18.0541
+     0.50     0.00   14    6     -2.7821      2.0750      4.8571      7.4190      5.8371     13.2561     18.1132
+     1.00     0.00    4    6     -2.2981      2.0742      4.3723      7.7385      6.1993     13.9379     18.3101
+   499.50     0.00    3    8     -2.0647      2.3980      4.4628      8.0510      7.5925     15.6435     20.1063
+   500.00     0.00    3    8     -2.0562      2.3765      4.4328      7.9732      7.6455     15.6187     20.0514
+ This trajectory end on 14Jun2022 at 22:18:17 
+
+ ###### itraj=   4 ######
+ This trajectory start on 14Jun2022 at 22:18:17 
+
+     The temperature of the non-adiabatic dynamica is :   300.00000 K
+     The average energy of phonon(quantum): <SUM_phE>=   12.95558 eV.
+     The average energy of phonon(class)  : <SUM_phE>=    5.50648 eV.
+
+     The phonon dynamica set as quantum
+     The initial energy of phonon: SUM_phT=    6.91781  eV SUM_phU=    7.39943  eV
+     The initial energy of phonon: SUM_phE=   14.31724 eV.
+     Energy of phonon after   2.50ps dynamica: SUM_phT=    6.91366  eV SUM_phU=    6.29836  eV
+     Energy of phonon after   2.50ps dynamica: SUM_phE=   13.21202 eV.
+
+     Initial eh_KSstate:  
+     ik=   10 coord.: (     0.166667     0.500000     0.000000  )
+     init_hband=    1 Initial hole Energy:    -2.65290 eV
+     init_eband=    2 Initial elec Energy:     2.51730 eV
+     elec-hole energy=      5.17020 eV
+
+     In adiabatic base,the elctron-hole state as follow:
+     Init_hsurface=   16 Initial hole Energy:  -2.8042024 eV
+     Init_esurface=    7 Initial elec Energy:   2.3049895 eV
+     elec-hole energy=   5.1091919 eV
+
+ time(fs)    rt(s) hsur esur     E_h(eV)     E_e(eV)    E_eh(eV)    T_ph(eV)    U_ph(eV)    E_ph(eV)   E_tot(eV)
+     0.00     0.00   16    7     -2.8042      2.3050      5.1092      6.9137      6.2984     13.2120     18.3212
+     0.50     0.00   16    7     -2.8045      2.2906      5.0951      6.9015      6.2513     13.1529     18.2480
+     1.00     0.00   16    7     -2.8151      2.2815      5.0965      6.8133      6.2232     13.0365     18.1330
+   499.50     0.00    5    4     -2.2488      1.7236      3.9724      6.9252      8.9167     15.8419     19.8143
+   500.00     0.00    5    4     -2.2477      1.7247      3.9724      6.9865      8.6839     15.6704     19.6428
+ This trajectory end on 14Jun2022 at 22:18:19 
+
+ ###### itraj=   5 ######
+ This trajectory start on 14Jun2022 at 22:18:19 
+
+     The temperature of the non-adiabatic dynamica is :   300.00000 K
+     The average energy of phonon(quantum): <SUM_phE>=   12.95558 eV.
+     The average energy of phonon(class)  : <SUM_phE>=    5.50648 eV.
+
+     The phonon dynamica set as quantum
+     The initial energy of phonon: SUM_phT=    5.97623  eV SUM_phU=    6.67605  eV
+     The initial energy of phonon: SUM_phE=   12.65228 eV.
+     Energy of phonon after   2.50ps dynamica: SUM_phT=    5.47393  eV SUM_phU=    6.90578  eV
+     Energy of phonon after   2.50ps dynamica: SUM_phE=   12.37971 eV.
+
+     Initial eh_KSstate:  
+     ik=   34 coord.: (     0.833333     0.500000     0.000000  )
+     init_hband=    1 Initial hole Energy:    -2.65290 eV
+     init_eband=    2 Initial elec Energy:     2.51730 eV
+     elec-hole energy=      5.17020 eV
+
+     In adiabatic base,the elctron-hole state as follow:
+     Init_hsurface=   12 Initial hole Energy:  -2.6166758 eV
+     Init_esurface=    6 Initial elec Energy:   2.2848340 eV
+     elec-hole energy=   4.9015098 eV
+
+ time(fs)    rt(s) hsur esur     E_h(eV)     E_e(eV)    E_eh(eV)    T_ph(eV)    U_ph(eV)    E_ph(eV)   E_tot(eV)
+     0.00     0.00   12    6     -2.6167      2.2848      4.9015      5.4739      6.9058     12.3797     17.2812
+     0.50     0.00   12    6     -2.6371      2.2688      4.9059      5.3546      7.0234     12.3780     17.2838
+     1.00     0.00   12    6     -2.6616      2.2502      4.9118      5.2744      7.1109     12.3853     17.2971
+   499.50     0.00    3    6     -2.2474      2.1663      4.4136      7.8795      7.0452     14.9247     19.3383
+   500.00     0.00    3    6     -2.2503      2.1789      4.4292      7.8528      6.9992     14.8520     19.2812
+ This trajectory end on 14Jun2022 at 22:18:21 
+
+ ###### itraj=   6 ######
+ This trajectory start on 14Jun2022 at 22:18:21 
+
+     The temperature of the non-adiabatic dynamica is :   300.00000 K
+     The average energy of phonon(quantum): <SUM_phE>=   12.95558 eV.
+     The average energy of phonon(class)  : <SUM_phE>=    5.50648 eV.
+
+     The phonon dynamica set as quantum
+     The initial energy of phonon: SUM_phT=    5.73765  eV SUM_phU=    5.26084  eV
+     The initial energy of phonon: SUM_phE=   10.99848 eV.
+     Energy of phonon after   2.50ps dynamica: SUM_phT=    6.86951  eV SUM_phU=    6.83981  eV
+     Energy of phonon after   2.50ps dynamica: SUM_phE=   13.70932 eV.
+
+     Initial eh_KSstate:  
+     ik=   24 coord.: (     0.500000     0.833333     0.000000  )
+     init_hband=    1 Initial hole Energy:    -2.65290 eV
+     init_eband=    2 Initial elec Energy:     2.51730 eV
+     elec-hole energy=      5.17020 eV
+
+     In adiabatic base,the elctron-hole state as follow:
+     Init_hsurface=   13 Initial hole Energy:  -2.7321223 eV
+     Init_esurface=   10 Initial elec Energy:   2.4136241 eV
+     elec-hole energy=   5.1457464 eV
+
+ time(fs)    rt(s) hsur esur     E_h(eV)     E_e(eV)    E_eh(eV)    T_ph(eV)    U_ph(eV)    E_ph(eV)   E_tot(eV)
+     0.00     0.00   13   10     -2.7321      2.4136      5.1457      6.8695      6.8398     13.7093     18.8551
+     0.50     0.00   13   10     -2.7211      2.4269      5.1480      6.8562      6.9371     13.7932     18.9412
+     1.00     0.00   13   10     -2.7127      2.4231      5.1358      6.8153      7.0391     13.8544     18.9903
+   499.50     0.00    4    3     -2.2778      1.3874      3.6652      7.6232      9.5103     17.1335     20.7986
+   500.00     0.00    4    3     -2.2881      1.3905      3.6786      7.4495      9.6576     17.1072     20.7857
+ This trajectory end on 14Jun2022 at 22:18:22 
+
+ ###### itraj=   7 ######
+ This trajectory start on 14Jun2022 at 22:18:22 
+
+     The temperature of the non-adiabatic dynamica is :   300.00000 K
+     The average energy of phonon(quantum): <SUM_phE>=   12.95558 eV.
+     The average energy of phonon(class)  : <SUM_phE>=    5.50648 eV.
+
+     The phonon dynamica set as quantum
+     The initial energy of phonon: SUM_phT=    7.15316  eV SUM_phU=    5.22246  eV
+     The initial energy of phonon: SUM_phE=   12.37562 eV.
+     Energy of phonon after   2.50ps dynamica: SUM_phT=    5.78900  eV SUM_phU=    6.73763  eV
+     Energy of phonon after   2.50ps dynamica: SUM_phE=   12.52663 eV.
+
+     Initial eh_KSstate:  
+     ik=   14 coord.: (     0.333333     0.166667     0.000000  )
+     init_hband=    1 Initial hole Energy:    -2.65290 eV
+     init_eband=    2 Initial elec Energy:     2.51730 eV
+     elec-hole energy=      5.17020 eV
+
+     In adiabatic base,the elctron-hole state as follow:
+     Init_hsurface=    8 Initial hole Energy:  -2.5156109 eV
+     Init_esurface=   17 Initial elec Energy:   2.8832054 eV
+     elec-hole energy=   5.3988163 eV
+
+ time(fs)    rt(s) hsur esur     E_h(eV)     E_e(eV)    E_eh(eV)    T_ph(eV)    U_ph(eV)    E_ph(eV)   E_tot(eV)
+     0.00     0.00    8   17     -2.5156      2.8832      5.3988      5.7890      6.7376     12.5266     17.9255
+     0.50     0.00    8   17     -2.5117      2.8607      5.3723      5.9014      6.5892     12.4906     17.8630
+     1.00     0.00    8   17     -2.5093      2.8348      5.3440      6.0885      6.4596     12.5482     17.8922
+   499.50     0.00    3    4     -2.2454      1.4663      3.7118      7.3416      6.9956     14.3372     18.0490
+   500.00     0.00    3    4     -2.2530      1.4672      3.7201      7.3952      6.8728     14.2681     17.9882
+ This trajectory end on 14Jun2022 at 22:18:24 
+
+ ###### itraj=   8 ######
+ This trajectory start on 14Jun2022 at 22:18:24 
+
+     The temperature of the non-adiabatic dynamica is :   300.00000 K
+     The average energy of phonon(quantum): <SUM_phE>=   12.95558 eV.
+     The average energy of phonon(class)  : <SUM_phE>=    5.50648 eV.
+
+     The phonon dynamica set as quantum
+     The initial energy of phonon: SUM_phT=    6.78908  eV SUM_phU=    5.63852  eV
+     The initial energy of phonon: SUM_phE=   12.42760 eV.
+     Energy of phonon after   2.50ps dynamica: SUM_phT=    8.03972  eV SUM_phU=    8.28250  eV
+     Energy of phonon after   2.50ps dynamica: SUM_phE=   16.32222 eV.
+
+     Initial eh_KSstate:  
+     ik=   34 coord.: (     0.833333     0.500000     0.000000  )
+     init_hband=    1 Initial hole Energy:    -2.65290 eV
+     init_eband=    2 Initial elec Energy:     2.51730 eV
+     elec-hole energy=      5.17020 eV
+
+     In adiabatic base,the elctron-hole state as follow:
+     Init_hsurface=    6 Initial hole Energy:  -2.2662975 eV
+     Init_esurface=   17 Initial elec Energy:   2.9868352 eV
+     elec-hole energy=   5.2531327 eV
+
+ time(fs)    rt(s) hsur esur     E_h(eV)     E_e(eV)    E_eh(eV)    T_ph(eV)    U_ph(eV)    E_ph(eV)   E_tot(eV)
+     0.00     0.00    6   17     -2.2663      2.9868      5.2531      8.0397      8.2825     16.3222     21.5754
+     0.50     0.00    6   17     -2.2615      2.9928      5.2543      8.0841      8.2530     16.3371     21.5915
+     1.00     0.00    6   17     -2.2637      2.9915      5.2552      8.1095      8.2384     16.3479     21.6032
+   499.50     0.00    2    4     -0.1731      1.4803      1.6534      7.0401      8.3288     15.3689     17.0223
+   500.00     0.00    2    4     -0.1458      1.5015      1.6473      7.0617      8.3702     15.4319     17.0791
+ This trajectory end on 14Jun2022 at 22:18:26 
+
+ ###### itraj=   9 ######
+ This trajectory start on 14Jun2022 at 22:18:26 
+
+     The temperature of the non-adiabatic dynamica is :   300.00000 K
+     The average energy of phonon(quantum): <SUM_phE>=   12.95558 eV.
+     The average energy of phonon(class)  : <SUM_phE>=    5.50648 eV.
+
+     The phonon dynamica set as quantum
+     The initial energy of phonon: SUM_phT=    6.42400  eV SUM_phU=    6.49659  eV
+     The initial energy of phonon: SUM_phE=   12.92060 eV.
+     Energy of phonon after   2.50ps dynamica: SUM_phT=    5.93073  eV SUM_phU=    5.08819  eV
+     Energy of phonon after   2.50ps dynamica: SUM_phE=   11.01892 eV.
+
+     Initial eh_KSstate:  
+     ik=   16 coord.: (     0.333333     0.500000     0.000000  )
+     init_hband=    1 Initial hole Energy:    -2.65290 eV
+     init_eband=    2 Initial elec Energy:     2.51730 eV
+     elec-hole energy=      5.17020 eV
+
+     In adiabatic base,the elctron-hole state as follow:
+     Init_hsurface=   16 Initial hole Energy:  -2.7799825 eV
+     Init_esurface=   17 Initial elec Energy:   2.8962831 eV
+     elec-hole energy=   5.6762656 eV
+
+ time(fs)    rt(s) hsur esur     E_h(eV)     E_e(eV)    E_eh(eV)    T_ph(eV)    U_ph(eV)    E_ph(eV)   E_tot(eV)
+     0.00     0.00   16   17     -2.7800      2.8963      5.6763      5.9307      5.0882     11.0189     16.6952
+     0.50     0.00   16   17     -2.7724      2.9058      5.6782      5.9640      5.0955     11.0595     16.7377
+     1.00     0.00   16   17     -2.7757      2.9116      5.6873      5.9637      5.1517     11.1154     16.8027
+   499.50     0.00    3    7     -2.2311      2.1591      4.3902      6.4502      6.4494     12.8996     17.2898
+   500.00     0.00    3    7     -2.2435      2.1572      4.4007      6.4248      6.4976     12.9224     17.3231
+ This trajectory end on 14Jun2022 at 22:18:27 
+
+ ###### itraj=  10 ######
+ This trajectory start on 14Jun2022 at 22:18:27 
+
+     The temperature of the non-adiabatic dynamica is :   300.00000 K
+     The average energy of phonon(quantum): <SUM_phE>=   12.95558 eV.
+     The average energy of phonon(class)  : <SUM_phE>=    5.50648 eV.
+
+     The phonon dynamica set as quantum
+     The initial energy of phonon: SUM_phT=    6.49945  eV SUM_phU=    5.19885  eV
+     The initial energy of phonon: SUM_phE=   11.69830 eV.
+     Energy of phonon after   2.50ps dynamica: SUM_phT=    5.61240  eV SUM_phU=    6.06434  eV
+     Energy of phonon after   2.50ps dynamica: SUM_phE=   11.67674 eV.
+
+     Initial eh_KSstate:  
+     ik=   30 coord.: (     0.666667     0.833333     0.000000  )
+     init_hband=    1 Initial hole Energy:    -2.65290 eV
+     init_eband=    2 Initial elec Energy:     2.51730 eV
+     elec-hole energy=      5.17020 eV
+
+     In adiabatic base,the elctron-hole state as follow:
+     Init_hsurface=   14 Initial hole Energy:  -2.7415443 eV
+     Init_esurface=   16 Initial elec Energy:   2.7264723 eV
+     elec-hole energy=   5.4680166 eV
+
+ time(fs)    rt(s) hsur esur     E_h(eV)     E_e(eV)    E_eh(eV)    T_ph(eV)    U_ph(eV)    E_ph(eV)   E_tot(eV)
+     0.00     0.00   14   16     -2.7415      2.7265      5.4680      5.6124      6.0643     11.6767     17.1448
+     0.50     0.00   14   16     -2.7419      2.7418      5.4837      5.5816      6.1133     11.6949     17.1786
+     1.00     0.00   14   16     -2.7345      2.7715      5.5061      5.5249      6.1435     11.6684     17.1744
+   499.50     0.00    3    3     -2.1459      1.4903      3.6363      6.5384      6.9226     13.4610     17.0973
+   500.00     0.00    3    3     -2.1359      1.4823      3.6181      6.5294      6.8988     13.4282     17.0463
+ This trajectory end on 14Jun2022 at 22:18:29 

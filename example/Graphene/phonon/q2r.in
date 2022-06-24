@@ -1,6 +1,5 @@
 &input
  fildyn = 'graphene.dyn'
- zasr   = 'crystal'
- flfrc  = 'ifc.q2r'
- loto_2d= .true.
+ zasr   = 'simple'
+ flfrc  = 'graphene.fc'
 /
