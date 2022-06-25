@@ -16,13 +16,21 @@ done
 NP=`cat nodelist | wc -l`
 rm nodelist
 
-prefix='graphene'
+seedname='graphene'
 
 module use /share/home/zw/xiehua/modulefiles
 module load Quantum_Espresso/7.0
 
 mpirun -np $NP pw.x -nk 7 <scf.in>scf.out
+
+kmesh.pl 36 36 1 >>nscf.in
 mpirun -np $NP pw.x -nk 7 <nscf.in> nscf.out
-wannier90.x -pp ${prefix}
-pw2wannier90.x < pw2wan.in > pw2wan.out
-mpirun -np $NP wannier90.x ${prefix}
+
+echo "mp_grid = 36 36 1">>${seedname}.win
+echo "begin kpoints">>${seedname}.win
+kmesh.pl 36 36 1 wannier >>${seedname}.win
+echo "end kpoints">>${seedname}.win
+mpirun -np $NP wannier90.x -pp ${seedname}
+
+mpirun -np $NP pw2wannier90.x < pw2wan.in > pw2wan.out
+mpirun -np $NP wannier90.x ${seedname}

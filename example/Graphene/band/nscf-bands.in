@@ -15,12 +15,11 @@
     ibrav       = 4
     nat         = 2
     ntyp        = 1
-!    a           = 2.464
-!    c           = 15.0
- celldm(1) =      4.66232586
- celldm(3) =      6.07977492
-    nbnd        = 28
-    assume_isolated = "2D"
+!    a           = 2.467196594915731
+!    c           = 20.0
+ celldm(1) =      4.66232677
+ celldm(3) =      8.10636498
+    nbnd        = 36
     occupations = "smearing"
     smearing    = "mp"    
     degauss     =  1.0d-2

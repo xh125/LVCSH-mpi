@@ -1,5 +1,5 @@
 #!/bin/bash
-for i in $(seq 6 6 36)
+for i in $(seq 12 12 60)
 	do
 	cp epw.in epw${i}.in
 	sed -i "s:epwwrite:epwwrite=.false. ! :g" epw${i}.in

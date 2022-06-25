@@ -4,7 +4,6 @@ epwdir='/share/home/zw/xiehua/workfiles/qefies/Graphene/epw'
 for i in $(seq 12 12 12)
   do
   mkdir epwkq${i}
-#  cp ../epw/epw${i}.out epwkq${i}
   cp LVCSH.in epwkq${i}
   cp lvcsh.bsub epwkq${i}
   sed -i "2s:lvcsh:lvcsh-kq${i}-s0:g" epwkq${i}/lvcsh.bsub

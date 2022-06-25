@@ -15,12 +15,11 @@
     ibrav       = 4
     nat         = 2
     ntyp        = 1
-!    a           = 2.464
-!    c           = 15.0
- celldm(1) =      4.66232586
- celldm(3) =      6.07977492
+!    a           = 2.467196594915731
+!    c           = 20.0
+ celldm(1) =      4.66232677
+ celldm(3) =      8.10636498
 !    nbnd        = 16
-    assume_isolated = "2D"
     occupations = "smearing"
     smearing    = "mp"    
     degauss     =  1.0d-2
@@ -46,12 +45,13 @@
 !    press_conv_thr =  0.001
 !/
 
-K_POINTS {automatic}
- 36  36  1  0 0 0
-
 ATOMIC_SPECIES
 C      12.01070  C.pbe-n-kjpaw_psl.1.0.0.UPF
 
 ATOMIC_POSITIONS {crystal}
 C       0.333333333333333   0.666666666666667   0.500000
 C       0.666666666666667   0.333333333333333   0.500000
+
+K_POINTS {automatic}
+ 36  36  1  0 0 0
+

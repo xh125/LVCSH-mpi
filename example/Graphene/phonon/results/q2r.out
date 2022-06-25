@@ -1,5 +1,5 @@
 
-     Program Q2R v.7.0 starts on 25Jun2022 at  4:22:41 
+     Program Q2R v.7.0 starts on 25Jun2022 at 20:11:14 
 
      This program is part of the open-source Quantum ESPRESSO suite
      for quantum simulation of materials; please cite
@@ -17,7 +17,7 @@
      MPI processes distributed on     1 nodes
      K-points division:     npool     =      14
      R & G space division:  proc/nbgrp/npool/nimage =       2
-     55394 MiB available memory on the printing compute node when the environment starts
+     55428 MiB available memory on the printing compute node when the environment starts
  
 
      reading grid info from file graphene.dyn0    
@@ -209,10 +209,10 @@
 
       fft-check success (sum of imaginary terms < 10^-12)
  
-     Q2R          :      0.41s CPU      2.90s WALL
+     Q2R          :      0.20s CPU      1.89s WALL
 
  
-   This run was terminated on:   4:22:44  25Jun2022            
+   This run was terminated on:  20:11:16  25Jun2022            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
