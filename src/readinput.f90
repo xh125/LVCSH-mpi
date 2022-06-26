@@ -167,12 +167,12 @@ module readinput
       call io_error('Error: Problem reading SCRATCH input namelist file')
       call io_error(msg)
     elseif(ierr == 0 )then    
-      write(incar_unit,*)"&shinput" 
+      write(incar_unit,"(A)")"&shinput" 
       do i=1,line_counter
         write(incar_unit,"(A)") trim(adjustl(in_data(i)))
       enddo
       !write(incar_unit,"(A1)") "/"
-      write(incar_unit,*) "/"
+      write(incar_unit,"(A)") "/"
     endif
     rewind(incar_unit)
     
