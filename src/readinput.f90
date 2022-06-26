@@ -169,7 +169,7 @@ module readinput
     elseif(ierr == 0 )then    
       write(incar_unit,*)"&shinput" 
       do i=1,line_counter
-        write(incar_unit,*) trim(adjustl(in_data(i)))
+        write(incar_unit,"(A)") trim(adjustl(in_data(i)))
       enddo
       !write(incar_unit,"(A1)") "/"
       write(incar_unit,*) "/"
@@ -241,8 +241,8 @@ module readinput
     write(stdout,"(1X,10X,A)") "The namelist file as follows"
     write(stdout,"(1X,A77)")   repeat("=",77)
     do i=1,line_counter+2
-      read(incar_unit,"(A80)") ctmp
-      write(stdout,"(A80)") ctmp
+      read(incar_unit,"(A256)") ctmp
+      write(stdout,"(A256)") ctmp
     enddo
     rewind(incar_unit)
     read(UNIT=incar_unit,nml=shinput,iostat=ios,iomsg=msg)
