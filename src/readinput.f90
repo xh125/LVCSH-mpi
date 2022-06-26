@@ -240,8 +240,8 @@ module readinput
     write(stdout,"(1X,10X,A)") "The namelist file as follows"
     write(stdout,"(1X,A77)")   repeat("=",77)
     do i=1,line_counter+2
-      read(incar_unit,*) ctmp
-      write(stdout,"(A)") ctmp
+      read(incar_unit,"(A)") ctmp
+      write(stdout,"(A)") trim(adjustl(ctmp))
     enddo
     rewind(incar_unit)
     read(UNIT=incar_unit,nml=shinput,iostat=ios,iomsg=msg)
