@@ -36,7 +36,7 @@
                                epmatkqread, selecqread, restart_step, nsmear,      &
                                nqc1, nqc2, nqc3, nkc1, nkc2, nkc3, assume_metal,   &
                                cumulant, eliashberg, nomega, mob_maxfreq, neta,    &
-                               omegamin, omegamax, omegastep, mob_nfreq
+                               omegamin, omegamax, omegastep, mob_nfreq,nbndnfbfe
   USE control_flags,    ONLY : iverbosity
   USE noncollin_module, ONLY : noncolin
   USE constants_epw,    ONLY : ryd2ev, ryd2mev, one, two, zero, czero, eps40,      &
@@ -75,7 +75,7 @@
                                !!!!!
   USE transport,        ONLY : transport_coeffs, scattering_rate_q
   USE grid,             ONLY : qwindow, loadkmesh_fst, xqf_otf
-  USE printing,         ONLY : print_gkk, plot_band, plot_fermisurface
+  USE printing,         ONLY : print_gkk, plot_band, plot_fermisurface,print_sh
   USE io_epw,           ONLY : rwepmatw, epw_read, epw_write
   USE io_transport,     ONLY : tau_read, iter_open, print_ibte, iter_merge
   USE io_selfen,        ONLY : selfen_el_read, spectral_read
@@ -689,13 +689,19 @@
     CALL hamwan2bloch(nbndsub, nrr_k, cufkk, etf(:, ik), chw, cfac, dims)
   ENDDO
   !
-  WRITE(stdout,'(/5x,a,f10.6,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
+  WRITE(stdout,'(/5x,a,f17.10,a)') 'Fermi energy coarse grid = ', ef * ryd2ev, ' eV'
   !
+  IF (noncolin) THEN
+    nelec = nelec - one * nbndnfbfe
+  ELSE
+    nelec = nelec - two * nbndnfbfe
+  ENDIF		
+	!
   IF (efermi_read) THEN
     !
     ef = fermi_energy
     WRITE(stdout,'(/5x,a)') REPEAT('=',67)
-    WRITE(stdout, '(/5x,a,f10.6,a)') 'Fermi energy is read from the input file: Ef = ', ef * ryd2ev, ' eV'
+    WRITE(stdout, '(/5x,a,f17.10,a)') 'Fermi energy is read from the input file: Ef = ', ef * ryd2ev, ' eV'
     WRITE(stdout,'(/5x,a)') REPEAT('=',67)
     !
     ! SP: even when reading from input the number of electron needs to be correct
@@ -747,7 +753,7 @@
       efnew = efermig(etf, nbndsub, nkqf, nelec, wkf, degaussw, ngaussw, 0, isk_dummy)
     ENDIF
     !
-    WRITE(stdout, '(/5x,a,f10.6,a)') &
+    WRITE(stdout, '(/5x,a,f17.10,a)') &
         'Fermi energy is calculated from the fine k-mesh: Ef = ', efnew * ryd2ev, ' eV'
     !
     ! if 'fine' Fermi level differs by more than 250 meV, there is probably something wrong
@@ -1755,6 +1761,18 @@
       IF (.NOT. iterative_bte) CALL transport_coeffs(ef0, efcb)
     ENDIF ! if scattering
     !
+    !--------------------------------------------------------------------------------
+    ! Added by xiehua, used to print the vmef of dmef to the output.
+    !--------------------------------------------------------------------------------   
+    ! Write dmef or vmef to the files
+    ! vmef is in units of Ryd * bohr
+    ! dmef is in units of 1/a.u. (where a.u. is bohr)
+    ! v_(k,i) = 1/m <ki|p|ki> = 2 * dmef (:, i,i,k) 
+    ! vmef = 2 *dmef
+    ! ! ... RY for "Rydberg" atomic units (e^2=2, m=1/2, hbar=1)   
+    !Lets gather the velocities from all pools
+    if(prtgkk) call print_sh() 
+		
     ! Now deallocate
     DEALLOCATE(epf17, STAT = ierr)
     IF (ierr /= 0) CALL errore('ephwann_shuffle', 'Error deallocating epf17', 1)

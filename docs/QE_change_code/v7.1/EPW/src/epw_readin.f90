@@ -55,7 +55,7 @@
                             fermi_diff, smear_rpa, cumulant, bnd_cum, proj, write_wfn, &
                             iswitch, liso, lacon, lpade, etf_mem, epbwrite,            &
                             nsiter, conv_thr_racon, npade, specfun_el, specfun_ph,     &
-                            system_2d, delta_approx, title, int_mob, scissor,          &
+                            system_2d, delta_approx, title, int_mob, scissor,nbndnfbfe,&
                             iterative_bte, scattering, selecqread, epmatkqread,        &
                             ncarrier, carrier, scattering_serta, restart, restart_step,&
                             scattering_0rta, longrange, shortrange, scatread, use_ws,  &
@@ -180,7 +180,7 @@
        ! lifc, asr_typ, lunif, kerwrite, kerread, imag_read, eliashberg,         &
        lifc, asr_typ, kerwrite, kerread, imag_read, eliashberg,                &
        !!!!!
-       ep_coupling, fila2f, max_memlt, efermi_read, fermi_energy,              &
+       ep_coupling, fila2f, max_memlt, efermi_read, fermi_energy,nbndnfbfe,    &
        specfun_el, specfun_ph, wmin_specfun, wmax_specfun, nw_specfun,         &
        delta_approx, scattering, int_mob, scissor, ncarrier, carrier,          &
        iterative_bte, scattering_serta, scattering_0rta, longrange, shortrange,&
@@ -604,6 +604,7 @@
   max_memlt    = 2.85d0
   efermi_read  = .FALSE.
   fermi_energy = 0.d0
+	nbndnfbfe    = 0
   wmin_specfun = 0.d0 ! eV
   wmax_specfun = 0.3d0 ! eV
   nw_specfun   = 100
@@ -997,6 +998,7 @@
   dvscf_dir = trimcheck(dvscf_dir)
   !
   CALL bcast_epw_input()
+	call mp_bcast(nbndnfbfe,meta_ionode_id,world_comm)
   !
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.

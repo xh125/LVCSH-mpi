@@ -339,6 +339,8 @@
   !! maximum memory that can be allocated per pool
   REAL(KIND = DP) :: fermi_energy
   !! fermi energy is given in the input file
+  integer :: nbndnfbfe
+  !! number of band not wannier fitting below fermi energy	
   REAL(KIND = DP) :: wmin_specfun
   !! min frequency in electron spectral function due to e-p interaction
   REAL(KIND = DP) :: wmax_specfun

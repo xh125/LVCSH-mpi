@@ -221,7 +221,26 @@ SUBROUTINE summary()
        &   "reciprocal axes: (cart. coord. in units 2 pi/alat)",/, &
        &            3(15x,"b(",i1,") = (",3f10.6," )  ",/ ) )')  (apol,&
        &  (bg (ipol, apol) , ipol = 1, 3) , apol = 1, 3)
+  
   !
+  ! ... print cell and ionic positions for wannier90.x
+  !
+  write(stdout,"(A)") "Begin Write cell and positions for Wannier90.x"
+  write(stdout,"(A)") "begin unit_cell_cart"
+  write(stdout,"(A)") "Bohr"
+  write(stdout,"(5X,3f12.7)") ((alat*at (ipol, apol) , ipol = 1, 3) , apol = 1, 3)
+  write(stdout,"(A)") "end unit_cell_cart"
+  write(stdout,"(/,A)") "begin atoms_cart"
+  write(stdout,"(A)") "Bohr"
+  WRITE( stdout, '(5x,a6,6x,3f12.7)') &
+             ( atm(ityp(na)), (alat*tau(ipol,na), ipol=1,3), na=1,nat)  
+  write(stdout,"(A)") "end atoms_cart"
+	write(stdout,"(A)") "End Write cell and positions for Wannier90.x"
+  !
+  ! ...end print cell and ionic positions for wannier90.x
+  !  	
+	
+	!
   CALL print_ps_info ( )
   !
   WRITE( stdout, '(/5x, "atomic species   valence    mass     pseudopotential")')
