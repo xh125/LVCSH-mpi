@@ -19,7 +19,8 @@ rm nodelist
 module use /share/home/zw/xiehua/modulefiles
 module load Quantum_Espresso/7.0
 
-mpirun -np $NP pw.x -nk 7 <scf.in>scf.out
-kmesh.pl 36 36 1 >>nscf.in
-mpirun -np $NP pw.x -nk 7 <nscf.in> nscf.out
+#mpirun -np $NP pw.x -nk 7 <scf.in>scf.out
+#kmesh.pl 36 36 1 >>nscf.in
+#mpirun -np $NP pw.x -nk 7 <nscf.in> nscf.out
+cp -r ../nscf/* ./
 mpirun -np $NP epw.x -nk $NP <epw.in> epw.out
