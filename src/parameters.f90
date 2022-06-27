@@ -4,7 +4,7 @@ module parameters
   use kinds,only : dp
   use constants,only    : maxlen
   use environments,only : mkl_threads,lsetthreads
-  use lasercom,only     : llaser,efield_cart,w_laser,fwhm
+  use lasercom,only     : llaser,lfcw,efield_cart,w_laser,fwhm
   use surfacecom,only   : methodsh,lfeedback,naver,nstep,nsnap,dt,pre_nstep,pre_dt,&
                           temp,gamma,ld_fric,l_ph_quantum,lit_gmnvkq,lit_ephonon,&
                           lelecsh,lholesh,lehpairsh,ldecoherence,Cdecoherence,eps_acustic,&
@@ -38,7 +38,7 @@ module parameters
 					 epwoutname,methodsh,lfeedback,naver,nstep,nsnap,mix_thr,&
            pre_nstep,pre_dt,gamma,ld_fric,l_ph_quantum,dt,temp,&
            init_kx,init_ky,init_kz,init_hband,init_eband,&
-           llaser,efield_cart,w_laser,fwhm,eps_acustic,prtgmnvkq,&
+           llaser,lfcw,efield_cart,w_laser,fwhm,eps_acustic,prtgmnvkq,&
            lsetthreads,mkl_threads,lelecsh,lholesh,lehpairsh,&
            ieband_min,ieband_max,ihband_min,ihband_max,nefre_sh,nhfre_sh,&
 					 nnode,ncore,savedsnap,lsortpes,l_dEa_dQ,l_dEa2_dQ2,&

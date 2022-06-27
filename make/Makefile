@@ -151,3 +151,4 @@ clean:
 	- rm -f ./*.o
 	- rm -rf $(bindir)
 	- rm -f ./$(exe)
+	- rm -f ../tools/*.x

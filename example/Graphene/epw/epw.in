@@ -4,8 +4,8 @@ epw calculation of graphene
   outdir = './'
   amass(1)= 12.0107
   dvscf_dir = '../phonon/save'
-!  lifc = .true.
-!  asr_typ = 'simple'  
+!lifc = .true.
+!asr_typ = 'simple'  
 
   iverbosity = 0
 
@@ -20,7 +20,7 @@ epw calculation of graphene
   wannierize = .true.
   nbndsub     =  2
   nbndnfbfe   =  3
-!  bands_skipped = 'exclude_bands = 1'
+!bands_skipped = 'exclude_bands = 1'
   num_iter = 3000
   iprint   = 2
   dis_win_max = 9.5
@@ -30,13 +30,13 @@ epw calculation of graphene
   proj(1) = 'C:pz'
   wannier_plot= .true.
   wannier_plot_supercell = 5 5 1
-!  wdata(1)= 'bands_plot = .true.'
-!  wdata(2)= 'begin kpoint_path'
-!  wdata(3)= 'G 0.00 0.00 0.00  M 0.50 0.00 0.00'
-!  wdate(4)= 'M 0.50 0.00 0.00  K 0.3333 0.3333 0.00'
-!  wdate(5)= 'K 0.3333 0.3333 0.00  G 0.00 0.00 0.00'
-!  wdata(6)= 'end kpoint_path'
-!  wdata(7)= 'bands_plot_format = gnuplot'
+!wdata(1)= 'bands_plot = .true.'
+!wdata(2)= 'begin kpoint_path'
+!wdata(3)= 'G 0.00 0.00 0.00  M 0.50 0.00 0.00'
+!wdate(4)= 'M 0.50 0.00 0.00  K 0.3333 0.3333 0.00'
+!wdate(5)= 'K 0.3333 0.3333 0.00  G 0.00 0.00 0.00'
+!wdata(6)= 'end kpoint_path'
+!wdata(7)= 'bands_plot_format = gnuplot'
   wdata(8)= 'conv_tol      = 1.0e-10 '
   wdata(9)= 'conv_window   = 10      '
   wdata(10)= 'dis_conv_tol  = 1.0e-10 '
@@ -51,7 +51,7 @@ epw calculation of graphene
   phonselfen  = .false.
   a2f         = .false.
 
-!  fsthick     = 5.0 ! eV
+!fsthick     = 5.0 ! eV
   temps       = 300 ! K
   degaussw    = 0.005 ! eV
 

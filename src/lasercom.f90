@@ -1,8 +1,9 @@
 module lasercom
-  use kinds,only : dp
+  use kinds,only : dp,dpc
   implicit none
   
   logical         :: llaser         ! If .TRUE. a laser electric field  is applied.
+	logical         :: lfcw           ! Use Franc-Condon windows transation.
   real(kind=dp)   :: efield         ! Amplitude of the laser electric field (in Ry a.u.;1 a.u. = 36.3609*10^10 V/m)
   real(kind=dp)   :: efield_cart(3) ! laser electric field (in Ry a.u.=36.3609*10^10 V/m) in cartesian axis.
   real(kind=dp)   :: w_laser        ! the center energy of laser in eV.
@@ -12,6 +13,9 @@ module lasercom
   ! F(w)=exp(-(w-w_laser)^2*T^2/2)
 
   real(kind=dp),allocatable :: W_cvk(:,:,:) !光激发下的跃迁几率大小
+	complex(kind=dpc),allocatable :: vij(:,:,:) !vij(3,nefre,nhfre)
+  ! <i|v|j>  where  |i> is the hole adiabatic state and |j> is the electron adiabatic state.
+  ! reference : 1 S. Fernandez-Alberti et al., J. Chem. Phys. 137 (2012) 	
   contains
   
   real function f_t(t,fwhm_2T2)

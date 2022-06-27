@@ -42,7 +42,7 @@ program lvcsh
                             epwoutname,inputfilename,llaser,init_ik,init_eband,&
                             init_hband,init_e_en,init_h_en,mix_thr,lsortpes,   &
                             calculation,verbosity,naver_sum,savedsnap,ncore,&
-                            nsample,dirsample
+                            nsample,dirsample,lfcw
   use hamiltonian,only    : nefre,neband,H_e,H_e_nk,E_e,P_e,P_e_nk,P0_e_nk,    &
                             gmnvkq_e,Enk_e,H0_e_nk,E0_e,P0_e,nhfre,nhband,H_h, &
                             H_h_nk,E_h,P_h,P_h_nk,P0_h_nk,gmnvkq_h,Enk_h,      &
@@ -50,8 +50,8 @@ program lvcsh
                             set_H0_nk,calculate_eigen_energy_state,test_H_conjg    
   use sortting,only       : resort_eigen_energy_stat
   use randoms,only        : init_random_seed
-  use lasercom,only       : fwhm,w_laser
-  use getwcvk,only        : get_Wcvk
+  use lasercom,only       : fwhm,w_laser,vij
+  use getwcvk,only        : get_Wcvk,get_vij
   use initialsh,only      : set_subband,init_normalmode_coordinate_velocity,   &
                             init_eh_KSstat,init_surface
   use write_sh_information,only : write_initial_information
@@ -141,7 +141,7 @@ program lvcsh
   deallocate(gmnvkq)
   
   call allocatesh(methodsh,lelecsh,lholesh,nmodes,nqtotf)
-  
+	
   if(trim(calculation) == "lvcsh") then
   
     ! set the friction coefficient of Langevin dynamica of all phonon modes.
@@ -150,9 +150,11 @@ program lvcsh
     if(llaser) call get_Wcvk(ihband_min,ieband_max,fwhm,w_laser)
     ! ref : https://journals.aps.org/prb/pdf/10.1103/PhysRevB.72.045314
     !get W_cvk(icband,ivband,ik)
-    call init_random_seed()
-    !if(lsetthreads) call set_mkl_threads(mkl_threads)
-    
+		if(llaser .and. lfcw ) then
+			allocate(vij(3,nefre_sh,nhfre_sh))
+			vij = czero
+		endif
+		call init_random_seed()
     
     !==========================!
     != loop over realizations =!
@@ -183,10 +185,24 @@ program lvcsh
       
       !应该先跑平衡后，再做电子空穴动力学计算   
       call pre_md(nmodes,nqtotf,wf,ld_gamma,temp,phQ,phP,l_ph_quantum,pre_dt)     
-
-      
-      !!得到初始电子和空穴的初始的KS状态 init_ik,init_eband,init_hband(in the diabatic states)
-      call init_eh_KSstat(lelecsh,lholesh,llaser,init_ik,init_eband,init_hband,init_e_en,init_h_en)
+			
+			if(lfcw) then
+        call set_H_nk(neband,nktotf,nmodes,nqtotf,phQ,gmnvkq_e,H0_e_nk,H_e_nk)
+        H_e = reshape(H_e_nk,(/ nefre,nefre /))
+        call test_H_conjg(nefre,H_e)
+        call calculate_eigen_energy_state(nefre,H_e,E_e,P_e)
+				P_e_nk = reshape(P_e,(/ neband,nktotf,nefre /))
+        call set_H_nk(nhband,nktotf,nmodes,nqtotf,phQ,gmnvkq_h,H0_h_nk,H_h_nk)
+        H_h = reshape(H_h_nk,(/ nhfre,nhfre /))    
+        call test_H_conjg(nhfre,H_h)
+        call calculate_eigen_energy_state(nhfre,H_h,E_h,P_h)	
+				P_h_nk = reshape(P_h,(/ nhband,nktotf,nhfre /))
+				
+				call get_vij(nefre_sh,nhfre_sh,vij,neband,nhband,P_e_nk,P_h_nk)
+			else 
+				!!得到初始电子和空穴的初始的KS状态 init_ik,init_eband,init_hband(in the diabatic states)
+				call init_eh_KSstat(lelecsh,lholesh,llaser,init_ik,init_eband,init_hband,init_e_en,init_h_en)
+			endif
 
       if(lelecsh) then
 				init_eband = init_eband-ieband_min+1

@@ -11,7 +11,7 @@ module readinput
                         methodsh,lfeedback,naver,nstep,nsnap,pre_nstep,pre_dt,mix_thr,&
                         gamma,ld_fric,dt,temp,l_ph_quantum,prtgmnvkq,&
                         init_kx,init_ky,init_kz,init_hband,init_eband,&
-                        llaser,efield_cart,w_laser,fwhm,eps_acustic,&
+                        llaser,lfcw,efield_cart,w_laser,fwhm,eps_acustic,&
                         lsetthreads,mkl_threads,lelecsh,lholesh,lehpairsh,&
                         ieband_min,ieband_max,ihband_min,ihband_max,nefre_sh,nhfre_sh,&
 												nnode,ncore,savedsnap,lsortpes,l_dEa_dQ,l_dEa2_dQ2,nsample,dirsample
@@ -221,6 +221,7 @@ module readinput
     init_eband    = 1      ! the initial electron band
     init_hband    = 1      ! the initial hole band
     llaser        = .true.
+		lfcw          = .true.
     efield_cart   = (/ 0.0,0.0,0.0 /)  ! V/m
     w_laser       = 1.0    ! eV
     fwhm          = 10     ! fs
@@ -271,6 +272,7 @@ module readinput
       lelecsh = .true.
       lholesh = .true.
     endif
+		if(lfcw) llaser = .ture.
     write(stdout,"(/,1X,A)") "Read parameter Successful!" 
     write(stdout,"(1X,A77)")   repeat("=",77)
     
@@ -349,6 +351,7 @@ module readinput
     call mp_bcast(init_eband    ,ionode_id)
     call mp_bcast(init_hband    ,ionode_id)    
     call mp_bcast(llaser        ,ionode_id)
+		call mp_bcast(lfcw          ,ionode_id)
     call mp_bcast(efield_cart   ,ionode_id) 
     call mp_bcast(w_laser       ,ionode_id)
     call mp_bcast(fwhm          ,ionode_id) 
@@ -434,7 +437,8 @@ module readinput
     write(procout,*) "init_kz      =",init_kz      
     write(procout,*) "init_eband   =",init_eband   
     write(procout,*) "init_hband   =",init_hband   
-    write(procout,*) "llaser       =",llaser       
+    write(procout,*) "llaser       =",llaser
+		write(procout,*) "lfcw         =",lfcw
     !write(procout,*) "efield_cart  =",efield_cart 
     write(procout,"(1X,A14,3(1X,F12.5))") "efield_cart  =",efield_cart  
     write(procout,*) "w_laser      =",w_laser      

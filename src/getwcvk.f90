@@ -5,7 +5,8 @@ module getwcvk
   use mp
 #endif
   use kinds,only    : dp,dpc
-  use lasercom,only : W_cvk,efield_cart
+  use parameters,only : verbosity
+	use lasercom,only : W_cvk,efield_cart
   implicit none
   
   contains
@@ -67,9 +68,11 @@ module getwcvk
     write(stdout,"(5X,A38,F12.7,A4)")  "The full width at half-maximum:fwhm = ",fwhm*ry_to_fs," fs."    
 #if defined __MPI 		
     endif
+		if(verbosity  == "high") then		
     write(procout,"(/,5X,A)") "In the laser obsorbtion,the Pump laser as follow:"
     write(procout,"(5X,A22,F12.7,A4)")  "Laser centred energy :",w_center*ryd2eV," eV."
     write(procout,"(5X,A38,F12.7,A4)")  "The full width at half-maximum:fwhm = ",fwhm*ry_to_fs," fs."     
+		endif
 #endif    
     
   end subroutine get_Wcvk
@@ -87,5 +90,39 @@ module getwcvk
     return
   end function
 
+  ! <i|v|j>  where  |i> is the hole adiabatic state and |j> is the electron adiabatic state.
+  ! reference : 1 S. Fernandez-Alberti et al., J. Chem. Phys. 137 (2012) 		
+	subroutine get_vij(ne,mh,vij,neband,nhband,P_e,P_h)
+		use elph2,only  : vmef,nktotf  !vmef(3,nbndsub,nbndsub,nktotf)
+		use readepw,only : icbm
+		use parameters,only : czero
+		implicit none
+		integer,intent(in) :: ne,mh
+		complex(kind=dpc),intent(out) :: vij(3,ne,mh)
+		complex(kind=dpc),intent(in) :: P_e(neband,nktotf,ne),P_h(nhband,nktotf,mh)
+		
+		integer :: i,j
+		integer :: n,m,ik,n_,m_
+		integer :: ivbm
+		
+		ivbm = icbm-1
+		
+		do i=1,mh
+			do j=1,ne
+				vij(:,j,i) = czero
+				do ik=1,nktotf
+					do m=1,nhband
+						m_ = m+ivbm-nhband
+						do n=1,neband
+							n_ = n+icbm-1
+							vij(:,j,i) = vij(:,j,i)+P_h(m,ik,i)*CONJG(P_e(n,ik,j))*vmef(:,n_,m_,ik)
+						enddo
+					enddo
+				enddo
+			enddo
+		enddo
+		
+	end subroutine get_vij
+	
   
 end module getwcvk
