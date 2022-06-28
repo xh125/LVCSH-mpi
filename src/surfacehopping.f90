@@ -45,42 +45,39 @@ module surfacehopping
 			call errore('surfacehopping','Error allocating phQ',1)
 		endif
 		phQ = 0.0
-    ! phonons normal mode coordinates
-    !allocate(phQsit(nmodes,nq,0:nsnap),stat=ierr,errmsg=msg)
-		!if(ierr /= 0 ) call io_error(msg)
-    !allocate(phPsit(nmodes,nq,0:nsnap),stat=ierr,errmsg=msg)
-		!if(ierr /= 0 ) call io_error(msg)
     allocate(phKsit(nmodes,nq,0:nsnap),stat=ierr,errmsg=msg)
 		if(ierr /= 0 ) call errore("surfacehopping",trim(msg),1)
     allocate(phUsit(nmodes,nq,0:nsnap),stat=ierr,errmsg=msg)
 		if(ierr /= 0 ) call errore("surfacehopping",trim(msg),1)
-    !phQsit = 0.0d0
-    !phPsit = 0.0d0
     phKsit = 0.0d0
     phUsit = 0.0d0
     ram = real_size*nmodes*nq*(1+nsnap)
-		!call print_memory("phQsit",ram)
-		!call print_memory("phPsit",ram)
 		call print_memory("phKsit",ram)
 		call print_memory("phUsit",ram)
 		
 		
     allocate(phP(nmodes,nq),stat=ierr,errmsg=msg)  ! v(1:nphfre)
     if(ierr /=0) call errore('surfacehopping','Error allocating phP',1)    
-    phP = 0.0
+    phP = czero
     !phonons normal mode verlosity
     allocate(phQ0(nmodes,nq),stat=ierr,errmsg=msg)
     if(ierr /=0) call errore('surfacehopping','Error allocating phQ0',1)
+		phQ0 = czero
     allocate(phP0(nmodes,nq),stat=ierr,errmsg=msg)
-    if(ierr /=0) call errore('surfacehopping','Error allocating phP0',1)    
+    if(ierr /=0) call errore('surfacehopping','Error allocating phP0',1)
+		phP0 = czero
     allocate(phU(nmodes,nq),stat=ierr,errmsg=msg)
     if(ierr /=0) call errore('surfacehopping','Error allocating phU',1)
+		phU = 0.0
     allocate(phK(nmodes,nq),stat=ierr,errmsg=msg)
-    if(ierr /=0) call errore('surfacehopping','Error allocating phK',1)            
+    if(ierr /=0) call errore('surfacehopping','Error allocating phK',1)
+		phK = 0.0
     allocate(dEa_dQ(nmodes,nq),stat=ierr,errmsg=msg)
 		if(ierr /=0) call errore("surfacehopping",trim(msg),1)
+		dEa_dQ = czero
     allocate(dEa2_dQ2(nmodes,nq),stat=ierr,errmsg=msg)
     if(ierr /=0) call errore("surfacehopping",trim(msg),1)
+		dEa2_dQ2 = 0.0
 		
     if(lelecsh) then
       allocate(E_e(1:nefre),stat=ierr,errmsg=msg)
@@ -139,7 +136,9 @@ module surfacehopping
       if(ierr /=0) call errore('surfacehopping','Error allocating w_e',1)  
       allocate(w0_e(nefre),stat=ierr,errmsg=msg)
       if(ierr /=0) call errore('surfacehopping','Error allocating w0_e',1)
-      
+      w_e = czero
+			w0_e= czero
+			
       allocate(g_e(1:nefre_sh),stat=ierr,errmsg=msg)  !g_ij
       if(ierr /=0) call errore('surfacehopping','Error allocating g_e',1)
       allocate(g1_e(1:nefre_sh),stat=ierr,errmsg=msg)
@@ -214,7 +213,9 @@ module surfacehopping
       if(ierr /=0) call errore('surfacehopping','Error allocating w_h',1)  
       allocate(w0_h(nhfre),stat=ierr,errmsg=msg)
       if(ierr /=0) call errore('surfacehopping','Error allocating w0_h',1)
-      
+      w_h = czero
+			w0_h= czero
+			
       allocate(g_h(1:nhfre_sh),stat=ierr,errmsg=msg)  !g_ij
       if(ierr /=0) call errore('surfacehopping','Error allocating g_h',1)
       allocate(g1_h(1:nhfre_sh),stat=ierr,errmsg=msg)
