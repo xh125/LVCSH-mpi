@@ -272,7 +272,7 @@ module readinput
       lelecsh = .true.
       lholesh = .true.
     endif
-		if(lfcw) llaser = .ture.
+		if(lfcw) llaser = .true.
     write(stdout,"(/,1X,A)") "Read parameter Successful!" 
     write(stdout,"(1X,A77)")   repeat("=",77)
     

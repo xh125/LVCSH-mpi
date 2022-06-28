@@ -76,6 +76,38 @@ module getwcvk
 #endif    
     
   end subroutine get_Wcvk
+
+	subroutine get_mij(nefre_sh,nhfre_sh,vij,fwhm,w_center,E_e,E_h,Mij)
+		implicit none
+		integer, intent(in) :: nefre_sh,nhfre_sh
+		complex(kind=dpc),intent(in) :: vij(3,nefre_sh,nhfre_sh)
+    real(kind=dp),intent(in) :: fwhm
+    real(kind=dp),intent(in) :: w_center
+		real(kind=dp),intent(in) :: E_e(nefre_sh),E_h(nhfre_sh)
+		real(kind=dp),intent(out):: Mij(nefre_sh,nhfre_sh)
+
+		real(kind=dp) :: fwhm_2T2, dE, fcw
+		complex(kind=dpc) :: Evij
+		integer :: i,j,ipol
+		! Mij(ielec,jhole)=|<E dot vij(3,ielec,jhole)>|^2 *f_w(w)
+    !!光激发下在Frocon-Condon windows下的跃迁几率大小
+		
+    fwhm_2T2 = fwhm**2.0/4.0*log(2.0)
+    Mij = 0.0
+    
+    do j=1,nhfre_sh
+      do i=1,nefre_sh
+				dE = E_e(i)+E_h(j)
+        Evij = 0.0
+        do ipol=1,3
+          Evij =Evij+ (efield_cart(ipol)*(vij(ipol,i,j)))
+        enddo
+        fcw = f_w(dE,w_center,fwhm_2T2)
+        Mij(i,j) = fcw*(ABS(Evij))**2
+      enddo
+    enddo 			
+		
+	end subroutine
   
   !ref : 1 S. Fernandez-Alberti et al., The Journal of Chemical Physics 137 (2012) 
   real function f_w(w,w_laser,fwhm_2T2)
@@ -95,9 +127,9 @@ module getwcvk
 	subroutine get_vij(ne,mh,vij,neband,nhband,P_e,P_h)
 		use elph2,only  : vmef,nktotf  !vmef(3,nbndsub,nbndsub,nktotf)
 		use readepw,only : icbm
-		use parameters,only : czero
+		use constants,only : czero
 		implicit none
-		integer,intent(in) :: ne,mh
+		integer,intent(in) :: ne,mh,neband,nhband
 		complex(kind=dpc),intent(out) :: vij(3,ne,mh)
 		complex(kind=dpc),intent(in) :: P_e(neband,nktotf,ne),P_h(nhband,nktotf,mh)
 		

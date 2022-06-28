@@ -15,7 +15,8 @@ module lasercom
   real(kind=dp),allocatable :: W_cvk(:,:,:) !光激发下的跃迁几率大小
 	complex(kind=dpc),allocatable :: vij(:,:,:) !vij(3,nefre,nhfre)
   ! <i|v|j>  where  |i> is the hole adiabatic state and |j> is the electron adiabatic state.
-  ! reference : 1 S. Fernandez-Alberti et al., J. Chem. Phys. 137 (2012) 	
+  ! reference : 1 S. Fernandez-Alberti et al., J. Chem. Phys. 137 (2012)
+	real(kind=dp),allocatable :: Mij(:,:)
   contains
   
   real function f_t(t,fwhm_2T2)

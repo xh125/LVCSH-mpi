@@ -50,8 +50,8 @@ program lvcsh
                             set_H0_nk,calculate_eigen_energy_state,test_H_conjg    
   use sortting,only       : resort_eigen_energy_stat
   use randoms,only        : init_random_seed
-  use lasercom,only       : fwhm,w_laser,vij
-  use getwcvk,only        : get_Wcvk,get_vij
+  use lasercom,only       : fwhm,w_laser,vij,Mij
+  use getwcvk,only        : get_Wcvk,get_vij,get_Mij
   use initialsh,only      : set_subband,init_normalmode_coordinate_velocity,   &
                             init_eh_KSstat,init_surface
   use write_sh_information,only : write_initial_information
@@ -153,6 +153,8 @@ program lvcsh
 		if(llaser .and. lfcw ) then
 			allocate(vij(3,nefre_sh,nhfre_sh))
 			vij = czero
+			allocate(Mij(nefre_sh,nhfre_sh))
+			Mij = 0.0
 		endif
 		call init_random_seed()
     
@@ -199,6 +201,7 @@ program lvcsh
 				P_h_nk = reshape(P_h,(/ nhband,nktotf,nhfre /))
 				
 				call get_vij(nefre_sh,nhfre_sh,vij,neband,nhband,P_e_nk,P_h_nk)
+				call get_mij(nefre_sh,nhfre_sh,vij,fwhm,w_laser,E_e,E_h,Mij)
 			else 
 				!!得到初始电子和空穴的初始的KS状态 init_ik,init_eband,init_hband(in the diabatic states)
 				call init_eh_KSstat(lelecsh,lholesh,llaser,init_ik,init_eband,init_hband,init_e_en,init_h_en)
