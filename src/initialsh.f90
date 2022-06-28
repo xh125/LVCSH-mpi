@@ -207,6 +207,33 @@ module initialsh
 		endif
 #endif     
   end subroutine init_eh_KSstat
+
+	subroutine init_eh_adiabatic(nefre_sh,nhfre_sh,Mij,iesurface,ihsurface)
+		implicit none
+		integer, intent(in) :: nefre_sh,nhfre_sh
+		real(kind=dp),intent(in) :: Mij(nefre_sh,nhfre_sh)
+		integer, intent(out) :: iesurface,ihsurface
+		
+		integer :: i,j
+		real(kind=dp) :: Mijall,flagr,flagd
+		
+		Mijall = SUM(Mij)
+
+    call random_number(flagr)
+    flagr = flagr*Mijall
+    flagd = 0.0		
+		outter1:do i=1,nhfre_sh
+			do j=1,nefre_sh
+				flagd = flagd + Mij(j,i)
+				if(flagr < flagd) then
+					iesurface = j
+					ihsurface = i
+					exit outter1
+				endif
+			enddo
+		enddo outter1
+		
+	end subroutine init_eh_adiabatic
   
   subroutine init_stat_diabatic(init_ik,init_band,iband_min,nband,nk,c_nk)
     implicit none

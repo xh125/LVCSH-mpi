@@ -188,6 +188,7 @@ program lvcsh
       !应该先跑平衡后，再做电子空穴动力学计算   
       call pre_md(nmodes,nqtotf,wf,ld_gamma,temp,phQ,phP,l_ph_quantum,pre_dt)     
 			
+			! Get initial electron and hole states(including diabatic and adiabatic states.)
 			if(lfcw) then
         call set_H_nk(neband,nktotf,nmodes,nqtotf,phQ,gmnvkq_e,H0_e_nk,H_e_nk)
         H_e = reshape(H_e_nk,(/ nefre,nefre /))
