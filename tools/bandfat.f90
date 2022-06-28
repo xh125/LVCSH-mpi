@@ -155,7 +155,7 @@ program main
 	
 	integer :: nbnd,nks,natomwfc
 	integer :: ik,iband,ipol,iwfc,ipos
-	character(len=maxlen) :: ctmp,cformat,dummp
+	character(len=maxlen) :: ctmp,cformat,dummy
 	real(kind=dp),allocatable :: kpoints(:,:),Enk(:,:),proj(:,:,:)
 	character(len=13),allocatable :: nameatomwfc(:)
 	real(kind=dp),allocatable   :: lkline(:)
