@@ -202,6 +202,7 @@ program lvcsh
 				
 				call get_vij(nefre_sh,nhfre_sh,vij,neband,nhband,P_e_nk,P_h_nk)
 				call get_mij(nefre_sh,nhfre_sh,vij,fwhm,w_laser,E_e,E_h,Mij)
+				call init_eh_adiabatic(nefre_sh,nhfre_sh,Mij,iesurface,ihsurface)
 			else 
 				!!得到初始电子和空穴的初始的KS状态 init_ik,init_eband,init_hband(in the diabatic states)
 				call init_eh_KSstat(lelecsh,lholesh,llaser,init_ik,init_eband,init_hband,init_e_en,init_h_en)
