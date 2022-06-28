@@ -154,8 +154,8 @@ program main
 	implicit none
 	
 	integer :: nbnd,nks,natomwfc
-	integer :: ik,iband,ipol,iwfc
-	character(len=maxlen) :: ctmp,cformat
+	integer :: ik,iband,ipol,iwfc,ipos
+	character(len=maxlen) :: ctmp,cformat,dummp
 	real(kind=dp),allocatable :: kpoints(:,:),Enk(:,:),proj(:,:,:)
 	character(len=13),allocatable :: nameatomwfc(:)
 	real(kind=dp),allocatable   :: lkline(:)
@@ -209,7 +209,17 @@ program main
 		enddo
 	enddo
 	
-	
+	! convert all spaces to "-" for nameatomwfc
+	do iwfc=1,natomwfc
+		dummy= trim(adjustl(nameatomwfc(iwfc)))
+		ipos = index(dummp,' ')
+    do while (ipos /= 0)
+      dummy(ipos:ipos) = '-'
+      ipos = index(dummy,' ')
+    end do		
+		nameatomwfc(iwfc) = trim(adjustl(dummy))
+	enddo
+	!
 	
 	write(ctmp,*) natomwfc
 	cformat = "(A10,1X,A10,"//trim(adjustl(ctmp))//"(1X,A13))"
