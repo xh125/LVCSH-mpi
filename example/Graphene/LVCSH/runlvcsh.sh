@@ -1,18 +1,44 @@
 #!/bin/bash
 ensampledir='ensample'
-epwdir='/share/home/zw/xiehua/workfiles/qefies/Graphene/epw'
-for i in $(seq 12 12 12)
+epwdir='/share/home/zw/xiehua/workfiles/qefies/Graphene/epw-ifc'
+for i in $(seq 12 12 60)
   do
   mkdir epwkq${i}
   cp LVCSH.in epwkq${i}
-  cp lvcsh.bsub epwkq${i}
-  sed -i "2s:lvcsh:lvcsh-kq${i}-s0:g" epwkq${i}/lvcsh.bsub
-  sed -i "s:epw.out:${epwdir}/epw${i}.out:g" epwkq${i}/LVCSH.in
+#  cp lvcsh.bsub epwkq${i}
+#  sed -i "2s:lvcsh:lvcsh-kq${i}-s0:g" epwkq${i}/lvcsh.bsub
+  sed -i "s:epwoutname:epwoutname = \"${epwdir}/epw${i}.out\" !:g" epwkq${i}/LVCSH.in
   
   cd epwkq${i}
-  cat > runlvcsh.sh <<-EOF
+  cat > lvcsh.bsub <<-EOF
 	#!/bin/bash
-	ensampledir='ensample'
+	#BSUB -J lvcsh-kq${i}-s0
+	#BSUB -q privateq-zw
+	##BSUB -q publicq
+	#BSUB -n 28
+	#BSUB -R "span[ptile=28]"
+	#BSUB -o %J.out
+	#BSUB -e %J.err
+
+	CURDIR=\$PWD
+	rm -f nodelist >& /dev/null
+	for host in \`echo \$LSB_HOSTS\`
+	do
+	echo \$host >> nodelist
+	done
+	NP=\`cat nodelist | wc -l\`
+	rm nodelist
+
+	module use /share/home/zw/xiehua/modulefiles
+	module load lvcsh/0.3-mpi
+
+	mpirun -np \$NP LVCSH
+EOF
+chmod +x lvcsh.bsub
+
+  cat > runlvcshen.sh <<-FFF
+	#!/bin/bash
+	ensampledir=${ensampledir}
 	for j in \$(seq 0 1 0)
 	  do
 	  mkdir ${ensampledir}\${j}
@@ -23,8 +49,9 @@ for i in $(seq 12 12 12)
 	  bsub < lvcsh.bsub
 	  cd ..
 	  done
-	EOF
-  chmod +x runlvcsh.sh
-  bash runlvcsh.sh
+FFF
+
+  chmod +x runlvcshen.sh
+  bash runlvcshen.sh
   cd ..		
   done
