@@ -74,8 +74,8 @@ MKL_dynamic_Link = ${BLAS95_LIB} ${LAPACP95_LIB} -L${MKLLIB} \
                    -liomp5 -lpthread -lm -ldl
 MKL_static_Link  = ${BLAS95_LIB} ${LAPACP95_LIB} -Wl,--start-group \
                    ${lp64_lib} ${sequential_lib} ${core_lib} \
-									 -Wl,--end-group \
-									 -lpthread -lm -ldl
+	       	         -Wl,--end-group \
+		               -liomp5 -lpthread -lm -ldl
 
 #SRC
 SRCS_F= errore.f90 randoms.f90 version.f90 kinds.f90 string.f90 constants.f90 date_and_times.f90 \
