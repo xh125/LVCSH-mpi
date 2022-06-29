@@ -38,7 +38,9 @@ CPPFLAGS = -P -traditional -Uvector $(IFLAGS)
 # C flags must include DFLAGS and IFLAGS
 # F90 flags must include MODFLAGS, IFLAGS, and FDFLAGS with appropriate syntax
 CFLAGS   =  $(OFLAGS) $(IFLAGS)
-F90FLAGS =  $(FFLAGS) -fpp $(IFLAGS)
+#F90FLAGS =  $(FFLAGS) -fpp $(IFLAGS)
+F90FLAGS =  $(FFLAGS) -qopenmp -fpp $(IFLAGS)
+# with openmp parallel in calculation of nonadiabatic_coupling
 OFLAGS   =  -O3
 
 

@@ -1,5 +1,6 @@
 #define __MPI
 module surfacehopping
+  use omp_lib
   use kinds, only : dp,dpc
   use constants,only : cone,czero,ci
   use epwcom,only : nkf1,nkf2,nkf3,nqf1,nqf2,nqf3,kqmap
@@ -373,6 +374,7 @@ module surfacehopping
     nfre = nfre_sh
     
     dd=czero
+!$omp parallel do
 		do iq=1,nq
       do ik =1 ,nk
         ikq = kqmap(ik,iq)
@@ -393,8 +395,10 @@ module surfacehopping
         enddo
       enddo
     enddo
-    
-    
+!$omp end parallel do
+
+
+!$omp parallel do    
     do iq=1,nq
       iq_ = iminusq(iq)
       do imode=1,nmodes
@@ -409,7 +413,7 @@ module surfacehopping
         enddo
       enddo
 		enddo
-    
+!$omp end parallel do
     
     ! Let dEa_dQ(imode,iq_) = dEa_dQ(imode,iq)* 
     ! dijqv(i,i,q,v) = CONJG(dijqv(i,i,-q,v))
