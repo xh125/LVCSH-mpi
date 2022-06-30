@@ -1,6 +1,0 @@
-&bands
-prefix = 'graphene'
-outdir = './'
-filband = 'graphene.bands.dat'
-lsym = .true.
-/

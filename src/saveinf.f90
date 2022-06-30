@@ -752,6 +752,7 @@ module saveinf
 
 	! save the first trajecotry active PES and first trajecotry PES : pes_e.dat_f.gnu
 	! save the average active PES and PES for all trajecotry. : pes_e.dat_average.gnu
+  ! only need the PES in active sub windows.
   subroutine save_pes(nfre,nsnap,naver,pes_one,pes,pes_file,dir)
     implicit none
     integer , intent(in) :: nfre,nsnap,naver
